@@ -600,9 +600,9 @@ int goloumb()
         plot4.set_yrange( 0, numNeurons );
         plot4.plot_xy(
             spikeTimes, spikeNeuronIndices, "Spikes" );
-        //getchar();
+        getchar();
     } else {
-        //getchar();
+        getchar();
     }
     
     // free memory
