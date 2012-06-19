@@ -717,9 +717,9 @@ int rc_circuit_generic()
     std::vector<double> V_t;
     V_t.push_back(state[0][0][1]);
 
-    for (int t = t_0; t < timesteps - 1; t += 1)
+    for (unsigned int t = (unsigned int)t_0; t < timesteps - 1; t += 1)
     {
-        for (int i = 0; i < stateSize; ++i)
+        for (unsigned int i = 0; i < stateSize; ++i)
         {
             state[t + 1][0][i] = state[t][0][i];
         }
