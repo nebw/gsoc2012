@@ -133,7 +133,6 @@ int runge_kutta_generic(
 }
 
 namespace golomb {
-
 inline double _f_I_Na_m_inf(const double V)
 {
     static const double theta_m = -30;
@@ -190,6 +189,14 @@ inline double _f_tau_n(const double V)
     return 0.1 + 0.5 * pow(1 + exp(-(V - theta_tn) / sigma_tn), -1);
 }
 
+inline double _f_s_inf(const double V)
+{
+    static const double theta_s = -20;
+    static const double sigma_s = 2;
+
+    return pow(1 + exp(-(V - theta_s) / sigma_s), -1);
+}
+
 inline double _f_n_inf(const double V)
 {
     static const double theta_n = -33;
@@ -230,15 +237,7 @@ inline double _f_I_Leak(const double V)
     return g_L * (V - V_L);
 }
 
-inline double _f_s_inf(const double V)
-{
-    static const double theta_s = -20;
-    static const double sigma_s = 2;
-
-    return pow(1 + exp(-(V - theta_s) / sigma_s), -1);
-}
-
-inline double _f_w(const int j)
+inline double _f_w_EE(const int j)
 {
     static const double sigma = 1;
     static const double p     = 32;
@@ -261,7 +260,7 @@ double _f_I_AMPA(
 
     for (int i = 0; i < numNeurons; ++i)
     {
-        sumFootprint += _f_w(indexOfNeuron - i) * states[i][5];
+        sumFootprint += _f_w_EE(indexOfNeuron - i) * states[i][5];
     }
 
     return g_AMPA * (states[indexOfNeuron][1] - V_Glu) * sumFootprint;
@@ -290,11 +289,22 @@ double _f_I_NMDA(
 
     for (int i = 0; i < numNeurons; ++i)
     {
-        sumFootprint += _f_w(indexOfNeuron - i) * states[i][6];
+        sumFootprint += _f_w_EE(indexOfNeuron - i) * states[i][6];
     }
 
     return g_NMDA * _f_f_NMDA(states[indexOfNeuron][1]) *
            (states[indexOfNeuron][1] - V_Glu) * sumFootprint;
+}
+
+inline double _f_w_IE(const int j)
+{
+    static const double sigma = 0.5;
+    static const double p     = 32;
+
+    // TODO: p varies between 8 to 64
+
+    return tanh(1 / (2 * sigma * p))
+           * exp(-abs(j) / (sigma * p));
 }
 
 double _f_I_GABAA(
@@ -309,17 +319,12 @@ double _f_I_GABAA(
 
     double sumFootprint = 0;
 
-    // TODO: implement
+    for (int i = 0; i < numNeurons; ++i)
+    {
+        sumFootprint += _f_w_EE(indexOfNeuron - i) * states[i][8];
+    }
 
-    return 0;
-
-    /*for( int i = 0; i < numNeurons; ++i )
-       {
-        sumFootprint += _f_w( indexOfNeuron - i ) * states[i][8];
-       }
-
-       return g_NMDA * _f_f_NMDA( states[indexOfNeuron][1] ) *
-        ( states[indexOfNeuron][1] - V_Glu ) * sumFootprint;*/
+    return g_GABAA * (states[indexOfNeuron][1] - V_GABAA) * sumFootprint;
 }
 
 inline void f_dsAMPA_dt(
@@ -366,21 +371,6 @@ inline void f_dsNMDA_dt(
     resultState[7] = k_fN * states[indexOfNeuron][6]
                      * (1 - states[indexOfNeuron][7])
                      - states[indexOfNeuron][7] / tau_NMDA;
-}
-
-inline void f_dsGABAA_dt(
-    const double     **states,
-    const unsigned int numNeurons,
-    const unsigned int stateSize,
-    const unsigned int indexOfNeuron,
-    double            *resultState)
-{
-    static const double k_fA      = 1;
-    static const double tau_GABAA = 10;
-
-    resultState[8] = k_fA * _f_s_inf(states[indexOfNeuron][1])
-                     * (1 - states[indexOfNeuron][8])
-                     - states[indexOfNeuron][8] / tau_GABAA;
 }
 
 inline void f_I_Na_dh_dt(
@@ -441,14 +431,197 @@ inline void f_dV_dt(
         - _f_I_GABAA(states, indexOfNeuron, numNeurons)
         + states[indexOfNeuron][9];
 }
-
 }
 
-namespace wang_buzsaki 
+namespace wang_buzsaki {
+inline double _f_I_Na_m_alpha(const double V)
 {
+    return 0.5 * (V + 35.0) /
+           (1 - exp(-(V + 35) / 10));
+}
 
+inline double _f_I_Na_m_beta(const double V)
+{
+    return 20 * exp(-(V + 60) / 18);
+}
 
+inline double _f_I_Na_m_inf(const double V)
+{
+    return _f_I_Na_m_alpha(V) /
+           (_f_I_Na_m_alpha(V) + _f_I_Na_m_beta(V));
+}
 
+inline double _f_I_Na(const double V, const double h)
+{
+    static const double g_Na = 35;
+    static const double V_Na = 55;
+
+    return g_Na * pow(_f_I_Na_m_inf(V), 3) * h * (V - V_Na);
+}
+
+inline double _f_I_Na_h_alpha(const double V)
+{
+    return 0.35 * exp(-(V + 58) / 20);
+}
+
+inline double _f_I_Na_h_beta(const double V)
+{
+    return 5 / (1 + exp(-(V + 28) / 10));
+}
+
+inline void f_I_Na_dh_dt(
+    const double     **states,
+    const unsigned int numNeurons,
+    const unsigned int stateSize,
+    const unsigned int indexOfNeuron,
+    double            *resultState)
+{
+    resultState[2] =
+        _f_I_Na_h_alpha(states[indexOfNeuron][1])
+        * (1 - states[indexOfNeuron][2])
+        + _f_I_Na_h_beta(states[indexOfNeuron][1])
+        * states[indexOfNeuron][2];
+}
+
+inline double _f_I_Kdr(const double V, const double n)
+{
+    static const double g_Kdr = 9;
+    static const double V_K   = -90;
+
+    return g_Kdr * pow(n, 4) * (V - V_K);
+}
+
+inline double _f_I_Kdr_n_alpha(const double V)
+{
+    return 0.05 * (V + 34)
+           / (1 - exp(-(V + 34) / 10));
+}
+
+inline double _f_I_Kdr_n_beta(const double V)
+{
+    return 0.625 * exp(-(V + 44) / 80);
+}
+
+inline void f_I_Kdr_dn_dt(
+    const double     **states,
+    const unsigned int numNeurons,
+    const unsigned int stateSize,
+    const unsigned int indexOfNeuron,
+    double            *resultState)
+{
+    resultState[3] =
+        _f_I_Kdr_n_alpha(states[indexOfNeuron][1])
+        * (1 - states[indexOfNeuron][3])
+        - _f_I_Kdr_n_beta(states[indexOfNeuron][1])
+        * states[indexOfNeuron][3];
+}
+
+inline double _f_I_Leak(const double V)
+{
+    static const double g_L = 0.1;
+    static const double V_L = -65;
+
+    return g_L * (V - V_L);
+}
+
+inline double _f_w_EI(const int j)
+{
+    static const double sigma = 1;
+    static const double p     = 32;
+
+    // TODO: p varies between 8 to 64
+
+    return tanh(1 / (2 * sigma * p))
+           * exp(-abs(j) / (sigma * p));
+}
+
+double _f_I_AMPA(
+    const double **states,
+    const int      indexOfNeuron,
+    const int      numNeurons)
+{
+    static const double g_EI_AMPA = 0.2;
+    static const double V_Glu     = 0;
+
+    double sumFootprint = 0;
+
+    for (int i = 0; i < numNeurons; ++i)
+    {
+        sumFootprint += _f_w_EI(indexOfNeuron - i) * states[i][5];
+    }
+
+    return g_EI_AMPA * (states[indexOfNeuron][1] - V_Glu) * sumFootprint;
+}
+
+inline double _f_f_NMDA(const double V)
+{
+    static const double theta_NMDA = 0;
+
+    // TODO: theta_NMDA = -inf for [Mg2+]_0 = 0
+    // and increases logarithmically with [Mg2+]_0
+    static const double sigma_NMDA = 10;
+
+    return pow(1 + exp(-(V - theta_NMDA) / sigma_NMDA), -1);
+}
+
+double _f_I_NMDA(
+    const double **states,
+    const int      indexOfNeuron,
+    const int      numNeurons)
+{
+    // 0.0 or 0.05
+    static const double g_EI_NMDA = 0.05;
+    static const double V_Glu     = 0;
+
+    double sumFootprint = 0;
+
+    for (int i = 0; i < numNeurons; ++i)
+    {
+        sumFootprint += _f_w_EI(indexOfNeuron - i) * states[i][6];
+    }
+
+    return g_EI_NMDA * _f_f_NMDA(states[indexOfNeuron][1]) *
+           (states[indexOfNeuron][1] - V_Glu) * sumFootprint;
+}
+
+inline double _f_s_inf(const double V)
+{
+    static const double theta_s = -20;
+    static const double sigma_s = 2;
+
+    return pow(1 + exp(-(V - theta_s) / sigma_s), -1);
+}
+
+inline void f_dsGABAA_dt(
+    const double     **states,
+    const unsigned int numNeurons,
+    const unsigned int stateSize,
+    const unsigned int indexOfNeuron,
+    double            *resultState)
+{
+    static const double k_fA      = 1;
+    static const double tau_GABAA = 10;
+
+    resultState[8] = k_fA * _f_s_inf(states[indexOfNeuron][1])
+                     * (1 - states[indexOfNeuron][8])
+                     - states[indexOfNeuron][8] / tau_GABAA;
+}
+
+inline void f_dV_dt(
+    const double     **states,
+    const unsigned int numNeurons,
+    const unsigned int stateSize,
+    const unsigned int indexOfNeuron,
+    double            *resultState)
+{
+    resultState[1] =
+        -_f_I_Na(states[indexOfNeuron][1], states[indexOfNeuron][2])
+        - _f_I_Kdr(states[indexOfNeuron][1], states[indexOfNeuron][3])
+        - _f_I_Leak(states[indexOfNeuron][1])
+        - _f_I_AMPA(states, indexOfNeuron, numNeurons)
+        - _f_I_NMDA(states, indexOfNeuron, numNeurons)
+        + states[indexOfNeuron][9];
+}
 }
 
 #define runge_kutta(f, i)                \
@@ -483,7 +656,7 @@ int goloumb()
     const double I_app_0          = 1;
     const double dt               = 0.1;
     const unsigned int timesteps  = 6000;
-    const unsigned int numNeurons = 200;
+    const unsigned int numNeurons = 20;
     const unsigned int stateSize  = 10;
 
     // state[2][numNeurons][stateSize];
@@ -556,10 +729,10 @@ int goloumb()
             runge_kutta((*golomb::f_dsAMPA_dt), 5);
             runge_kutta((*golomb::f_dxNMDA_dt), 6);
             runge_kutta((*golomb::f_dsNMDA_dt), 7);
-            runge_kutta((*golomb::f_dsGABAA_dt), 8);
 
             state[ind_new][indexOfNeuron][0] = state[ind_old][indexOfNeuron][0] +
                                                1;
+            state[ind_new][indexOfNeuron][8] = state[ind_old][indexOfNeuron][8];
             state[ind_new][indexOfNeuron][9] = state[ind_old][indexOfNeuron][9];
 
             if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
@@ -577,7 +750,6 @@ int goloumb()
         sAMPA_t.push_back(state[ind_new][neuronToPlot][5]);
         xNMDA_t.push_back(state[ind_new][neuronToPlot][6]);
         sNMDA_t.push_back(state[ind_new][neuronToPlot][7]);
-        sGABAA_t.push_back(state[ind_new][neuronToPlot][8]);
     }
 
     Gnuplot plot;
@@ -611,9 +783,6 @@ int goloumb()
     plot3.plot_xy(
         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
         sNMDA_t, "s_NMDA");
-    plot3.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-        sGABAA_t, "s_GABAA");
     Gnuplot plot4;
 
     if (!spikeTimes.empty())
