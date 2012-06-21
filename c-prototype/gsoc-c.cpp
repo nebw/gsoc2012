@@ -1,3 +1,5 @@
+#define USE_STD_THREADS
+
 #include "gnuplot_i.hpp"
 
 #include <stdint.h>
@@ -7,6 +9,10 @@
 
 #include <ctime>
 #include <unordered_set>
+
+#ifdef USE_STD_THREADS
+#include <thread>
+#endif
 
 template<class T1, class T2>
 std::vector<T2>linSpaceVec(T1 n, T2 start, T2 stop) {
@@ -625,22 +631,41 @@ inline void f_dV_dt(
 }
 }
 
-#define runge_kutta(f, i)                \
-    runge_kutta_generic(                 \
-        (const double **)state[ind_old], \
-        state_K1,                        \
-        state_K2,                        \
-        state_K3,                        \
-        state_K4,                        \
-        state_temp_1,                    \
-        state_temp_2,                    \
-        state_temp_3,                    \
-        numNeurons, stateSize,           \
-        indexOfNeuron,                   \
-        i,                               \
-        dt,                              \
-        f,                               \
-        state[ind_new][indexOfNeuron])
+#ifdef USE_STD_THREADS
+  #define runge_kutta(f, i)                \
+      runge_kutta_generic,                 \
+      (const double **)state[ind_old], \
+      state_K1,                        \
+      state_K2,                        \
+      state_K3,                        \
+      state_K4,                        \
+      state_temp_1,                    \
+      state_temp_2,                    \
+      state_temp_3,                    \
+      numNeurons, stateSize,           \
+      indexOfNeuron,                   \
+      i,                               \
+      dt,                              \
+      f,                               \
+      state[ind_new][indexOfNeuron]
+#else
+  #define runge_kutta(f, i)                \
+	runge_kutta_generic(                 \
+	  (const double **)state[ind_old], \
+	  state_K1,                        \
+	  state_K2,                        \
+	  state_K3,                        \
+	  state_K4,                        \
+	  state_temp_1,                    \
+	  state_temp_2,                    \
+	  state_temp_3,                    \
+	  numNeurons, stateSize,           \
+	  indexOfNeuron,                   \
+	  i,                               \
+	  dt,                              \
+	  f,                               \
+	  state[ind_new][indexOfNeuron])
+#endif
 
 // state[t, V, h, n, z, sAMPA, xNMDA, sNMDA, sGABAA, I_app]
 int simulate()
@@ -659,14 +684,14 @@ int simulate()
     const double I_app_0                = 1;
     const double dt                     = 0.1;
     const unsigned int timesteps        = 6000;
-    const unsigned int numNeurons       = 500;
+    const unsigned int numNeurons       = 10;
     const unsigned int stateSize        = 10;
     const unsigned int chanceInhibitory = 10;
 
     // state[2][numNeurons][stateSize];
 
-    auto excitatory_neurons = std::unordered_set<const unsigned int>();
-    auto inhibitory_neurons = std::unordered_set<const unsigned int>();
+    std::unordered_set<unsigned int> excitatory_neurons;
+    std::unordered_set<unsigned int> inhibitory_neurons;
 
     for (unsigned int j = 0; j < numNeurons; ++j)
     {
@@ -755,9 +780,31 @@ int simulate()
         {
             if (excitatory_neurons.count(indexOfNeuron))
             {
+		#ifdef USE_STD_THREADS
+		const unsigned int threads_golomb = 7;
+		std::thread t[threads_golomb];
+
                 state[ind_new][indexOfNeuron][0] =
                     state[ind_old][indexOfNeuron][0] + 1;
-                runge_kutta((*golomb::f_dV_dt), 1);
+		t[0] = std::thread(runge_kutta((*golomb::f_dV_dt), 1));
+                t[1] = std::thread(runge_kutta((*golomb::f_I_Na_dh_dt), 2));
+                t[2] = std::thread(runge_kutta((*golomb::f_dn_dt), 3));
+                t[3] = std::thread(runge_kutta((*golomb::f_dz_dt), 4));
+                t[4] = std::thread(runge_kutta((*golomb::f_dsAMPA_dt), 5));
+                t[5] = std::thread(runge_kutta((*golomb::f_dxNMDA_dt), 6));
+                t[6] = std::thread(runge_kutta((*golomb::f_dsNMDA_dt), 7));
+                state[ind_new][indexOfNeuron][8] =
+                    state[ind_old][indexOfNeuron][8];
+                state[ind_new][indexOfNeuron][9] =
+                    state[ind_old][indexOfNeuron][9];
+
+		for (int i = 0; i < threads_golomb; ++i) {
+		  t[i].join();
+		}
+		#else
+                state[ind_new][indexOfNeuron][0] =
+                    state[ind_old][indexOfNeuron][0] + 1;
+		runge_kutta((*golomb::f_dV_dt), 1);
                 runge_kutta((*golomb::f_I_Na_dh_dt), 2);
                 runge_kutta((*golomb::f_dn_dt), 3);
                 runge_kutta((*golomb::f_dz_dt), 4);
@@ -768,6 +815,7 @@ int simulate()
                     state[ind_old][indexOfNeuron][8];
                 state[ind_new][indexOfNeuron][9] =
                     state[ind_old][indexOfNeuron][9];
+		#endif
 
                 if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
                 {
@@ -776,6 +824,31 @@ int simulate()
                     spikeNeuronIndices_e.push_back(indexOfNeuron);
                 }
             } else {
+		#ifdef USE_STD_THREADS
+		const unsigned int threads_wang_buzsaki = 4;
+		std::thread t[threads_wang_buzsaki];
+	      
+                state[ind_new][indexOfNeuron][0] =
+                    state[ind_old][indexOfNeuron][0] + 1;
+                t[0] = std::thread(runge_kutta((*wang_buzsaki::f_dV_dt), 1));
+                t[1] = std::thread(runge_kutta((*wang_buzsaki::f_I_Na_dh_dt), 2));
+                t[2] = std::thread(runge_kutta((*wang_buzsaki::f_I_Kdr_dn_dt), 3));
+                state[ind_new][indexOfNeuron][4] =
+                    state[ind_old][indexOfNeuron][4];
+                state[ind_new][indexOfNeuron][5] =
+                    state[ind_old][indexOfNeuron][5];
+                state[ind_new][indexOfNeuron][6] =
+                    state[ind_old][indexOfNeuron][6];
+                state[ind_new][indexOfNeuron][7] =
+                    state[ind_old][indexOfNeuron][7];
+                t[3] = std::thread(runge_kutta((*wang_buzsaki::f_dsGABAA_dt), 8));
+                state[ind_new][indexOfNeuron][9] =
+                    state[ind_old][indexOfNeuron][9];
+
+		for (int i = 0; i < threads_wang_buzsaki; ++i) {
+		  t[i].join();
+		}
+		#else
                 state[ind_new][indexOfNeuron][0] =
                     state[ind_old][indexOfNeuron][0] + 1;
                 runge_kutta((*wang_buzsaki::f_dV_dt), 1);
@@ -792,6 +865,7 @@ int simulate()
                 runge_kutta((*wang_buzsaki::f_dsGABAA_dt), 8);
                 state[ind_new][indexOfNeuron][9] =
                     state[ind_old][indexOfNeuron][9];
+		#endif
 
                 if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
                 {
