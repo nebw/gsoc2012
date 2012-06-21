@@ -132,6 +132,8 @@ int runge_kutta_generic(
     return 0;
 }
 
+namespace golomb {
+
 inline double _f_I_Na_m_inf(const double V)
 {
     static const double theta_m = -30;
@@ -421,7 +423,7 @@ inline void f_dz_dt(
          - states[indexOfNeuron][4]) / tau_z;
 }
 
-inline void f_Na_dV_dt(
+inline void f_dV_dt(
     const double     **states,
     const unsigned int numNeurons,
     const unsigned int stateSize,
@@ -438,6 +440,15 @@ inline void f_Na_dV_dt(
         - _f_I_NMDA(states, indexOfNeuron, numNeurons)
         - _f_I_GABAA(states, indexOfNeuron, numNeurons)
         + states[indexOfNeuron][9];
+}
+
+}
+
+namespace wang_buzsaki 
+{
+
+
+
 }
 
 #define runge_kutta(f, i)                \
@@ -538,14 +549,14 @@ int goloumb()
         for (unsigned int indexOfNeuron = 0; indexOfNeuron < numNeurons;
              ++indexOfNeuron)
         {
-            runge_kutta((*f_Na_dV_dt), 1);
-            runge_kutta((*f_I_Na_dh_dt), 2);
-            runge_kutta((*f_dn_dt), 3);
-            runge_kutta((*f_dz_dt), 4);
-            runge_kutta((*f_dsAMPA_dt), 5);
-            runge_kutta((*f_dxNMDA_dt), 6);
-            runge_kutta((*f_dsNMDA_dt), 7);
-            runge_kutta((*f_dsGABAA_dt), 8);
+            runge_kutta((*golomb::f_dV_dt), 1);
+            runge_kutta((*golomb::f_I_Na_dh_dt), 2);
+            runge_kutta((*golomb::f_dn_dt), 3);
+            runge_kutta((*golomb::f_dz_dt), 4);
+            runge_kutta((*golomb::f_dsAMPA_dt), 5);
+            runge_kutta((*golomb::f_dxNMDA_dt), 6);
+            runge_kutta((*golomb::f_dsNMDA_dt), 7);
+            runge_kutta((*golomb::f_dsGABAA_dt), 8);
 
             state[ind_new][indexOfNeuron][0] = state[ind_old][indexOfNeuron][0] +
                                                1;

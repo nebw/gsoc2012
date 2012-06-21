@@ -166,3 +166,6 @@ pip-log.txt
 
 #gnuploti temp files
 gnuploti*
+
+#Viusal Lint temp files
+*Visual Lint*
