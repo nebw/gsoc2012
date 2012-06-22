@@ -1,4 +1,11 @@
-// #define USE_STD_THREADS
+#define USE_STD_THREADS
+
+#ifdef USE_STD_THREADS
+# ifndef _VARIADIC_MAX
+#  define _VARIADIC_MAX 10
+# endif // ifndef _VARIADIC_MAX
+# include <thread>
+#endif // ifdef USE_STD_THREADS
 
 #include "gnuplot_i.hpp"
 
@@ -11,8 +18,8 @@
 #include <unordered_set>
 
 #ifdef USE_STD_THREADS
-#include <thread>
-#endif
+std::mutex m;
+#endif // ifdef USE_STD_THREADS
 
 template<class T1, class T2>
 std::vector<T2>linSpaceVec(T1 n, T2 start, T2 stop) {
@@ -632,90 +639,101 @@ inline void f_dV_dt(
 }
 
 #define runge_kutta(f, i)                \
-      runge_kutta_generic(                 \
-	(const double **)state[ind_old], \
-	state_K1,                        \
-	state_K2,                        \
-	state_K3,                        \
-	state_K4,                        \
-	state_temp_1,                    \
-	state_temp_2,                    \
-	state_temp_3,                    \
-	numNeurons, stateSize,           \
-	indexOfNeuron,                   \
-	i,                               \
-	dt,                              \
-	f,                               \
-	state[ind_new][indexOfNeuron])
+    runge_kutta_generic(                 \
+        (const double **)state[ind_old], \
+        state_K1,                        \
+        state_K2,                        \
+        state_K3,                        \
+        state_K4,                        \
+        state_temp_1,                    \
+        state_temp_2,                    \
+        state_temp_3,                    \
+        numNeurons, stateSize,           \
+        indexOfNeuron,                   \
+        i,                               \
+        dt,                              \
+        f,                               \
+        state[ind_new][indexOfNeuron])
 
 void stepFunction(
-  const std::unordered_set<unsigned int> &excitatory_neurons,
-  const unsigned int indexOfNeuron,
-  double ***state,
-  const unsigned int ind_old,
-  const unsigned int ind_new,
-  double            *state_K1,
-  double            *state_K2,
-  double            *state_K3,
-  double            *state_K4,
-  double            *state_temp_1,
-  double            *state_temp_2,
-  double            *state_temp_3,
-  const unsigned int numNeurons,
-  const unsigned int stateSize,
-  const double       dt,
-  std::vector<double> &spikeTimes_e,
-  std::vector<double> &spikeNeuronIndices_e,
-  std::vector<double> &spikeTimes_i,
-  std::vector<double> &spikeNeuronIndices_i
-)
+    const std::unordered_set<unsigned int>& excitatory_neurons,
+    double                               ***state,
+    const unsigned int                      ind_old,
+    const unsigned int                      ind_new,
+    double                                 *state_K1,
+    double                                 *state_K2,
+    double                                 *state_K3,
+    double                                 *state_K4,
+    double                                 *state_temp_1,
+    double                                 *state_temp_2,
+    double                                 *state_temp_3,
+    const unsigned int                      numNeurons,
+    const unsigned int                      stateSize,
+    const double                            dt,
+    std::vector<double>                    *spikeTimes_e,
+    std::vector<double>                    *spikeNeuronIndices_e,
+    std::vector<double>                    *spikeTimes_i,
+    std::vector<double>                    *spikeNeuronIndices_i,
+    const unsigned int                      firstNeuron,
+    const unsigned int                      lastNeuron
+    )
 {
-  if (excitatory_neurons.count(indexOfNeuron))
+    for (unsigned int indexOfNeuron = firstNeuron; indexOfNeuron < lastNeuron;
+         indexOfNeuron += 1)
     {
-	state[ind_new][indexOfNeuron][0] =
-	    state[ind_old][indexOfNeuron][0] + 1;
-	runge_kutta((*golomb::f_dV_dt), 1);
-	runge_kutta((*golomb::f_I_Na_dh_dt), 2);
-	runge_kutta((*golomb::f_dn_dt), 3);
-	runge_kutta((*golomb::f_dz_dt), 4);
-	runge_kutta((*golomb::f_dsAMPA_dt), 5);
-	runge_kutta((*golomb::f_dxNMDA_dt), 6);
-	runge_kutta((*golomb::f_dsNMDA_dt), 7);
-	state[ind_new][indexOfNeuron][8] =
-	    state[ind_old][indexOfNeuron][8];
-	state[ind_new][indexOfNeuron][9] =
-	    state[ind_old][indexOfNeuron][9];
+        if (excitatory_neurons.count(indexOfNeuron))
+        {
+            state[ind_new][indexOfNeuron][0] =
+                state[ind_old][indexOfNeuron][0] + 1;
+            runge_kutta((*golomb::f_dV_dt), 1);
+            runge_kutta((*golomb::f_I_Na_dh_dt), 2);
+            runge_kutta((*golomb::f_dn_dt), 3);
+            runge_kutta((*golomb::f_dz_dt), 4);
+            runge_kutta((*golomb::f_dsAMPA_dt), 5);
+            runge_kutta((*golomb::f_dxNMDA_dt), 6);
+            runge_kutta((*golomb::f_dsNMDA_dt), 7);
+            state[ind_new][indexOfNeuron][8] =
+                state[ind_old][indexOfNeuron][8];
+            state[ind_new][indexOfNeuron][9] =
+                state[ind_old][indexOfNeuron][9];
 
-	if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
-	{
-	    spikeTimes_e.push_back(
-		(state[ind_new][indexOfNeuron][0]) * dt);
-	    spikeNeuronIndices_e.push_back(indexOfNeuron);
-	}
-    } else {
-	state[ind_new][indexOfNeuron][0] =
-	    state[ind_old][indexOfNeuron][0] + 1;
-	runge_kutta((*wang_buzsaki::f_dV_dt), 1);
-	runge_kutta((*wang_buzsaki::f_I_Na_dh_dt), 2);
-	runge_kutta((*wang_buzsaki::f_I_Kdr_dn_dt), 3);
-	state[ind_new][indexOfNeuron][4] =
-	    state[ind_old][indexOfNeuron][4];
-	state[ind_new][indexOfNeuron][5] =
-	    state[ind_old][indexOfNeuron][5];
-	state[ind_new][indexOfNeuron][6] =
-	    state[ind_old][indexOfNeuron][6];
-	state[ind_new][indexOfNeuron][7] =
-	    state[ind_old][indexOfNeuron][7];
-	runge_kutta((*wang_buzsaki::f_dsGABAA_dt), 8);
-	state[ind_new][indexOfNeuron][9] =
-	    state[ind_old][indexOfNeuron][9];
+            if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
+            {
+#ifdef USE_STD_THREADS
+                std::lock_guard<std::mutex> lk(m);
+#endif // ifdef USE_STD_THREADS
+                spikeTimes_e->push_back(
+                    (state[ind_new][indexOfNeuron][0]) * dt);
+                spikeNeuronIndices_e->push_back(indexOfNeuron);
+            }
+        } else {
+            state[ind_new][indexOfNeuron][0] =
+                state[ind_old][indexOfNeuron][0] + 1;
+            runge_kutta((*wang_buzsaki::f_dV_dt), 1);
+            runge_kutta((*wang_buzsaki::f_I_Na_dh_dt), 2);
+            runge_kutta((*wang_buzsaki::f_I_Kdr_dn_dt), 3);
+            state[ind_new][indexOfNeuron][4] =
+                state[ind_old][indexOfNeuron][4];
+            state[ind_new][indexOfNeuron][5] =
+                state[ind_old][indexOfNeuron][5];
+            state[ind_new][indexOfNeuron][6] =
+                state[ind_old][indexOfNeuron][6];
+            state[ind_new][indexOfNeuron][7] =
+                state[ind_old][indexOfNeuron][7];
+            runge_kutta((*wang_buzsaki::f_dsGABAA_dt), 8);
+            state[ind_new][indexOfNeuron][9] =
+                state[ind_old][indexOfNeuron][9];
 
-	if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
-	{
-	    spikeTimes_i.push_back(
-		(state[ind_new][indexOfNeuron][0]) * dt);
-	    spikeNeuronIndices_i.push_back(indexOfNeuron);
-	}
+            if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
+            {
+#ifdef USE_STD_THREADS
+                std::lock_guard<std::mutex> lk(m);
+#endif // ifdef USE_STD_THREADS
+                spikeTimes_i->push_back(
+                    (state[ind_new][indexOfNeuron][0]) * dt);
+                spikeNeuronIndices_i->push_back(indexOfNeuron);
+            }
+        }
     }
 }
 
@@ -736,9 +754,14 @@ int simulate()
     const double I_app_0                = 1;
     const double dt                     = 0.1;
     const unsigned int timesteps        = 6000;
-    const unsigned int numNeurons       = 10;
+    const unsigned int numNeurons       = 3000;
     const unsigned int stateSize        = 10;
     const unsigned int chanceInhibitory = 10;
+
+#ifdef USE_STD_THREADS
+    static const unsigned int numThreads = 8;
+    std::thread threads[numThreads];
+#endif // ifdef USE_STD_THREADS
 
     // state[2][numNeurons][stateSize];
 
@@ -769,13 +792,34 @@ int simulate()
     }
 
     // allocate memory for runge kutta temporary arrays
+#ifdef USE_STD_THREADS
+    double **state_K1 = (double **)malloc(numThreads * sizeof(double *));
+
+    for (unsigned int i = 0; i < numThreads; ++i)
+    {
+        state_K1[i] = (double *)malloc(stateSize * sizeof(double));
+    }
+    double **state_temp_1 = (double **)malloc(numThreads * sizeof(double *));
+
+    for (unsigned int i = 0; i < numThreads; ++i)
+    {
+        state_temp_1[i] = (double *)malloc(stateSize * sizeof(double));
+    }
+    double **state_temp_3 = (double **)malloc(numThreads * sizeof(double *));
+
+    for (unsigned int i = 0; i < numThreads; ++i)
+    {
+        state_temp_3[i] = (double *)malloc(stateSize * sizeof(double));
+    }
+#else // ifdef USE_STD_THREADS
     double *state_K1     = (double *)malloc(stateSize * sizeof(double));
+    double *state_temp_1 = (double *)malloc(stateSize * sizeof(double));
+    double *state_temp_3 = (double *)malloc(stateSize * sizeof(double));
+#endif // ifdef USE_STD_THREADS
     double *state_K2     = (double *)malloc(stateSize * sizeof(double));
     double *state_K3     = (double *)malloc(stateSize * sizeof(double));
     double *state_K4     = (double *)malloc(stateSize * sizeof(double));
-    double *state_temp_1 = (double *)malloc(stateSize * sizeof(double));
     double *state_temp_2 = (double *)malloc(stateSize * sizeof(double));
-    double *state_temp_3 = (double *)malloc(stateSize * sizeof(double));
 
     for (int i = 0; i < numNeurons; ++i)
     {
@@ -788,7 +832,14 @@ int simulate()
         state[0][i][6] = xNMDA_0;
         state[0][i][7] = sNMDA_0;
         state[0][i][8] = s_GABAA_0;
-        state[0][i][9] = I_app_0;
+
+        if (excitatory_neurons.count(i))
+        {
+            state[0][i][9] = I_app_0;
+        } else
+        {
+            state[0][i][9] = 0;
+        }
     }
 
     std::vector<double> V_t_e, I_app_t_e, h_t_e, n_t_e, z_t_e, sAMPA_t_e,
@@ -818,78 +869,93 @@ int simulate()
     std::vector<double> spikeTimes_e, spikeNeuronIndices_e;
     std::vector<double> spikeTimes_i, spikeNeuronIndices_i;
 
-    //printf("Timestep %d/%d\n", 1, timesteps);
+    struct timespec start, finish;
+    double elapsed;
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
+
+    printf("Timestep %d/%d\n", 1, timesteps);
 
     for (unsigned int t = 0; t < timesteps - 1; ++t)
     {
         unsigned int ind_old = t % 2;
         unsigned int ind_new = 1 - ind_old;
 
-        //printf("Timestep %d/%d\n", t + 2, timesteps);
+        printf("Timestep %d/%d\n", t + 2, timesteps);
 
-        
-#ifdef USE_STD_THREAD
-#define step(i) \
-	stepFunction, \
-	    excitatory_neurons, \
-	    i, \
-	    state, \
-	    ind_old, \
-	    ind_new, \
-	    state_K1, \
-	    state_K2, \
-	    state_K3, \
-	    state_K4, \
-	    state_temp_1, \
-	    state_temp_2, \
-	    state_temp_3, \
-	    numNeurons, \
-	    stateSize, \
-	    dt, \
-	    spikeTimes_e, \
-	    spikeNeuronIndices_e, \
-	    spikeTimes_i, \
-	    spikeNeuronIndices_i
-	  const unsigned int numThreads;
-	  std::thread t[numThreads];  
-	  for (unsigned int indexOfNeuron = 0; indexOfNeuron < numNeurons;
-             indexOfNeuron += numThreads)
+#ifdef USE_STD_THREADS
+
+        // TODO: rename to something else
+# define step(first, last) \
+    stepFunction,          \
+    excitatory_neurons,    \
+    state,                 \
+    ind_old,               \
+    ind_new,               \
+    state_K1[thread],      \
+    state_K2,              \
+    state_K3,              \
+    state_K4,              \
+    state_temp_1[thread],  \
+    state_temp_2,          \
+    state_temp_3[thread],  \
+    numNeurons,            \
+    stateSize,             \
+    dt,                    \
+    &spikeTimes_e,         \
+    &spikeNeuronIndices_e, \
+    &spikeTimes_i,         \
+    &spikeNeuronIndices_i, \
+    first,                 \
+    last
+
+        assert((numNeurons % numThreads) == 0);
+        unsigned int thread = 0;
+        unsigned int first  = 0;
+        unsigned int last   = numNeurons / numThreads;
+
+        for (unsigned int i = last; i <= numNeurons;
+             i += (numNeurons / numThreads))
         {
-	  for(unsigned int i=0; i<numThreads; ++i)
-	  {
-	    t[i] = std::thread(step(indexOfNeuron + i));
-	  }
-	  for(unsigned int i=0; i<numThreads; ++i)
-	  {
-	    t[i].join());
-	  }
-#else
-	  for (unsigned int indexOfNeuron = 0; indexOfNeuron < numNeurons;
+            threads[thread] = std::thread(step(first, i));
+            ++thread;
+            first = i;
+        }
+
+        for (unsigned int i = 0; i < numThreads; ++i)
+        {
+            threads[i].join();
+        }
+
+#else // ifdef USE_STD_THREADS
+
+        for (unsigned int indexOfNeuron = 0; indexOfNeuron < numNeurons;
              ++indexOfNeuron)
         {
-	  stepFunction(
-	    excitatory_neurons,
-	    indexOfNeuron,
-	    state,
-	    ind_old,
-	    ind_new,
-	    state_K1,
-	    state_K2,
-	    state_K3,
-	    state_K4,
-	    state_temp_1,
-	    state_temp_2,
-	    state_temp_3,
-	    numNeurons,
-	    stateSize,
-	    dt,
-	    spikeTimes_e,
-	    spikeNeuronIndices_e,
-	    spikeTimes_i,
-	    spikeNeuronIndices_i
-	  );
-#endif  
+            stepFunction(
+                excitatory_neurons,
+                state,
+                ind_old,
+                ind_new,
+                state_K1,
+                state_K2,
+                state_K3,
+                state_K4,
+                state_temp_1,
+                state_temp_2,
+                state_temp_3,
+                numNeurons,
+                stateSize,
+                dt,
+                &spikeTimes_e,
+                &spikeNeuronIndices_e,
+                &spikeTimes_i,
+                &spikeNeuronIndices_i,
+                indexOfNeuron,
+                indexOfNeuron + 1
+                );
         }
+#endif // ifdef USE_STD_THREADS
 
         V_t_e.push_back(state[ind_new][neuronToPlot_e][1]);
         I_app_t_e.push_back(state[ind_new][neuronToPlot_e][9]);
@@ -908,86 +974,93 @@ int simulate()
         sGABAA_t_i.push_back(state[ind_new][neuronToPlot_i][8]);
     }
 
-//     Gnuplot plot_V_Iapp_e;
-//     plot_V_Iapp_e.set_style("lines");
-//     plot_V_Iapp_e.set_title("Excitatory neuron");
-//     plot_V_Iapp_e.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         V_t_e, "V");
-//     plot_V_Iapp_e.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         I_app_t_e, "I_app");
-//     Gnuplot plot_hnz_e;
-//     plot_hnz_e.set_style("lines");
-//     plot_hnz_e.set_title("Excitatory neuron");
-//     plot_hnz_e.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         h_t_e, "h");
-//     plot_hnz_e.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         n_t_e, "n");
-//     plot_hnz_e.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         z_t_e, "z");
-//     Gnuplot plot_Syn_e;
-//     plot_Syn_e.set_style("lines");
-//     plot_Syn_e.set_title("Excitatory neuron");
-//     plot_Syn_e.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         sAMPA_t_e, "s_AMPA");
-//     plot_Syn_e.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         xNMDA_t_e, "x_NMDA");
-//     plot_Syn_e.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         sNMDA_t_e, "s_NMDA");
-// 
-//     Gnuplot plot_V_Iapp_i;
-//     plot_V_Iapp_i.set_style("lines");
-//     plot_V_Iapp_i.set_title("Inhibitory neuron");
-//     plot_V_Iapp_i.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         V_t_i, "V");
-//     plot_V_Iapp_i.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         I_app_t_i, "I_app");
-//     Gnuplot plot_hnz_i;
-//     plot_hnz_i.set_style("lines");
-//     plot_hnz_i.set_title("Inhibitory neuron");
-//     plot_hnz_i.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         h_t_i, "h");
-//     plot_hnz_i.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         n_t_i, "n");
-//     plot_hnz_i.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         z_t_i, "z");
-//     Gnuplot plot_Syn_i;
-//     plot_Syn_i.set_style("lines");
-//     plot_Syn_i.set_title("Inhibitory neuron");
-//     plot_Syn_i.plot_xy(
-//         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
-//         sGABAA_t_i, "s_GABAA");
-// 
-//     Gnuplot plot_Spikes;
-//     plot_Spikes.set_title("Spikes");
-//     plot_Spikes.set_style("points");
-//     plot_Spikes.set_xrange(t_0, timesteps * dt);
-//     plot_Spikes.set_yrange(0, numNeurons - 1);
-// 
-//     if (!spikeTimes_e.empty())
-//     {
-//         plot_Spikes.plot_xy(
-//             spikeTimes_e, spikeNeuronIndices_e, "Excitatory Spikes");
-//     }
-// 
-//     if (!spikeTimes_i.empty())
-//     {
-//         plot_Spikes.plot_xy(
-//             spikeTimes_i, spikeNeuronIndices_i, " Inhibitory Spikes");
-//     }
-//     getchar();
+    clock_gettime(CLOCK_MONOTONIC, &finish);
+
+    elapsed  = (finish.tv_sec - start.tv_sec);
+    elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+    printf("Elapsed time: %f\n", elapsed);
+
+    Gnuplot plot_V_Iapp_e;
+    plot_V_Iapp_e.set_style("lines");
+    plot_V_Iapp_e.set_title("Excitatory neuron");
+    plot_V_Iapp_e.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        V_t_e, "V");
+    plot_V_Iapp_e.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        I_app_t_e, "I_app");
+    Gnuplot plot_hnz_e;
+    plot_hnz_e.set_style("lines");
+    plot_hnz_e.set_title("Excitatory neuron");
+    plot_hnz_e.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        h_t_e, "h");
+    plot_hnz_e.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        n_t_e, "n");
+    plot_hnz_e.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        z_t_e, "z");
+    Gnuplot plot_Syn_e;
+    plot_Syn_e.set_style("lines");
+    plot_Syn_e.set_title("Excitatory neuron");
+    plot_Syn_e.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        sAMPA_t_e, "s_AMPA");
+    plot_Syn_e.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        xNMDA_t_e, "x_NMDA");
+    plot_Syn_e.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        sNMDA_t_e, "s_NMDA");
+
+    Gnuplot plot_V_Iapp_i;
+    plot_V_Iapp_i.set_style("lines");
+    plot_V_Iapp_i.set_title("Inhibitory neuron");
+    plot_V_Iapp_i.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        V_t_i, "V");
+    plot_V_Iapp_i.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        I_app_t_i, "I_app");
+    Gnuplot plot_hnz_i;
+    plot_hnz_i.set_style("lines");
+    plot_hnz_i.set_title("Inhibitory neuron");
+    plot_hnz_i.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        h_t_i, "h");
+    plot_hnz_i.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        n_t_i, "n");
+    plot_hnz_i.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        z_t_i, "z");
+    Gnuplot plot_Syn_i;
+    plot_Syn_i.set_style("lines");
+    plot_Syn_i.set_title("Inhibitory neuron");
+    plot_Syn_i.plot_xy(
+        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        sGABAA_t_i, "s_GABAA");
+
+    Gnuplot plot_Spikes;
+    plot_Spikes.set_title("Spikes");
+    plot_Spikes.set_style("points");
+    plot_Spikes.set_xrange(t_0, timesteps * dt);
+    plot_Spikes.set_yrange(0, numNeurons - 1);
+
+    if (!spikeTimes_e.empty())
+    {
+        plot_Spikes.plot_xy(
+            spikeTimes_e, spikeNeuronIndices_e, "Excitatory Spikes");
+    }
+
+    if (!spikeTimes_i.empty())
+    {
+        plot_Spikes.plot_xy(
+            spikeTimes_i, spikeNeuronIndices_i, " Inhibitory Spikes");
+    }
+    getchar();
 
     // free memory
     free(state_K1);
@@ -1159,6 +1232,7 @@ int rc_circuit_generic()
     plot.plot_xy(
         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
         V_t_analytical, "Analytical solution");
+
     // getchar();
 
     // free memory

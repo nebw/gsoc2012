@@ -1,5 +1,5 @@
 all:
-	g++ -std=c++0x -O2 -ftree-vectorize -march=native gsoc-c.cpp -o gsoc-c -lpthread -lm
+	g++ -std=c++0x -O2 -ftree-vectorize -march=native gsoc-c.cpp -o gsoc-c -lpthread -lm -lrt
 	
 clean:
 	
