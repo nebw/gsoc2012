@@ -1,11 +1,14 @@
-#define USE_STD_THREADS
+#if defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+# define USE_STD_THREADS
+#endif // if defined(unix) || defined(__unix) || defined(__unix__) ||
+       // defined(__APPLE__)
 
 #ifdef USE_STD_THREADS
 # ifndef _VARIADIC_MAX
 #  define _VARIADIC_MAX 10
 # endif // ifndef _VARIADIC_MAX
 # include <thread>
-#endif // ifdef USE_STD_THREADS
+#endif  // ifdef USE_STD_THREADS
 
 #include "gnuplot_i.hpp"
 
@@ -754,7 +757,7 @@ int simulate()
     const double I_app_0                = 1;
     const double dt                     = 0.1;
     const unsigned int timesteps        = 6000;
-    const unsigned int numNeurons       = 3000;
+    const unsigned int numNeurons       = 80;
     const unsigned int stateSize        = 10;
     const unsigned int chanceInhibitory = 10;
 
@@ -869,10 +872,13 @@ int simulate()
     std::vector<double> spikeTimes_e, spikeNeuronIndices_e;
     std::vector<double> spikeTimes_i, spikeNeuronIndices_i;
 
+#ifdef USE_STD_THREADS
     struct timespec start, finish;
     double elapsed;
-
     clock_gettime(CLOCK_MONOTONIC, &start);
+#else // ifdef USE_STD_THREADS
+    clock_t tStart = clock();
+#endif // ifdef USE_STD_THREADS
 
     printf("Timestep %d/%d\n", 1, timesteps);
 
@@ -884,29 +890,27 @@ int simulate()
         printf("Timestep %d/%d\n", t + 2, timesteps);
 
 #ifdef USE_STD_THREADS
-
-        // TODO: rename to something else
-# define step(first, last) \
-    stepFunction,          \
-    excitatory_neurons,    \
-    state,                 \
-    ind_old,               \
-    ind_new,               \
-    state_K1[thread],      \
-    state_K2,              \
-    state_K3,              \
-    state_K4,              \
-    state_temp_1[thread],  \
-    state_temp_2,          \
-    state_temp_3[thread],  \
-    numNeurons,            \
-    stateSize,             \
-    dt,                    \
-    &spikeTimes_e,         \
-    &spikeNeuronIndices_e, \
-    &spikeTimes_i,         \
-    &spikeNeuronIndices_i, \
-    first,                 \
+# define calculate(first, last) \
+    stepFunction,               \
+    excitatory_neurons,         \
+    state,                      \
+    ind_old,                    \
+    ind_new,                    \
+    state_K1[thread],           \
+    state_K2,                   \
+    state_K3,                   \
+    state_K4,                   \
+    state_temp_1[thread],       \
+    state_temp_2,               \
+    state_temp_3[thread],       \
+    numNeurons,                 \
+    stateSize,                  \
+    dt,                         \
+    &spikeTimes_e,              \
+    &spikeNeuronIndices_e,      \
+    &spikeTimes_i,              \
+    &spikeNeuronIndices_i,      \
+    first,                      \
     last
 
         assert((numNeurons % numThreads) == 0);
@@ -917,7 +921,7 @@ int simulate()
         for (unsigned int i = last; i <= numNeurons;
              i += (numNeurons / numThreads))
         {
-            threads[thread] = std::thread(step(first, i));
+            threads[thread] = std::thread(calculate(first, i));
             ++thread;
             first = i;
         }
@@ -974,12 +978,15 @@ int simulate()
         sGABAA_t_i.push_back(state[ind_new][neuronToPlot_i][8]);
     }
 
+#ifdef USE_STD_THREADS
     clock_gettime(CLOCK_MONOTONIC, &finish);
 
     elapsed  = (finish.tv_sec - start.tv_sec);
     elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
-
-    printf("Elapsed time: %f\n", elapsed);
+    printf("Execution time: %f\n", elapsed);
+#else // ifdef USE_STD_THREADS
+    printf("Execution time: %.2fs\n", (double)(clock() - tStart) / CLOCKS_PER_SEC);
+#endif // ifdef USE_STD_THREADS
 
     Gnuplot plot_V_Iapp_e;
     plot_V_Iapp_e.set_style("lines");
