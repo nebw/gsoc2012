@@ -1,15 +1,3 @@
-#if defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-# define USE_STD_THREADS
-#endif // if defined(unix) || defined(__unix) || defined(__unix__) ||
-       // defined(__APPLE__)
-
-#ifdef USE_STD_THREADS
-# ifndef _VARIADIC_MAX
-#  define _VARIADIC_MAX 10
-# endif // ifndef _VARIADIC_MAX
-# include <thread>
-#endif  // ifdef USE_STD_THREADS
-
 #include "gnuplot_i.hpp"
 
 #include <stdint.h>
@@ -19,10 +7,6 @@
 
 #include <ctime>
 #include <unordered_set>
-
-#ifdef USE_STD_THREADS
-std::mutex m;
-#endif // ifdef USE_STD_THREADS
 
 template<class T1, class T2>
 std::vector<T2>linSpaceVec(T1 n, T2 start, T2 stop) {
@@ -658,88 +642,6 @@ inline void f_dV_dt(
         f,                               \
         state[ind_new][indexOfNeuron])
 
-void stepFunction(
-    const std::unordered_set<unsigned int>& excitatory_neurons,
-    double                               ***state,
-    const unsigned int                      ind_old,
-    const unsigned int                      ind_new,
-    double                                 *state_K1,
-    double                                 *state_K2,
-    double                                 *state_K3,
-    double                                 *state_K4,
-    double                                 *state_temp_1,
-    double                                 *state_temp_2,
-    double                                 *state_temp_3,
-    const unsigned int                      numNeurons,
-    const unsigned int                      stateSize,
-    const double                            dt,
-    std::vector<double>                    *spikeTimes_e,
-    std::vector<double>                    *spikeNeuronIndices_e,
-    std::vector<double>                    *spikeTimes_i,
-    std::vector<double>                    *spikeNeuronIndices_i,
-    const unsigned int                      firstNeuron,
-    const unsigned int                      lastNeuron
-    )
-{
-    for (unsigned int indexOfNeuron = firstNeuron; indexOfNeuron < lastNeuron;
-         indexOfNeuron += 1)
-    {
-        if (excitatory_neurons.count(indexOfNeuron))
-        {
-            state[ind_new][indexOfNeuron][0] =
-                state[ind_old][indexOfNeuron][0] + 1;
-            runge_kutta((*golomb::f_dV_dt), 1);
-            runge_kutta((*golomb::f_I_Na_dh_dt), 2);
-            runge_kutta((*golomb::f_dn_dt), 3);
-            runge_kutta((*golomb::f_dz_dt), 4);
-            runge_kutta((*golomb::f_dsAMPA_dt), 5);
-            runge_kutta((*golomb::f_dxNMDA_dt), 6);
-            runge_kutta((*golomb::f_dsNMDA_dt), 7);
-            state[ind_new][indexOfNeuron][8] =
-                state[ind_old][indexOfNeuron][8];
-            state[ind_new][indexOfNeuron][9] =
-                state[ind_old][indexOfNeuron][9];
-
-            if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
-            {
-#ifdef USE_STD_THREADS
-                std::lock_guard<std::mutex> lk(m);
-#endif // ifdef USE_STD_THREADS
-                spikeTimes_e->push_back(
-                    (state[ind_new][indexOfNeuron][0]) * dt);
-                spikeNeuronIndices_e->push_back(indexOfNeuron);
-            }
-        } else {
-            state[ind_new][indexOfNeuron][0] =
-                state[ind_old][indexOfNeuron][0] + 1;
-            runge_kutta((*wang_buzsaki::f_dV_dt), 1);
-            runge_kutta((*wang_buzsaki::f_I_Na_dh_dt), 2);
-            runge_kutta((*wang_buzsaki::f_I_Kdr_dn_dt), 3);
-            state[ind_new][indexOfNeuron][4] =
-                state[ind_old][indexOfNeuron][4];
-            state[ind_new][indexOfNeuron][5] =
-                state[ind_old][indexOfNeuron][5];
-            state[ind_new][indexOfNeuron][6] =
-                state[ind_old][indexOfNeuron][6];
-            state[ind_new][indexOfNeuron][7] =
-                state[ind_old][indexOfNeuron][7];
-            runge_kutta((*wang_buzsaki::f_dsGABAA_dt), 8);
-            state[ind_new][indexOfNeuron][9] =
-                state[ind_old][indexOfNeuron][9];
-
-            if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
-            {
-#ifdef USE_STD_THREADS
-                std::lock_guard<std::mutex> lk(m);
-#endif // ifdef USE_STD_THREADS
-                spikeTimes_i->push_back(
-                    (state[ind_new][indexOfNeuron][0]) * dt);
-                spikeNeuronIndices_i->push_back(indexOfNeuron);
-            }
-        }
-    }
-}
-
 // state[t, V, h, n, z, sAMPA, xNMDA, sNMDA, sGABAA, I_app]
 int simulate()
 {
@@ -757,19 +659,14 @@ int simulate()
     const double I_app_0                = 1;
     const double dt                     = 0.1;
     const unsigned int timesteps        = 6000;
-    const unsigned int numNeurons       = 80;
+    const unsigned int numNeurons       = 500;
     const unsigned int stateSize        = 10;
     const unsigned int chanceInhibitory = 10;
 
-#ifdef USE_STD_THREADS
-    static const unsigned int numThreads = 8;
-    std::thread threads[numThreads];
-#endif // ifdef USE_STD_THREADS
-
     // state[2][numNeurons][stateSize];
 
-    std::unordered_set<unsigned int> excitatory_neurons;
-    std::unordered_set<unsigned int> inhibitory_neurons;
+    auto excitatory_neurons = std::unordered_set<const unsigned int>();
+    auto inhibitory_neurons = std::unordered_set<const unsigned int>();
 
     for (unsigned int j = 0; j < numNeurons; ++j)
     {
@@ -795,34 +692,13 @@ int simulate()
     }
 
     // allocate memory for runge kutta temporary arrays
-#ifdef USE_STD_THREADS
-    double **state_K1 = (double **)malloc(numThreads * sizeof(double *));
-
-    for (unsigned int i = 0; i < numThreads; ++i)
-    {
-        state_K1[i] = (double *)malloc(stateSize * sizeof(double));
-    }
-    double **state_temp_1 = (double **)malloc(numThreads * sizeof(double *));
-
-    for (unsigned int i = 0; i < numThreads; ++i)
-    {
-        state_temp_1[i] = (double *)malloc(stateSize * sizeof(double));
-    }
-    double **state_temp_3 = (double **)malloc(numThreads * sizeof(double *));
-
-    for (unsigned int i = 0; i < numThreads; ++i)
-    {
-        state_temp_3[i] = (double *)malloc(stateSize * sizeof(double));
-    }
-#else // ifdef USE_STD_THREADS
     double *state_K1     = (double *)malloc(stateSize * sizeof(double));
-    double *state_temp_1 = (double *)malloc(stateSize * sizeof(double));
-    double *state_temp_3 = (double *)malloc(stateSize * sizeof(double));
-#endif // ifdef USE_STD_THREADS
     double *state_K2     = (double *)malloc(stateSize * sizeof(double));
     double *state_K3     = (double *)malloc(stateSize * sizeof(double));
     double *state_K4     = (double *)malloc(stateSize * sizeof(double));
+    double *state_temp_1 = (double *)malloc(stateSize * sizeof(double));
     double *state_temp_2 = (double *)malloc(stateSize * sizeof(double));
+    double *state_temp_3 = (double *)malloc(stateSize * sizeof(double));
 
     for (int i = 0; i < numNeurons; ++i)
     {
@@ -835,14 +711,7 @@ int simulate()
         state[0][i][6] = xNMDA_0;
         state[0][i][7] = sNMDA_0;
         state[0][i][8] = s_GABAA_0;
-
-        if (excitatory_neurons.count(i))
-        {
-            state[0][i][9] = I_app_0;
-        } else
-        {
-            state[0][i][9] = 0;
-        }
+        state[0][i][9] = I_app_0;
     }
 
     std::vector<double> V_t_e, I_app_t_e, h_t_e, n_t_e, z_t_e, sAMPA_t_e,
@@ -872,14 +741,6 @@ int simulate()
     std::vector<double> spikeTimes_e, spikeNeuronIndices_e;
     std::vector<double> spikeTimes_i, spikeNeuronIndices_i;
 
-#ifdef USE_STD_THREADS
-    struct timespec start, finish;
-    double elapsed;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-#else // ifdef USE_STD_THREADS
-    clock_t tStart = clock();
-#endif // ifdef USE_STD_THREADS
-
     printf("Timestep %d/%d\n", 1, timesteps);
 
     for (unsigned int t = 0; t < timesteps - 1; ++t)
@@ -889,77 +750,57 @@ int simulate()
 
         printf("Timestep %d/%d\n", t + 2, timesteps);
 
-#ifdef USE_STD_THREADS
-# define calculate(first, last) \
-    stepFunction,               \
-    excitatory_neurons,         \
-    state,                      \
-    ind_old,                    \
-    ind_new,                    \
-    state_K1[thread],           \
-    state_K2,                   \
-    state_K3,                   \
-    state_K4,                   \
-    state_temp_1[thread],       \
-    state_temp_2,               \
-    state_temp_3[thread],       \
-    numNeurons,                 \
-    stateSize,                  \
-    dt,                         \
-    &spikeTimes_e,              \
-    &spikeNeuronIndices_e,      \
-    &spikeTimes_i,              \
-    &spikeNeuronIndices_i,      \
-    first,                      \
-    last
-
-        assert((numNeurons % numThreads) == 0);
-        unsigned int thread = 0;
-        unsigned int first  = 0;
-        unsigned int last   = numNeurons / numThreads;
-
-        for (unsigned int i = last; i <= numNeurons;
-             i += (numNeurons / numThreads))
-        {
-            threads[thread] = std::thread(calculate(first, i));
-            ++thread;
-            first = i;
-        }
-
-        for (unsigned int i = 0; i < numThreads; ++i)
-        {
-            threads[i].join();
-        }
-
-#else // ifdef USE_STD_THREADS
-
         for (unsigned int indexOfNeuron = 0; indexOfNeuron < numNeurons;
              ++indexOfNeuron)
         {
-            stepFunction(
-                excitatory_neurons,
-                state,
-                ind_old,
-                ind_new,
-                state_K1,
-                state_K2,
-                state_K3,
-                state_K4,
-                state_temp_1,
-                state_temp_2,
-                state_temp_3,
-                numNeurons,
-                stateSize,
-                dt,
-                &spikeTimes_e,
-                &spikeNeuronIndices_e,
-                &spikeTimes_i,
-                &spikeNeuronIndices_i,
-                indexOfNeuron,
-                indexOfNeuron + 1
-                );
+            if (excitatory_neurons.count(indexOfNeuron))
+            {
+                state[ind_new][indexOfNeuron][0] =
+                    state[ind_old][indexOfNeuron][0] + 1;
+                runge_kutta((*golomb::f_dV_dt), 1);
+                runge_kutta((*golomb::f_I_Na_dh_dt), 2);
+                runge_kutta((*golomb::f_dn_dt), 3);
+                runge_kutta((*golomb::f_dz_dt), 4);
+                runge_kutta((*golomb::f_dsAMPA_dt), 5);
+                runge_kutta((*golomb::f_dxNMDA_dt), 6);
+                runge_kutta((*golomb::f_dsNMDA_dt), 7);
+                state[ind_new][indexOfNeuron][8] =
+                    state[ind_old][indexOfNeuron][8];
+                state[ind_new][indexOfNeuron][9] =
+                    state[ind_old][indexOfNeuron][9];
+
+                if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
+                {
+                    spikeTimes_e.push_back(
+                        (state[ind_new][indexOfNeuron][0]) * dt);
+                    spikeNeuronIndices_e.push_back(indexOfNeuron);
+                }
+            } else {
+                state[ind_new][indexOfNeuron][0] =
+                    state[ind_old][indexOfNeuron][0] + 1;
+                runge_kutta((*wang_buzsaki::f_dV_dt), 1);
+                runge_kutta((*wang_buzsaki::f_I_Na_dh_dt), 2);
+                runge_kutta((*wang_buzsaki::f_I_Kdr_dn_dt), 3);
+                state[ind_new][indexOfNeuron][4] =
+                    state[ind_old][indexOfNeuron][4];
+                state[ind_new][indexOfNeuron][5] =
+                    state[ind_old][indexOfNeuron][5];
+                state[ind_new][indexOfNeuron][6] =
+                    state[ind_old][indexOfNeuron][6];
+                state[ind_new][indexOfNeuron][7] =
+                    state[ind_old][indexOfNeuron][7];
+                runge_kutta((*wang_buzsaki::f_dsGABAA_dt), 8);
+                state[ind_new][indexOfNeuron][9] =
+                    state[ind_old][indexOfNeuron][9];
+
+                if (((int)state[ind_new][indexOfNeuron][1]) >= 20)
+                {
+                    spikeTimes_i.push_back(
+                        (state[ind_new][indexOfNeuron][0]) * dt);
+                    spikeNeuronIndices_i.push_back(indexOfNeuron);
+                }
+            }
         }
-#endif // ifdef USE_STD_THREADS
 
         V_t_e.push_back(state[ind_new][neuronToPlot_e][1]);
         I_app_t_e.push_back(state[ind_new][neuronToPlot_e][9]);
@@ -977,16 +818,6 @@ int simulate()
         z_t_i.push_back(state[ind_new][neuronToPlot_i][4]);
         sGABAA_t_i.push_back(state[ind_new][neuronToPlot_i][8]);
     }
-
-#ifdef USE_STD_THREADS
-    clock_gettime(CLOCK_MONOTONIC, &finish);
-
-    elapsed  = (finish.tv_sec - start.tv_sec);
-    elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
-    printf("Execution time: %f\n", elapsed);
-#else // ifdef USE_STD_THREADS
-    printf("Execution time: %.2fs\n", (double)(clock() - tStart) / CLOCKS_PER_SEC);
-#endif // ifdef USE_STD_THREADS
 
     Gnuplot plot_V_Iapp_e;
     plot_V_Iapp_e.set_style("lines");
@@ -1239,8 +1070,7 @@ int rc_circuit_generic()
     plot.plot_xy(
         linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
         V_t_analytical, "Analytical solution");
-
-    // getchar();
+    getchar();
 
     // free memory
     free(state_K1);
