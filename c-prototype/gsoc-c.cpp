@@ -21,7 +21,7 @@
 
 #if defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
 # include <fftw3.h>
-#else if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || \
+#elif defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || \
     defined(__TOS_WIN__)
 # include "fftw/fftw3.h"
 #endif // if defined(unix) || defined(__unix) || defined(__unix__) ||
@@ -466,7 +466,10 @@ void f_I_NMDA_FFT(
     const unsigned int stateSize,
     double           **resultStates)
 {
-    fftw_complex *distances, *sNMDAs, *inv;
+    fftw_complex *distances, *sNMDAs;
+    fftw_complex *distances_f, *sNMDAs_f;
+    fftw_complex *convolution_f, *convolution;
+    const double scale = 1.0 / numNeurons;
     fftw_plan     p, pinv;
 
 #ifdef USE_STD_THREADS
@@ -474,17 +477,23 @@ void f_I_NMDA_FFT(
         std::lock_guard<std::mutex> lk(m);
         distances = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
         sNMDAs    = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
-        inv       = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+        distances_f = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+        sNMDAs_f    = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+        convolution = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+        convolution_f    = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
     }
 #else // ifdef USE_STD_THREADS
     distances = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
     sNMDAs    = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
-    inv       = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+    distances_f = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+    sNMDAs_f    = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+    convolution = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+    convolution_f    = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
 #endif // ifdef USE_STD_THREADS
 
     for (unsigned int i = 0; i < numNeurons; ++i)
     {
-        distances[i][0] = i;
+        distances[i][0] = _f_w_EE(i);
         distances[i][1] = 0;
     }
 
@@ -496,21 +505,49 @@ void f_I_NMDA_FFT(
 
     p = fftw_plan_dft_1d(numNeurons,
                          distances,
-                         sNMDAs,
+                         distances_f,
                          FFTW_FORWARD,
                          FFTW_ESTIMATE);
-
     fftw_execute(p);
 
-    pinv = fftw_plan_dft_1d(numNeurons, sNMDAs, inv, FFTW_BACKWARD, FFTW_ESTIMATE);
+    p = fftw_plan_dft_1d(numNeurons,
+                         sNMDAs,
+                         sNMDAs_f,
+                         FFTW_FORWARD,
+                         FFTW_ESTIMATE);
+    fftw_execute(p);
 
+    // calculate convolution by point multiplication in frequence space
+    for(unsigned int i = 0; i< numNeurons; ++i)
+    {
+      convolution_f[i][0] = (sNMDAs_f[i][0] * distances_f[i][0]
+          - sNMDAs_f[i][1] * distances_f[i][1]) * scale;
+      convolution_f[i][1] = (sNMDAs_f[i][0] * distances_f[i][1]
+          + sNMDAs_f[i][1] * distances_f[i][0]) * scale;
+    }
+
+    pinv = fftw_plan_dft_1d(numNeurons,
+                            convolution_f,
+                            convolution,
+                            FFTW_BACKWARD,
+                            FFTW_ESTIMATE);
     fftw_execute(pinv);
 
-    if (states[1][6] > 0.1)
+    if (states[0][6] > 0.1)
     {
         for (unsigned int i = 0; i < numNeurons; ++i)
         {
-            printf("r%f, i%f : %f\n", distances[i][0], distances[i][1], i);
+            printf("states[%d] = %f\n", i, states[i][6]);
+        }
+        for (unsigned int i = 0; i < numNeurons; ++i)
+        {
+            double sumFootprint = 0;
+
+            for (int j = 0; j < numNeurons; ++j)
+            {
+                sumFootprint += _f_w_EE(i - j) * states[j][6];
+            }
+            printf("i=%d, r%f, i%f : %f\n", i, convolution[i][0], convolution[i][1], sumFootprint);
         }
         getchar();
     }
@@ -521,13 +558,17 @@ void f_I_NMDA_FFT(
         fftw_destroy_plan(p);
         fftw_destroy_plan(pinv);
 
-        fftw_free(distances); fftw_free(inv); fftw_free(sNMDAs);
+        fftw_free(distances); fftw_free(distances_f);
+        fftw_free(sNMDAs); fftw_free(sNMDAs_f);
+        fftw_free(convolution); fftw_free(convolution_f);
     }
 #else // ifdef USE_STD_THREADS
     fftw_destroy_plan(p);
     fftw_destroy_plan(pinv);
 
-    fftw_free(distances); fftw_free(inv); fftw_free(sNMDAs);
+    fftw_free(distances); fftw_free(distances_f);
+    fftw_free(sNMDAs); fftw_free(sNMDAs_f);
+    fftw_free(convolution); fftw_free(convolution_f);
 #endif // ifdef USE_STD_THREADS
 }
 }
@@ -839,7 +880,7 @@ int simulate()
     const double I_app_0                = 1;
     const double dt                     = 0.1;
     const unsigned int timesteps        = 6000;
-    const unsigned int numNeurons       = 80;
+    const unsigned int numNeurons       = 3;
     const unsigned int stateSize        = 10;
     const unsigned int chanceInhibitory = 10;
 
