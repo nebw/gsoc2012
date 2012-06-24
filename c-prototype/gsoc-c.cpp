@@ -1,7 +1,8 @@
 #if defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-# define USE_STD_THREADS
+//# define USE_STD_THREADS
 #endif // if defined(unix) || defined(__unix) || defined(__unix__) ||
        // defined(__APPLE__)
+// #define PLOT
 
 #ifdef USE_STD_THREADS
 # ifndef _VARIADIC_MAX
@@ -16,6 +17,13 @@
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
+
+#if defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+#include <fftw3.h>
+#else if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) 
+#include "fftw/fftw3.h"
+#endif
+
 
 #include <ctime>
 #include <unordered_set>
@@ -447,6 +455,73 @@ inline void f_dV_dt(
         - _f_I_NMDA(states, indexOfNeuron, numNeurons)
         - _f_I_GABAA(states, indexOfNeuron, numNeurons)
         + states[indexOfNeuron][9];
+}
+
+void f_I_NMDA_FFT(
+    const double     **states,
+    const unsigned int numNeurons,
+    const unsigned int stateSize,
+    double ** resultStates)
+{
+    fftw_complex *distances, *sNMDAs, *inv;
+    fftw_plan p, pinv;
+
+#ifdef USE_STD_THREADS
+    {
+        std::lock_guard<std::mutex> lk(m);
+        distances = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
+        sNMDAs = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
+        inv = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
+    }
+#else
+    distances = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
+    sNMDAs = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
+    inv = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
+#endif // ifdef USE_STD_THREADS
+
+    for (unsigned int i = 0; i < numNeurons; ++i)
+    {
+        distances[i][0] = i;
+        distances[i][1] = 0;
+    }
+
+    for (unsigned int i = 0; i < numNeurons; ++i)
+    {
+        sNMDAs[i][0] = states[i][6];
+        sNMDAs[i][1] = 0;
+    }
+
+    p = fftw_plan_dft_1d(numNeurons, distances, sNMDAs, FFTW_FORWARD, FFTW_ESTIMATE);
+
+    fftw_execute(p);
+
+    pinv = fftw_plan_dft_1d(numNeurons, sNMDAs, inv, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+    fftw_execute(pinv);
+
+    if(states[1][6] > 0.1)
+    {
+        for (unsigned int i = 0; i < numNeurons; ++i)
+        {
+            printf("r%f, i%f : %f\n", distances[i][0], distances[i][1], i);
+        }
+        getchar();
+    }
+
+#ifdef USE_STD_THREADS
+    {
+        std::lock_guard<std::mutex> lk(m);
+        fftw_destroy_plan(p);
+        fftw_destroy_plan(pinv);
+
+        fftw_free(distances); fftw_free(inv); fftw_free(sNMDAs);
+    }
+#else
+    fftw_destroy_plan(p);
+    fftw_destroy_plan(pinv);
+
+    fftw_free(distances); fftw_free(inv); fftw_free(sNMDAs);
+#endif // ifdef USE_STD_THREADS
 }
 }
 
@@ -958,6 +1033,13 @@ int simulate()
                 indexOfNeuron,
                 indexOfNeuron + 1
                 );
+
+            golomb::f_I_NMDA_FFT(
+                (const double **)state[ind_old],
+                numNeurons,
+                stateSize,
+                state[ind_new]
+                );
         }
 #endif // ifdef USE_STD_THREADS
 
@@ -988,6 +1070,7 @@ int simulate()
     printf("Execution time: %.2fs\n", (double)(clock() - tStart) / CLOCKS_PER_SEC);
 #endif // ifdef USE_STD_THREADS
 
+#ifdef PLOT
     Gnuplot plot_V_Iapp_e;
     plot_V_Iapp_e.set_style("lines");
     plot_V_Iapp_e.set_title("Excitatory neuron");
@@ -1068,6 +1151,7 @@ int simulate()
             spikeTimes_i, spikeNeuronIndices_i, " Inhibitory Spikes");
     }
     getchar();
+#endif
 
     // free memory
     free(state_K1);
