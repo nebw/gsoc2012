@@ -1,5 +1,6 @@
 #if defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-//# define USE_STD_THREADS
+
+// # define USE_STD_THREADS
 #endif // if defined(unix) || defined(__unix) || defined(__unix__) ||
        // defined(__APPLE__)
 // #define PLOT
@@ -19,10 +20,12 @@
 #include <assert.h>
 
 #if defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-#include <fftw3.h>
-#else if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) 
-#include "fftw/fftw3.h"
-#endif
+# include <fftw3.h>
+#else if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || \
+    defined(__TOS_WIN__)
+# include "fftw/fftw3.h"
+#endif // if defined(unix) || defined(__unix) || defined(__unix__) ||
+       // defined(__APPLE__)
 
 
 #include <ctime>
@@ -461,22 +464,22 @@ void f_I_NMDA_FFT(
     const double     **states,
     const unsigned int numNeurons,
     const unsigned int stateSize,
-    double ** resultStates)
+    double           **resultStates)
 {
     fftw_complex *distances, *sNMDAs, *inv;
-    fftw_plan p, pinv;
+    fftw_plan     p, pinv;
 
 #ifdef USE_STD_THREADS
     {
         std::lock_guard<std::mutex> lk(m);
-        distances = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
-        sNMDAs = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
-        inv = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
+        distances = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+        sNMDAs    = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+        inv       = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
     }
-#else
-    distances = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
-    sNMDAs = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
-    inv = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * numNeurons);
+#else // ifdef USE_STD_THREADS
+    distances = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+    sNMDAs    = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
+    inv       = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * numNeurons);
 #endif // ifdef USE_STD_THREADS
 
     for (unsigned int i = 0; i < numNeurons; ++i)
@@ -491,7 +494,11 @@ void f_I_NMDA_FFT(
         sNMDAs[i][1] = 0;
     }
 
-    p = fftw_plan_dft_1d(numNeurons, distances, sNMDAs, FFTW_FORWARD, FFTW_ESTIMATE);
+    p = fftw_plan_dft_1d(numNeurons,
+                         distances,
+                         sNMDAs,
+                         FFTW_FORWARD,
+                         FFTW_ESTIMATE);
 
     fftw_execute(p);
 
@@ -499,7 +506,7 @@ void f_I_NMDA_FFT(
 
     fftw_execute(pinv);
 
-    if(states[1][6] > 0.1)
+    if (states[1][6] > 0.1)
     {
         for (unsigned int i = 0; i < numNeurons; ++i)
         {
@@ -516,7 +523,7 @@ void f_I_NMDA_FFT(
 
         fftw_free(distances); fftw_free(inv); fftw_free(sNMDAs);
     }
-#else
+#else // ifdef USE_STD_THREADS
     fftw_destroy_plan(p);
     fftw_destroy_plan(pinv);
 
@@ -1151,7 +1158,7 @@ int simulate()
             spikeTimes_i, spikeNeuronIndices_i, " Inhibitory Spikes");
     }
     getchar();
-#endif
+#endif // ifdef PLOT
 
     // free memory
     free(state_K1);
