@@ -23,7 +23,7 @@
 # include <fftw3.h>
 #elif defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || \
     defined(__TOS_WIN__)
-# include "fftw/fftw3.h"
+# include "fftw3.h"
 #endif // if defined(unix) || defined(__unix) || defined(__unix__) ||
        // defined(__APPLE__)
 
@@ -529,10 +529,6 @@ void f_I_NMDA_FFT(
 
     if (false)
     {
-        struct timespec start, finish;
-        double elapsed;
-        clock_gettime(CLOCK_MONOTONIC, &start);
-
         /*
            for (unsigned int i = 0; i < numNeurons; ++i)
            {
@@ -545,7 +541,7 @@ void f_I_NMDA_FFT(
         {
             double sumFootprint = 0;
 
-            for (int j = 0; j < numNeurons; ++j)
+            for (unsigned int j = 0; j < numNeurons; ++j)
             {
                 sumFootprint += _f_w_EE(i - j) * states[j][6];
             }
@@ -556,12 +552,6 @@ void f_I_NMDA_FFT(
                    sumFootprint);
              */
         }
-
-        clock_gettime(CLOCK_MONOTONIC, &finish);
-
-        elapsed  = (finish.tv_sec - start.tv_sec);
-        elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
-        printf("Execution time for manual convolution: %f\n", elapsed);
 
         /*
            for (unsigned int i = 0; i < numNeurons; ++i)
@@ -977,12 +967,11 @@ int simulate()
 
     for (unsigned int i = 0; i < numFFTs; ++i)
     {
-        distances[i]     = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-        sNMDAs[i]        = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-        convolution[i]   = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-        distances_f[i]   = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-        sNMDAs_f[i]      = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-        convolution_f[i] = (fftw_complex *)malloc(n * sizeof(fftw_complex));
+        distances[i]     = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
+        sNMDAs[i]        = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
+        convolution[i]   = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
+        sNMDAs_f[i]      = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
+        convolution_f[i] = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
         p_distances[i]   = fftw_plan_dft_1d(n,
                                             distances[i],
                                             distances_f[i],
@@ -1000,12 +989,12 @@ int simulate()
                                     FFTW_ESTIMATE);
     }
 #else // ifdef USE_STD_THREADS
-    fftw_complex *distances     = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-    fftw_complex *sNMDAs        = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-    fftw_complex *convolution   = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-    fftw_complex *distances_f   = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-    fftw_complex *sNMDAs_f      = (fftw_complex *)malloc(n * sizeof(fftw_complex));
-    fftw_complex *convolution_f = (fftw_complex *)malloc(n * sizeof(fftw_complex));
+    fftw_complex *distances     = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
+    fftw_complex *sNMDAs        = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
+    fftw_complex *convolution   = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
+    fftw_complex *distances_f   = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
+    fftw_complex *sNMDAs_f      = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
+    fftw_complex *convolution_f = (fftw_complex *)fftw_malloc(n * sizeof(fftw_complex));
     fftw_plan     p_distances   = fftw_plan_dft_1d(n,
                                                    distances,
                                                    distances_f,
