@@ -35,15 +35,15 @@
 std::mutex m;
 #endif // ifdef USE_STD_THREADS
 
-template<class T1, class T2>
-std::vector<T2>linSpaceVec(T1 n, T2 start, T2 stop) {
-    std::vector<T2> vec;
-    T2 step = (stop - start) / n;
-
-    for (T2 i = start; i < stop; i += step) {
-        vec.push_back(i);
-    }
-    return vec;
+template <typename T = double>
+std::vector<T> linSpaceVec(T a, T b, size_t N) {
+  T h = (b - a) / static_cast<T>(N-1);
+  std::vector<T> xs(N);
+  typename std::vector<T>::iterator x;
+  T val;
+  for (x = xs.begin(), val = a; x != xs.end(); ++x, val += h)
+    *x = val;
+  return xs;
 }
 
 inline void arrAdd(const double *a, const double *b, double *c, int len)
@@ -875,7 +875,7 @@ int simulate()
     const double s_GABAA_0              = 0;
     const double I_app_0                = 1;
     const double dt                     = 0.1;
-    const unsigned int timesteps        = 800;
+    const unsigned int timesteps        = 6000;
     const unsigned int numNeurons       = 80;
     const unsigned int stateSize        = 10;
     const unsigned int chanceInhibitory = 10;
@@ -1186,62 +1186,62 @@ int simulate()
     plot_V_Iapp_e.set_style("lines");
     plot_V_Iapp_e.set_title("Excitatory neuron");
     plot_V_Iapp_e.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         V_t_e, "V");
     plot_V_Iapp_e.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         I_app_t_e, "I_app");
     Gnuplot plot_hnz_e;
     plot_hnz_e.set_style("lines");
     plot_hnz_e.set_title("Excitatory neuron");
     plot_hnz_e.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         h_t_e, "h");
     plot_hnz_e.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         n_t_e, "n");
     plot_hnz_e.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         z_t_e, "z");
     Gnuplot plot_Syn_e;
     plot_Syn_e.set_style("lines");
     plot_Syn_e.set_title("Excitatory neuron");
     plot_Syn_e.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         sAMPA_t_e, "s_AMPA");
     plot_Syn_e.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         xNMDA_t_e, "x_NMDA");
     plot_Syn_e.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         sNMDA_t_e, "s_NMDA");
 
     Gnuplot plot_V_Iapp_i;
     plot_V_Iapp_i.set_style("lines");
     plot_V_Iapp_i.set_title("Inhibitory neuron");
     plot_V_Iapp_i.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         V_t_i, "V");
     plot_V_Iapp_i.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         I_app_t_i, "I_app");
     Gnuplot plot_hnz_i;
     plot_hnz_i.set_style("lines");
     plot_hnz_i.set_title("Inhibitory neuron");
     plot_hnz_i.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         h_t_i, "h");
     plot_hnz_i.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         n_t_i, "n");
     plot_hnz_i.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         z_t_i, "z");
     Gnuplot plot_Syn_i;
     plot_Syn_i.set_style("lines");
     plot_Syn_i.set_title("Inhibitory neuron");
     plot_Syn_i.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         sGABAA_t_i, "s_GABAA");
 
     Gnuplot plot_Spikes;
@@ -1440,10 +1440,10 @@ int rc_circuit_generic()
     Gnuplot plot;
     plot.set_style("linespoints");
     plot.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         V_t, "Runge-kutta-approximation");
     plot.plot_xy(
-        linSpaceVec<double, double>(timesteps, 0, timesteps * dt),
+        linSpaceVec<double>(0, timesteps * dt, timesteps),
         V_t_analytical, "Analytical solution");
 
     // getchar();
