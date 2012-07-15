@@ -56,6 +56,15 @@
 #include "fft_internal.h"
 #include "clFFT.h"
 
+#ifdef _MSC_VER
+double log2( double n )  
+{  
+    static const double log_2 = log(double(2));
+    // log(n)/log(2) is log2.  
+    return log( n ) / log_2;  
+}
+#endif
+
 using namespace std;
 
 #define max(A,B) ((A) > (B) ? (A) : (B))
