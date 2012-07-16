@@ -14,6 +14,9 @@ public:
 
     cl::Program loadProgram(std::string path);
 
+    cl::Context getContext() const;
+    cl::CommandQueue getQueue() const;
+
     // //setup the data for the kernel
     // //these are implemented in part1.cpp (in the future we will make these
     // more general)
@@ -22,6 +25,8 @@ public:
     // void runKernel();
 
 private:
+
+    cl::Buffer states;
 
     // device variables
     unsigned int deviceUsed;

@@ -32,12 +32,14 @@ SET(SOURCE
   main.cpp
   util.cpp
   CLWrapper.cpp
+  kernels.cl
 )
 
 SET(HEADERS
   stdafx.h
   util.h
   CLWrapper.h
+  gnuplot_i/gnuplot_i.hpp
 )
 
 SET(OPENCL_FFT

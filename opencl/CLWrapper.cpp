@@ -89,6 +89,8 @@ CLWrapper::~CLWrapper()
 
 cl::Program CLWrapper::loadProgram(std::string path)
 {
+    //TODO: use boost::filesystem
+
     // Program Setup
     cl::Program program;
 
@@ -133,4 +135,14 @@ cl::Program CLWrapper::loadProgram(std::string path)
         devices[0]) << std::endl;
 
     return program;
+}
+
+cl::Context CLWrapper::getContext() const
+{
+    return context;
+}
+
+cl::CommandQueue CLWrapper::getQueue() const
+{
+    return queue;
 }
