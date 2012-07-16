@@ -1,4 +1,3 @@
-
 //
 // File:       clFFT.h
 //
@@ -53,11 +52,7 @@
 extern "C" {
 #endif
 
-#if defined(__APPLE__)
-#include <OpenCL/opencl.h>
-#else
-#include <CL/opencl.h>
-#endif
+#include "CL/opencl.h"
 
 #include <stdio.h>
 
