@@ -52,6 +52,9 @@ if(NOT MSVC)
   # treat warnings as errors
   # set(CMAKE_CXX_FLAGS "-Werror ${CMAKE_CXX_FLAGS}")
   # set(CMAKE_CXX_FLAGS "-Weffc++ ${CMAKE_CXX_FLAGS}")
+else()
+  # enable visual studio static code analysis
+  set(CMAKE_CXX_FLAGS "-analyze ${CMAKE_CXX_FLAGS}")
 endif()
 
 ## Compiler flags for GCC only
