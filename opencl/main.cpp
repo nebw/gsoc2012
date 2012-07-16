@@ -38,7 +38,7 @@ namespace cpu
 
     void initialize() 
     {
-        static const unsigned int numNeurons = 100;
+        static const unsigned int numNeurons = 500;
         static const unsigned int timesteps = 5000;
         static const float dt = 0.1f;
 
@@ -105,6 +105,9 @@ namespace cpu
         cl::Kernel kernel_f_dn_dt = cl::Kernel(program, "f_dn_dt", &err);
         cl::Kernel kernel_f_I_Na_dh_dt = cl::Kernel(program, "f_I_Na_dh_dt", &err);
         cl::Kernel kernel_f_dz_dt = cl::Kernel(program, "f_dz_dt", &err);
+        cl::Kernel kernel_f_dsAMPA_dt = cl::Kernel(program, "f_dsAMPA_dt", &err);
+        cl::Kernel kernel_f_dxNMDA_dt = cl::Kernel(program, "f_dxNMDA_dt", &err);
+        cl::Kernel kernel_f_dsNMDA_dt = cl::Kernel(program, "f_dsNMDA_dt", &err);
 
         cl::Event event; 
 
@@ -115,12 +118,15 @@ namespace cpu
         //    std::cout << states[i].V << std::endl;
         //}
 
-        std::vector<float> V_t, h_t, n_t, z_t, I_app_t;
+        std::vector<float> V_t, h_t, n_t, z_t, sAMPA_t, xNMDA_t, sNMDA_t, I_app_t;
         V_t.push_back(states[0].V);
         h_t.push_back(states[0].h);
         n_t.push_back(states[0].n);
         z_t.push_back(states[0].z);
         I_app_t.push_back(states[0].I_app);
+        sAMPA_t.push_back(states[0].s_AMPA);
+        xNMDA_t.push_back(states[0].x_NMDA);
+        sNMDA_t.push_back(states[0].s_NMDA);
 
         printf("Timestep %d/%d\n", 1, timesteps);
 
@@ -151,12 +157,35 @@ namespace cpu
             err = kernel_f_dz_dt.setArg(2, ind_old);
             err = kernel_f_dz_dt.setArg(3, dt);
 
+            err = kernel_f_dsAMPA_dt.setArg(0, states_cl);
+            err = kernel_f_dsAMPA_dt.setArg(1, numNeurons);
+            err = kernel_f_dsAMPA_dt.setArg(2, ind_old);
+            err = kernel_f_dsAMPA_dt.setArg(3, dt);
+
+            err = kernel_f_dsAMPA_dt.setArg(0, states_cl);
+            err = kernel_f_dsAMPA_dt.setArg(1, numNeurons);
+            err = kernel_f_dsAMPA_dt.setArg(2, ind_old);
+            err = kernel_f_dsAMPA_dt.setArg(3, dt);
+
+            err = kernel_f_dxNMDA_dt.setArg(0, states_cl);
+            err = kernel_f_dxNMDA_dt.setArg(1, numNeurons);
+            err = kernel_f_dxNMDA_dt.setArg(2, ind_old);
+            err = kernel_f_dxNMDA_dt.setArg(3, dt);
+
+            err = kernel_f_dsNMDA_dt.setArg(0, states_cl);
+            err = kernel_f_dsNMDA_dt.setArg(1, numNeurons);
+            err = kernel_f_dsNMDA_dt.setArg(2, ind_old);
+            err = kernel_f_dsNMDA_dt.setArg(3, dt);
+
             cl.getQueue().finish();
 
             err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dV_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
             err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dn_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
             err = cl.getQueue().enqueueNDRangeKernel(kernel_f_I_Na_dh_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
             err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dz_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
+            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dsAMPA_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
+            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dxNMDA_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
+            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dsNMDA_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
 
             cl.getQueue().finish();
 
@@ -175,6 +204,9 @@ namespace cpu
             n_t.push_back(c_done[ind_new].n);
             z_t.push_back(c_done[ind_new].z);
             I_app_t.push_back(c_done[ind_new].I_app);
+            sAMPA_t.push_back(c_done[ind_new].s_AMPA);
+            xNMDA_t.push_back(c_done[ind_new].x_NMDA);
+            sNMDA_t.push_back(c_done[ind_new].s_NMDA);
         }
 
         Gnuplot plot_V_Iapp_e;
@@ -184,20 +216,32 @@ namespace cpu
             linSpaceVec<float>(0, timesteps * dt, timesteps),
             V_t, "V");
         plot_V_Iapp_e.plot_xy(
-            linSpaceVec<double>(0, timesteps * dt, timesteps),
+            linSpaceVec<float>(0, timesteps * dt, timesteps),
             I_app_t, "I_app");
         Gnuplot plot_hnz_e;
         plot_hnz_e.set_style("lines");
         plot_hnz_e.set_title("Excitatory neuron");
         plot_hnz_e.plot_xy(
-            linSpaceVec<double>(0, timesteps * dt, timesteps),
+            linSpaceVec<float>(0, timesteps * dt, timesteps),
             h_t, "h");
         plot_hnz_e.plot_xy(
-            linSpaceVec<double>(0, timesteps * dt, timesteps),
+            linSpaceVec<float>(0, timesteps * dt, timesteps),
             n_t, "n");
         plot_hnz_e.plot_xy(
-            linSpaceVec<double>(0, timesteps * dt, timesteps),
+            linSpaceVec<float>(0, timesteps * dt, timesteps),
             z_t, "z");
+        Gnuplot plot_Syn_e;
+        plot_Syn_e.set_style("lines");
+        plot_Syn_e.set_title("Excitatory neuron");
+        plot_Syn_e.plot_xy(
+            linSpaceVec<float>(0, timesteps * dt, timesteps),
+            sAMPA_t, "s_AMPA");
+        plot_Syn_e.plot_xy(
+            linSpaceVec<float>(0, timesteps * dt, timesteps),
+            xNMDA_t, "x_NMDA");
+        plot_Syn_e.plot_xy(
+            linSpaceVec<float>(0, timesteps * dt, timesteps),
+            sNMDA_t, "s_NMDA");
         getchar();
     }
 }

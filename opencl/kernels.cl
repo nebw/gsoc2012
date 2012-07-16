@@ -91,15 +91,10 @@ __kernel void f_dV_dt(__global struct state* states, const unsigned int numNeuro
 
     struct state state_0 = states[ind_old*numNeurons+idx];
 
-    float V_0 = states[ind_old*numNeurons+idx].V;
-    float h_0 = states[ind_old*numNeurons+idx].h;
-    float n_0 = states[ind_old*numNeurons+idx].n;
-    float z_0 = states[ind_old*numNeurons+idx].z;
-    float I_app_0 = states[ind_old*numNeurons+idx].I_app;
     
     float f1, f2, f3, f4;
 
-    f1 = _f_dV_dt(V_0, h_0, n_0, z_0, I_app_0);
+    f1 = _f_dV_dt(state_0.V, state_0.h, state_0.n, state_0.z, state_0.I_app);
     f2 = _f_dV_dt(state_0.V + dt * f1 / 2.0, state_0.h, state_0.n, state_0.z, state_0.I_app);
     f3 = _f_dV_dt(state_0.V + dt * f2 / 2.0, state_0.h, state_0.n, state_0.z, state_0.I_app);
     f4 = _f_dV_dt(state_0.V + dt * f3, state_0.h, state_0.n, state_0.z, state_0.I_app);
@@ -213,4 +208,90 @@ __kernel void f_dz_dt(__global struct state* states, const unsigned int numNeuro
     f4 = _f_dz_dt(state_0.z + dt * f3, state_0.V);
 
     states[ind_new*numNeurons+idx].z = state_0.z + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+}
+
+inline float _f_s_inf(const float V)
+{
+    const float theta_s = -20;
+    const float sigma_s = 2;
+
+    return pow(1 + exp(-(V - theta_s) / sigma_s), -1);
+}
+
+inline float _f_dsAMPA_dt(const float s_AMPA, const float V)
+{
+    const float k_fP     = 1;
+    const float tau_AMPA = 5;
+
+    return k_fP * _f_s_inf(V) * (1 - s_AMPA)
+           - (s_AMPA / tau_AMPA);
+}
+
+__kernel void f_dsAMPA_dt(__global struct state* states, const unsigned int numNeurons, const unsigned int ind_old, const float dt)
+{
+    const unsigned int idx = get_global_id(0);
+    const unsigned int ind_new = 1 - ind_old;
+
+    struct state state_0 = states[ind_old*numNeurons+idx];
+
+    float f1, f2, f3, f4;
+
+    f1 = _f_dsAMPA_dt(state_0.s_AMPA, state_0.V);
+    f2 = _f_dsAMPA_dt(state_0.s_AMPA + dt * f1 / 2.0, state_0.V);
+    f3 = _f_dsAMPA_dt(state_0.s_AMPA + dt * f2 / 2.0, state_0.V);
+    f4 = _f_dsAMPA_dt(state_0.s_AMPA + dt * f3, state_0.V);
+
+    states[ind_new*numNeurons+idx].s_AMPA = state_0.s_AMPA + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+}
+
+inline float _f_dxNMDA_dt(const float x_NMDA, const float V)
+{
+    const float k_xN      = 1;
+    const float tau2_NMDA = 14.3;
+
+    return k_xN * _f_s_inf(V) * (1 - x_NMDA)
+           - (1 - _f_s_inf(V)) * x_NMDA / tau2_NMDA;
+}
+
+__kernel void f_dxNMDA_dt(__global struct state* states, const unsigned int numNeurons, const unsigned int ind_old, const float dt)
+{
+    const unsigned int idx = get_global_id(0);
+    const unsigned int ind_new = 1 - ind_old;
+
+    struct state state_0 = states[ind_old*numNeurons+idx];
+
+    float f1, f2, f3, f4;
+
+    f1 = _f_dxNMDA_dt(state_0.x_NMDA, state_0.V);
+    f2 = _f_dxNMDA_dt(state_0.x_NMDA + dt * f1 / 2.0, state_0.V);
+    f3 = _f_dxNMDA_dt(state_0.x_NMDA + dt * f2 / 2.0, state_0.V);
+    f4 = _f_dxNMDA_dt(state_0.x_NMDA + dt * f3, state_0.V);
+
+    states[ind_new*numNeurons+idx].x_NMDA = state_0.x_NMDA + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+}
+
+inline float _f_dsNMDA_dt(const float s_NMDA, const float x_NMDA, const float V)
+{
+    const float k_fN     = 1;
+    const float tau_NMDA = 14.3;
+
+    return k_fN * x_NMDA * (1 - s_NMDA)
+                     - s_NMDA / tau_NMDA;
+}
+
+__kernel void f_dsNMDA_dt(__global struct state* states, const unsigned int numNeurons, const unsigned int ind_old, const float dt)
+{
+    const unsigned int idx = get_global_id(0);
+    const unsigned int ind_new = 1 - ind_old;
+
+    struct state state_0 = states[ind_old*numNeurons+idx];
+
+    float f1, f2, f3, f4;
+
+    f1 = _f_dsNMDA_dt(state_0.s_NMDA, state_0.x_NMDA, state_0.V);
+    f2 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f1 / 2.0, state_0.x_NMDA, state_0.V);
+    f3 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f2 / 2.0, state_0.x_NMDA, state_0.V);
+    f4 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f3, state_0.x_NMDA, state_0.V);
+
+    states[ind_new*numNeurons+idx].s_NMDA = state_0.s_NMDA + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
 }
