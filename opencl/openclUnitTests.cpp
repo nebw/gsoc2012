@@ -1,15 +1,15 @@
 #include <boost/program_options.hpp>
 
-#include "opencl_fft/clFFT.h"
 #include "gtest/gtest.h"
+#include "opencl_fft/clFFT.h"
 
 #include <iostream>
 
 #if defined(__APPLE__)
-#include <OpenCL/opencl.h>
-#else
-#include <CL/cl.h>
-#endif
+# include <OpenCL/opencl.h>
+#else // if defined(__APPLE__)
+# include <CL/cl.h>
+#endif // if defined(__APPLE__)
 
 typedef struct
 {
@@ -21,10 +21,10 @@ TEST(FFTTest, InverseFFTTest)
 {
     // Get platform and device information
     cl_platform_id platform_id = NULL;
-    cl_device_id   device_id   = NULL;
+    cl_device_id device_id   = NULL;
     cl_uint ret_num_devices;
     cl_uint ret_num_platforms;
-    cl_int  ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
+    cl_int ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
 
     ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_DEFAULT, 1,
                          &device_id, &ret_num_devices);
@@ -41,7 +41,7 @@ TEST(FFTTest, InverseFFTTest)
     clFFT_Direction dir         = clFFT_Forward;
     clFFT_Dim3 n                = { 4096, 1, 1 };
     clFFT_DataFormat dataFormat = clFFT_SplitComplexFormat;
-    clFFT_Dimension  dim        = clFFT_1D;
+    clFFT_Dimension dim        = clFFT_1D;
     cl_int error_code;
     cl_mem data_in_real  = NULL;
     cl_mem data_in_imag  = NULL;
@@ -55,8 +55,8 @@ TEST(FFTTest, InverseFFTTest)
 
     clFFT_SplitComplex data_i_split    = { NULL, NULL };
     clFFT_SplitComplex data_cl_split   = { NULL, NULL };
-    clFFT_Complex     *data_i          = NULL;
-    clFFT_Complex     *data_cl         = NULL;
+    clFFT_Complex *data_i          = NULL;
+    clFFT_Complex *data_cl         = NULL;
     clFFT_SplitComplexDouble data_iref = { NULL, NULL };
     clFFT_SplitComplexDouble data_oref = { NULL, NULL };
 
