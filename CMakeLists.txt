@@ -1,5 +1,24 @@
 cmake_minimum_required(VERSION 2.6)
 cmake_policy(SET CMP0015 NEW)
+
+## Source: http://stackoverflow.com/a/2956392/1474346
+MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
+  IF(MSVC)
+    GET_FILENAME_COMPONENT(PrecompiledBasename ${PrecompiledHeader} NAME_WE)
+    SET(PrecompiledBinary "$(IntDir)/${PrecompiledBasename}.pch")
+    SET(Sources ${${SourcesVar}})
+
+    SET_SOURCE_FILES_PROPERTIES(${PrecompiledSource}
+                                PROPERTIES COMPILE_FLAGS "/Yc\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\""
+                                           OBJECT_OUTPUTS "${PrecompiledBinary}")
+    SET_SOURCE_FILES_PROPERTIES(${Sources}
+                                PROPERTIES COMPILE_FLAGS "/Yu\"${PrecompiledHeader}\" /FI\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\""
+                                           OBJECT_DEPENDS "${PrecompiledBinary}")  
+    # Add precompiled header to SourcesVar
+    LIST(APPEND ${SourcesVar} ${PrecompiledSource})
+  ENDIF(MSVC)
+ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
+
 project(gsoc2012)
 
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/findopencl/")
