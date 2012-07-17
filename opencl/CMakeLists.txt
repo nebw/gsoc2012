@@ -60,14 +60,28 @@ add_executable(opencl
 )
 
 if(MSVC)
+  if(CMAKE_GENERATOR MATCHES "Win64")
+    set(FFTW_LIBRARIES
+      "${opencl_SOURCE_DIR}/fftw_win64/libfftw3-3.lib"
+    )
+  else()
+    set(FFTW_LIBRARIES
+      "${opencl_SOURCE_DIR}/fftw_win32/libfftw3-3.lib"
+    )
+  endif()
+  
+  message("  FFTW_LIBRARIES: ${FFTW_LIBRARIES}")
+  
   target_link_libraries(opencl 
         ${Boost_LIBRARIES}
         ${OPENCL_LIBRARIES}
+        ${FFTW_LIBRARIES}
         Winmm
   )
 else()
   target_link_libraries(opencl 
         ${Boost_LIBRARIES}
         ${OPENCL_LIBRARIES}
+        ${FFTW_LIBRARIES}
   )
 endif()
