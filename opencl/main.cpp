@@ -7,6 +7,8 @@
 
 #include "cpplog/cpplog.hpp"
 
+#include "fftw3.h"
+
 #include <iomanip>
 #include <vector>
 

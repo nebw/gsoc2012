@@ -21,7 +21,7 @@ ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
 
 project(gsoc2012)
 
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/findopencl/")
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 ##set(Boost_USE_STATIC_LIBS OFF) 
 set(Boost_USE_MULTITHREADED ON) 
@@ -40,6 +40,13 @@ message("OpenCL information:")
 message("  OPENCL_INCLUDE_DIRS: ${OPENCL_INCLUDE_DIRS}") 
 message("  OPENCL_LIBRARIES: ${OPENCL_LIBRARIES}") 
 message("  OPENCL_HAS_CPP_BINDINGS: ${OPENCL_HAS_CPP_BINDINGS}") 
+
+if(NOT MSVC)
+  find_package(FFTW REQUIRED)
+  message("FFTW information:") 
+  message("  FFTW_INCLUDES: ${FFTW_INCLUDES}") 
+  message("  FFTW_LIBRARIES: ${FFTW_LIBRARIES}") 
+endif()
 
 ## Compiler flags for GCC and Clang
 if(NOT MSVC)
