@@ -101,6 +101,8 @@ namespace cpu
 
         cl::Program program = cl.loadProgram(path + "/kernels.cl");
 
+        std::vector<cl::Kernel> kernels;
+
         cl::Kernel kernel_f_dV_dt = cl::Kernel(program, "f_dV_dt", &err);
         cl::Kernel kernel_f_dn_dt = cl::Kernel(program, "f_dn_dt", &err);
         cl::Kernel kernel_f_I_Na_dh_dt = cl::Kernel(program, "f_I_Na_dh_dt", &err);
@@ -108,6 +110,20 @@ namespace cpu
         cl::Kernel kernel_f_dsAMPA_dt = cl::Kernel(program, "f_dsAMPA_dt", &err);
         cl::Kernel kernel_f_dxNMDA_dt = cl::Kernel(program, "f_dxNMDA_dt", &err);
         cl::Kernel kernel_f_dsNMDA_dt = cl::Kernel(program, "f_dsNMDA_dt", &err);
+        kernels.push_back(kernel_f_dV_dt);
+        kernels.push_back(kernel_f_dn_dt);
+        kernels.push_back(kernel_f_I_Na_dh_dt);
+        kernels.push_back(kernel_f_dz_dt);
+        kernels.push_back(kernel_f_dsAMPA_dt);
+        kernels.push_back(kernel_f_dxNMDA_dt);
+        kernels.push_back(kernel_f_dsNMDA_dt);
+
+        BOOST_FOREACH(cl::Kernel kernel, kernels)
+        {
+            err = kernel.setArg(0, states_cl);
+            err = kernel.setArg(1, numNeurons);
+            err = kernel.setArg(3, dt);
+        }
 
         cl::Event event; 
 
@@ -119,6 +135,7 @@ namespace cpu
         //}
 
         std::vector<float> V_t, h_t, n_t, z_t, sAMPA_t, xNMDA_t, sNMDA_t, I_app_t;
+        std::vector<float> spikeTimes, spikeNeuronIndices;
         V_t.push_back(states[0].V);
         h_t.push_back(states[0].h);
         n_t.push_back(states[0].n);
@@ -128,64 +145,29 @@ namespace cpu
         xNMDA_t.push_back(states[0].x_NMDA);
         sNMDA_t.push_back(states[0].s_NMDA);
 
-        printf("Timestep %d/%d\n", 1, timesteps);
+        std::cout << "Timestep 1/" << timesteps << std::endl;
 
         for (unsigned int t = 0; t < timesteps - 1; ++t)
         {
-            printf("Timestep %d/%d\n", t + 2, timesteps);
+            if((t + 2) % (timesteps / 100) == 0)
+            {
+                std::cout << "Timestep " << t + 2 << "/" << timesteps << std::endl;
+            }
 
             unsigned int ind_old = t % 2;
             unsigned int ind_new = 1 - ind_old;
 
-            err = kernel_f_dV_dt.setArg(0, states_cl);
-            err = kernel_f_dV_dt.setArg(1, numNeurons);
-            err = kernel_f_dV_dt.setArg(2, ind_old);
-            err = kernel_f_dV_dt.setArg(3, dt);
-
-            err = kernel_f_dn_dt.setArg(0, states_cl);
-            err = kernel_f_dn_dt.setArg(1, numNeurons);
-            err = kernel_f_dn_dt.setArg(2, ind_old);
-            err = kernel_f_dn_dt.setArg(3, dt);
-
-            err = kernel_f_I_Na_dh_dt.setArg(0, states_cl);
-            err = kernel_f_I_Na_dh_dt.setArg(1, numNeurons);
-            err = kernel_f_I_Na_dh_dt.setArg(2, ind_old);
-            err = kernel_f_I_Na_dh_dt.setArg(3, dt);
-
-            err = kernel_f_dz_dt.setArg(0, states_cl);
-            err = kernel_f_dz_dt.setArg(1, numNeurons);
-            err = kernel_f_dz_dt.setArg(2, ind_old);
-            err = kernel_f_dz_dt.setArg(3, dt);
-
-            err = kernel_f_dsAMPA_dt.setArg(0, states_cl);
-            err = kernel_f_dsAMPA_dt.setArg(1, numNeurons);
-            err = kernel_f_dsAMPA_dt.setArg(2, ind_old);
-            err = kernel_f_dsAMPA_dt.setArg(3, dt);
-
-            err = kernel_f_dsAMPA_dt.setArg(0, states_cl);
-            err = kernel_f_dsAMPA_dt.setArg(1, numNeurons);
-            err = kernel_f_dsAMPA_dt.setArg(2, ind_old);
-            err = kernel_f_dsAMPA_dt.setArg(3, dt);
-
-            err = kernel_f_dxNMDA_dt.setArg(0, states_cl);
-            err = kernel_f_dxNMDA_dt.setArg(1, numNeurons);
-            err = kernel_f_dxNMDA_dt.setArg(2, ind_old);
-            err = kernel_f_dxNMDA_dt.setArg(3, dt);
-
-            err = kernel_f_dsNMDA_dt.setArg(0, states_cl);
-            err = kernel_f_dsNMDA_dt.setArg(1, numNeurons);
-            err = kernel_f_dsNMDA_dt.setArg(2, ind_old);
-            err = kernel_f_dsNMDA_dt.setArg(3, dt);
+            BOOST_FOREACH(cl::Kernel kernel, kernels)
+            {
+                err = kernel.setArg(2, ind_old);
+            }
 
             cl.getQueue().finish();
 
-            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dV_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
-            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dn_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
-            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_I_Na_dh_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
-            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dz_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
-            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dsAMPA_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
-            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dxNMDA_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
-            err = cl.getQueue().enqueueNDRangeKernel(kernel_f_dsNMDA_dt, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
+            BOOST_FOREACH(cl::Kernel kernel, kernels)
+            {
+                err = cl.getQueue().enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(numNeurons), cl::NullRange, NULL, &event);
+            }
 
             cl.getQueue().finish();
 
@@ -207,6 +189,15 @@ namespace cpu
             sAMPA_t.push_back(c_done[ind_new].s_AMPA);
             xNMDA_t.push_back(c_done[ind_new].x_NMDA);
             sNMDA_t.push_back(c_done[ind_new].s_NMDA);
+
+            for(unsigned int i = 0; i < numNeurons; ++i)
+            {
+                if (c_done[ind_new].V >= 20)
+                {
+                    spikeTimes.push_back(t * dt);
+                    spikeNeuronIndices.push_back(i);
+                }
+            }
         }
 
         Gnuplot plot_V_Iapp_e;
@@ -242,6 +233,13 @@ namespace cpu
         plot_Syn_e.plot_xy(
             linSpaceVec<float>(0, timesteps * dt, timesteps),
             sNMDA_t, "s_NMDA");
+        Gnuplot plot_Spikes;
+        plot_Spikes.set_title("Spikes");
+        plot_Spikes.set_style("points");
+        plot_Spikes.set_xrange(0, timesteps * dt);
+        plot_Spikes.set_yrange(0, numNeurons - 1);
+        plot_Spikes.plot_xy(
+            spikeTimes, spikeNeuronIndices, "Excitatory Spikes");
         getchar();
     }
 }
