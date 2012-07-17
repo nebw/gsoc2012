@@ -59,7 +59,15 @@ add_executable(opencl
       ${OPENCL_FFT}
 )
 
-target_link_libraries(opencl 
-      ${Boost_LIBRARIES}
-      ${OPENCL_LIBRARIES}
-)
+if(NOT MSVC)
+  target_link_libraries(opencl 
+        ${Boost_LIBRARIES}
+        ${OPENCL_LIBRARIES}
+  )
+else()
+  target_link_libraries(opencl 
+        ${Boost_LIBRARIES}
+        ${OPENCL_LIBRARIES}
+        Winmm
+  )
+endif()
