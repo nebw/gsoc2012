@@ -2985,16 +2985,18 @@ public:
             }
         }
 
-        return detail::errHandler(
-            ::clEnqueueNativeKernel(
-                object_, userFptr, args.first, args.second,
-                (mem_objects != NULL) ? (cl_uint) mem_objects->size() : 0,
-                mems,
-                (mem_locs != NULL) ? (const void **) &mem_locs->front() : NULL,
-                (events != NULL) ? (cl_uint) events->size() : 0,
-                (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
-                (cl_event*) event),
-            __ENQUEUE_NATIVE_KERNEL);
+        return 0;
+
+        //return detail::errHandler(
+        //    ::clEnqueueNativeKernel(
+        //        object_, userFptr, args.first, args.second,
+        //        (mem_objects != NULL) ? (cl_uint) mem_objects->size() : 0,
+        //        mems,
+        //        (mem_locs != NULL) ? (const void **) &mem_locs->front() : NULL,
+        //        (events != NULL) ? (cl_uint) events->size() : 0,
+        //        (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
+        //        (cl_event*) event),
+        //    __ENQUEUE_NATIVE_KERNEL);
     }
 
     cl_int enqueueMarker(Event* event = NULL) const
