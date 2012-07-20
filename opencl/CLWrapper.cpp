@@ -67,25 +67,25 @@ CLWrapper::CLWrapper()
     }
 }
 
-CLWrapper::~CLWrapper()
-{
-    /*
-       printf("Releasing OpenCL memory\n");
-       if(kernel)clReleaseKernel(kernel);
-       if(program)clReleaseProgram(program);
-       if(command_queue)clReleaseCommandQueue(command_queue);
-       //need to release any other OpenCL memory objects here
-       if(cl_a)clReleaseMemObject(cl_a);
-       if(cl_b)clReleaseMemObject(cl_b);
-       if(cl_c)clReleaseMemObject(cl_c);
-
-       if(context)clReleaseContext(context);
-
-       if(devices)delete(devices);
-       printf("OpenCL memory released\n");
-
-     */
-}
+//CLWrapper::~CLWrapper()
+//{
+//    /*
+//       printf("Releasing OpenCL memory\n");
+//       if(kernel)clReleaseKernel(kernel);
+//       if(program)clReleaseProgram(program);
+//       if(command_queue)clReleaseCommandQueue(command_queue);
+//       //need to release any other OpenCL memory objects here
+//       if(cl_a)clReleaseMemObject(cl_a);
+//       if(cl_b)clReleaseMemObject(cl_b);
+//       if(cl_c)clReleaseMemObject(cl_c);
+//
+//       if(context)clReleaseContext(context);
+//
+//       if(devices)delete(devices);
+//       printf("OpenCL memory released\n");
+//
+//     */
+//}
 
 cl::Program CLWrapper::loadProgram(std::string path)
 {
@@ -145,4 +145,14 @@ cl::Context CLWrapper::getContext() const
 cl::CommandQueue CLWrapper::getQueue() const
 {
     return queue;
+}
+
+cl_context CLWrapper::getContextC() const
+{
+    return context();
+}
+
+cl_command_queue CLWrapper::getQueueC() const
+{
+    return queue();
 }
