@@ -29,7 +29,7 @@ set(Boost_USE_MULTITHREADED ON)
 
 add_definitions( -DBOOST_ALL_NO_LIB )
 
-find_package(Boost COMPONENTS program_options REQUIRED)
+find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
 message("Boost information:")
 message("  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 message("  Boost_LIBRARIES: ${Boost_LIBRARIES}")
@@ -61,7 +61,7 @@ if(NOT MSVC)
   # set(CMAKE_CXX_FLAGS "-Weffc++ ${CMAKE_CXX_FLAGS}")
 else()
   # enable visual studio static code analysis
-  set(CMAKE_CXX_FLAGS "-analyze ${CMAKE_CXX_FLAGS}")
+  # set(CMAKE_CXX_FLAGS "-analyze ${CMAKE_CXX_FLAGS}")
 endif()
 
 ## Compiler flags for GCC only
