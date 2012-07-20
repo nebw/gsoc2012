@@ -32,6 +32,8 @@ SET(SOURCE
   main.cpp
   util.cpp
   CLWrapper.cpp
+  Simulator.cpp
+  Plotter.cpp
   kernels.cl
 )
 
@@ -39,6 +41,9 @@ SET(HEADERS
   stdafx.h
   util.h
   CLWrapper.h
+  Simulator.h
+  Plotter.h
+  Definitions.h
   gnuplot_i/gnuplot_i.hpp
 )
 
@@ -63,10 +68,14 @@ if(MSVC)
   if(CMAKE_GENERATOR MATCHES "Win64")
     set(FFTW_LIBRARIES
       "${opencl_SOURCE_DIR}/fftw_win64/libfftw3-3.lib"
+      "${opencl_SOURCE_DIR}/fftw_win64/libfftw3f-3.lib"
+      "${opencl_SOURCE_DIR}/fftw_win64/libfftw3l-3.lib"
     )
   else()
     set(FFTW_LIBRARIES
       "${opencl_SOURCE_DIR}/fftw_win32/libfftw3-3.lib"
+      "${opencl_SOURCE_DIR}/fftw_win32/libfftw3f-3.lib"
+      "${opencl_SOURCE_DIR}/fftw_win32/libfftw3l-3.lib"
     )
   endif()
   
