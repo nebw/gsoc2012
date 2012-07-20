@@ -11,13 +11,6 @@ struct state
     float I_app;
 };
 
-//__kernel void stepKernel(__global struct state* states, const unsigned int numNeurons)
-//{
-//   const int idx = get_global_id(0);
-//
-//   states[1*numNeurons+idx].V = states[0*numNeurons+idx].V + 1;
-//}
-
 inline float _f_I_Na_m_inf(const float V)
 {
     const float theta_m = -30;
@@ -74,12 +67,12 @@ inline float _f_I_Kslow(const float V, const float z)
     return g_Kslow * z * (V - V_K);
 }
 
-inline float _f_I_AMPA(const float V, const float sumFootprintNMDA)
+inline float _f_I_AMPA(const float V, const float sumFootprintAMPA)
 {
     const float g_AMPA = 0.08;
     const float V_Glu  = 0;
 
-    return g_AMPA * (V - V_Glu) * sumFootprintNMDA;
+    return g_AMPA * (V - V_Glu) * sumFootprintAMPA;
 }
 
 inline float _f_f_NMDA(const float V)
@@ -93,12 +86,12 @@ inline float _f_f_NMDA(const float V)
     return pow(1 + exp(-(V - theta_NMDA) / sigma_NMDA), -1);
 }
 
-inline float _f_I_NMDA(const float V, const float sumFootprintAMPA)
+inline float _f_I_NMDA(const float V, const float sumFootprintNMDA)
 {
     const float g_NMDA = 0.07;
     const float V_Glu  = 0;
 
-    return g_NMDA * _f_f_NMDA(V) * (V - V_Glu) *sumFootprintAMPA;
+    return g_NMDA * _f_f_NMDA(V) * (V - V_Glu) * sumFootprintNMDA;
 }
 
 inline float _f_I_GABAA(const float V, const float sumFootprintGABAA)
@@ -140,15 +133,17 @@ __kernel void f_dV_dt(__global struct state* states,
     const unsigned int idx = get_global_id(0);
     const unsigned int ind_new = 1 - ind_old;
 
-    struct state state_0 = states[ind_old*numNeurons+idx];
-
+    const struct state state_0 = states[ind_old*numNeurons+idx];
+    const float sumFootprintAMPA_loc = sumFootprintAMPA[idx];
+    const float sumFootprintNMDA_loc = sumFootprintNMDA[idx];
+    const float sumFootprintGABAA_loc = sumFootprintGABAA[idx];
     
     float f1, f2, f3, f4;
 
-    f1 = _f_dV_dt(state_0.V, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA[idx], sumFootprintNMDA[idx], sumFootprintGABAA[idx]);
-    f2 = _f_dV_dt(state_0.V + dt * f1 / 2.0, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA[idx], sumFootprintNMDA[idx], sumFootprintGABAA[idx]);
-    f3 = _f_dV_dt(state_0.V + dt * f2 / 2.0, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA[idx], sumFootprintNMDA[idx], sumFootprintGABAA[idx]);
-    f4 = _f_dV_dt(state_0.V + dt * f3, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA[idx], sumFootprintNMDA[idx], sumFootprintGABAA[idx]);
+    f1 = _f_dV_dt(state_0.V, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
+    f2 = _f_dV_dt(state_0.V + dt * f1 / 2.0, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
+    f3 = _f_dV_dt(state_0.V + dt * f2 / 2.0, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
+    f4 = _f_dV_dt(state_0.V + dt * f3, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
 
     states[ind_new*numNeurons+idx].V = state_0.V + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
 }
