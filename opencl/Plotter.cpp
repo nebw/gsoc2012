@@ -37,7 +37,7 @@ Plotter::Plotter(unsigned int numNeurons, unsigned int index, float dt)
     }
 }
 
-void Plotter::step(const state *curState, const unsigned int t, const float* sumFootprintAMPA, const float* sumFootprintNMDA, const float* sumFootprintGABAA)
+void Plotter::step(const state *curState, const unsigned int t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA)
 {
     _V.push_back(curState[_index].V);
     _h.push_back(curState[_index].h);

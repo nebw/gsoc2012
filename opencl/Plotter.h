@@ -2,13 +2,11 @@
 
 #include "Definitions.h"
 
-//#include "gnuplot_i\gnuplot_i.hpp"
-
 class Plotter
 {
 public:
     Plotter(unsigned int numNeurons, unsigned int index, float dt);
-    void step(const state *curState, const unsigned int t, const float* sumFootprintAMPA, const float* sumFootprintNMDA, const float* sumFootprintGABAA);
+    void step(const state *curState, const unsigned int t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA);
     void plot();
 
 private:

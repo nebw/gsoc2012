@@ -12,19 +12,51 @@
 class Simulator
 {
 public:
+    enum Plot {
+        NO_PLOT = 0,
+        PLOT
+    };
+
+    enum Measure {
+        NO_MEASURE = 0,
+        MEASURE
+    };
+
+    enum FFT_FFTW {
+        NO_FFTW = 0,
+        FFTW
+    };
+
+    enum FFT_clFFT {
+        NO_CLFFT = 0,
+        CLFFT
+    };
+
     Simulator(const unsigned int numNeurons,
               const unsigned int timesteps,
               const float dt,
               state const& state_0,
-              const bool plot,
-              const bool measure,
+              const Plot plot,
+              const Measure measure,
+              const FFT_FFTW fftw,
+              const FFT_clFFT clfft,
               boost::filesystem3::path const& programPath,
               Logger const& logger);
 
     void step();
     void simulate();
 
+    std::vector<unsigned long> getTimesCalculations() const;
+    std::vector<unsigned long> getTimesFFTW() const;
+    std::vector<unsigned long> getTimesClFFT() const;
+
 private:
+    enum Receptor {
+        AMPA = 0,
+        NMDA,
+        GABAA
+    };
+
     // OpenCL
     CLWrapper _wrapper;
     cl::Program _program;
@@ -46,34 +78,61 @@ private:
     // Configuration
     bool _plot;
     bool _measure;
+    bool _fftw;
+    bool _clfft;
+
+    // Measurements
+    std::vector<unsigned long> _timesCalculations;
+    std::vector<unsigned long> _timesFFTW;
+    std::vector<unsigned long> _timesClFFT;
 
     // FFT variables
     unsigned int _nFFT;
     float _scaleFFT;
 
     // Data
-    state *_states;
-    float *_sumFootprintAMPA;
-    float *_sumFootprintNMDA;
-    float *_sumFootprintGABAA;
+    std::unique_ptr<state[]> _states;
+    std::unique_ptr<float[]> _sumFootprintAMPA;
+    std::unique_ptr<float[]> _sumFootprintNMDA;
+    std::unique_ptr<float[]> _sumFootprintGABAA;
 
     // Data (FFTW)
-    fftwf_complex *_distances;
-    fftwf_complex *_sVals;
-    fftwf_complex *_convolution;
-    fftwf_complex *_distances_f;
-    fftwf_complex *_sVals_f;
-    fftwf_complex *_convolution_f;
-    
-    fftwf_plan _p_distances;
-    fftwf_plan _p_sVals;
-    fftwf_plan _p_inv;
+    fftwf_complex *_distances_split;
+    fftwf_complex *_sVals_split;
+    fftwf_complex *_convolution_split;
+    fftwf_complex *_distances_f_split;
+    fftwf_complex *_sVals_f_split;
+    fftwf_complex *_convolution_f_split;
+    fftwf_plan _p_distances_fftw;
+    fftwf_plan _p_sVals_fftw;
+    fftwf_plan _p_inv_fftw;
 
     // Data (OpenCL)
     cl::Buffer _states_cl;
     cl::Buffer _sumFootprintAMPA_cl;
     cl::Buffer _sumFootprintNMDA_cl;
     cl::Buffer _sumFootprintGABAA_cl;
+
+    // OpenCL_FFT
+    std::unique_ptr<float[]> _distances_real;
+    std::unique_ptr<float[]> _sVals_real;
+    std::unique_ptr<float[]> _convolution_real;
+    std::unique_ptr<float[]> _zeros;
+    cl::Buffer _distances_real_cl;
+    cl::Buffer _distances_imag_cl;
+    cl::Buffer _sVals_real_cl;
+    cl::Buffer _sVals_imag_cl;
+    cl::Buffer _convolution_real_cl;
+    cl::Buffer _convolution_imag_cl;
+    cl::Buffer _distances_f_real_cl;
+    cl::Buffer _distances_f_imag_cl;
+    cl::Buffer _sVals_f_real_cl;
+    cl::Buffer _sVals_f_imag_cl;
+    cl::Buffer _convolution_f_real_cl;
+    cl::Buffer _convolution_f_imag_cl;
+
+    clFFT_Plan _p_cl;
+    cl::Kernel _kernel_convolution;
 
     // Kernels
     cl::Kernel _kernel_f_dV_dt;
@@ -84,7 +143,10 @@ private:
     cl::Kernel _kernel_f_dxNMDA_dt;
     cl::Kernel _kernel_f_dsNMDA_dt;
 
+    void handleClError(cl_int err);
+
     static inline float _f_w_EE(const int j);
 
-    void f_I_FFT(const unsigned int ind_old, const std::string var);
+    void f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec);
+    void f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec);
 };
