@@ -341,3 +341,18 @@ __kernel void f_dsNMDA_dt(__global struct state* states, const unsigned int numN
 
     states[ind_new*numNeurons+idx].s_NMDA = state_0.s_NMDA + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
 }
+
+__kernel void convolution(__global float* convolution_f_real, __global float* convolution_f_imag,
+                          __global float* distances_f_real, __global float* distances_f_imag,
+                          __global float* sVals_f_real, __global float* sVals_f_imag, 
+                          const float scaleFFT)
+{
+    const unsigned int idx = get_global_id(0);
+
+    convolution_f_real[idx] = (distances_f_real[idx] * sVals_f_real[idx]
+                              - distances_f_imag[idx] * sVals_f_imag[idx])
+                              * scaleFFT;
+    convolution_f_imag[idx] = (distances_f_real[idx] * sVals_f_imag[idx]
+                              - distances_f_imag[idx] * sVals_f_real[idx])
+                              * scaleFFT;
+}    
