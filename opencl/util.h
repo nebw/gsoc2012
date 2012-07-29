@@ -17,3 +17,11 @@ std::vector<T> linSpaceVec(T a, T b, size_t N) {
     *x = val;
   return xs;
 }
+
+void assertAlmostEquals(const float a, const float b);
+
+void assertNear(const float a, const float b, const double abs_error);
+
+bool isPowerOfTwo(unsigned int x);
+
+bool stringToBool(const string& str);

@@ -1,5 +1,11 @@
 #include "util.h"
 
+#include "gtest/internal/gtest-internal.h"
+
+#include <cassert>
+
+#include <boost/algorithm/string/predicate.hpp>
+
 char* file_contents(const char *filename, int *length)
 {
     FILE *f = fopen(filename, "r");
@@ -96,4 +102,44 @@ const char* oclErrorString(cl_int error)
     const int index = -error;
 
     return (index >= 0 && index < errorCount) ? errorString[index] : "";
+}
+
+void assertAlmostEquals(const float a, const float b)
+{
+    const testing::internal::FloatingPoint<float> lhs(a), rhs(b);
+
+    assert(lhs.AlmostEquals(rhs));
+}
+
+void assertNear(const float a, const float b, const double abs_error)
+{
+    const double diff = fabs(a - b);
+    assert(diff <= abs_error);
+}
+
+
+// see: http://stackoverflow.com/a/600306/1474346
+bool isPowerOfTwo(unsigned int x)
+{
+    return (x != 0) && ((x & (x - 1)) == 0);
+}
+
+bool stringToBool( const string& str )
+{
+    if (str.empty()) {
+        return false;
+    }
+
+    if (
+        str == "1" 
+        || boost::iequals(str, "y")
+        || boost::iequals(str, "yes")
+        || boost::iequals(str, "true")
+        )
+    {
+        return true;
+    }
+
+    return false;
+
 }
