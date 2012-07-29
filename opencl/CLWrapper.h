@@ -19,15 +19,15 @@ public:
     cl_command_queue getQueueC() const;
 
 private:
-    unsigned int deviceUsed;
-    std::vector<cl::Device> devices;
+    unsigned int _deviceUsed;
+    std::vector<cl::Device> _devices;
 
-    cl::Context context;
-    cl::CommandQueue queue;
-    cl::Program program;
-    cl::Kernel kernel;
+    cl::Context _context;
+    cl::CommandQueue _queue;
+    cl::Program _program;
+    cl::Kernel _kernel;
 
-    cl_int err;
+    cl_int _err;
 
-    cl::Event event;
+    cl::Event _event;
 };
