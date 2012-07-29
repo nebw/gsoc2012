@@ -2,8 +2,6 @@
 
 #include "cpplog/cpplog.hpp"
 
-#include <boost/shared_ptr.hpp>
-
 typedef struct
 {
     float V;
@@ -17,10 +15,6 @@ typedef struct
     float I_app;
 } state;
 
-typedef struct
-{
-    float *real;
-    float *imag;
-} clFFT_SplitComplexFloat;
+typedef float splitComplex[2];
 
-typedef boost::shared_ptr<cpplog::BaseLogger> Logger;
+typedef shared_ptr<cpplog::BaseLogger> Logger;
