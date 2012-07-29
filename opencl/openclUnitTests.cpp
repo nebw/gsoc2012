@@ -55,20 +55,11 @@ TEST(FFTTest, InverseFFTTest)
 
     clFFT_SplitComplex data_i_split    = { NULL, NULL };
     clFFT_SplitComplex data_cl_split   = { NULL, NULL };
-    clFFT_Complex *data_i          = NULL;
-    clFFT_Complex *data_cl         = NULL;
-    clFFT_SplitComplexDouble data_iref = { NULL, NULL };
-    clFFT_SplitComplexDouble data_oref = { NULL, NULL };
 
     data_i_split.real  = (float *)malloc(sizeof(float) * length);
     data_i_split.imag  = (float *)malloc(sizeof(float) * length);
     data_cl_split.real = (float *)malloc(sizeof(float) * length);
     data_cl_split.imag = (float *)malloc(sizeof(float) * length);
-
-    data_iref.real = (double *)malloc(sizeof(double) * length);
-    data_iref.imag = (double *)malloc(sizeof(double) * length);
-    data_oref.real = (double *)malloc(sizeof(double) * length);
-    data_oref.imag = (double *)malloc(sizeof(double) * length);
 
     // std::cout << "Input: " << std::endl;
     for (int i = 0; i < length; i++)
@@ -77,10 +68,6 @@ TEST(FFTTest, InverseFFTTest)
         data_i_split.imag[i]  = 2.0f * (float)rand() / (float)RAND_MAX - 1.0f;
         data_cl_split.real[i] = 0.0f;
         data_cl_split.imag[i] = 0.0f;
-        data_iref.real[i]     = data_i_split.real[i];
-        data_iref.imag[i]     = data_i_split.imag[i];
-        data_oref.real[i]     = data_iref.real[i];
-        data_oref.imag[i]     = data_iref.imag[i];
 
         // std::cout << "data[" << i << "] = { " << data_i_split.real[i] << ", "
         // << data_i_split.imag[i] << " } " << std::endl;
