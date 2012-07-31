@@ -12,8 +12,8 @@ public:
 
     cl::Program loadProgram(std::string path);
 
-    cl::Context getContext() const;
-    cl::CommandQueue getQueue() const;
+    cl::Context const& getContext() const;
+    cl::CommandQueue const& getQueue() const;
 
     cl_context getContextC() const;
     cl_command_queue getQueueC() const;
@@ -24,7 +24,6 @@ private:
 
     cl::Context _context;
     cl::CommandQueue _queue;
-    cl::Program _program;
     cl::Kernel _kernel;
 
     cl_int _err;

@@ -5,8 +5,10 @@
 #include "CLWrapper.h"
 #include "util.h"
 
+#include <cassert>
+
 #include <boost/foreach.hpp>
-#include <boost/thread/thread.hpp>
+//#include <boost/thread/thread.hpp>
 
 CLWrapper::CLWrapper()
 {
@@ -87,12 +89,12 @@ cl::Program CLWrapper::loadProgram(std::string path)
     }
 }
 
-cl::Context CLWrapper::getContext() const
+cl::Context const& CLWrapper::getContext() const
 {
     return _context;
 }
 
-cl::CommandQueue CLWrapper::getQueue() const
+cl::CommandQueue const& CLWrapper::getQueue() const
 {
     return _queue;
 }
