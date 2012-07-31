@@ -1,3 +1,13 @@
+//#ifdef _DEBUG
+//#define _CRTDBG_MAP_ALLOC
+//#include <stdlib.h>
+//#include <crtdbg.h>
+//#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+//#define new DEBUG_NEW
+//#endif
+
+#include <vld.h>
+
 #include "Definitions.h"
 #include "Simulator.h"
 #include "util.h"
@@ -69,6 +79,13 @@ void measureTimes(Logger const& logger, state const& state0, boost::filesystem3:
     }
 }
 
+int finish()
+{
+    _CrtDumpMemoryLeaks();
+
+    return(0);
+}
+
 int main(int ac, char **av)
 {
     float V0, h0, n0, z0, sAMPA0, sNMDA0, xNMDA0, sGABAA0, IApp0, dt;
@@ -105,6 +122,12 @@ int main(int ac, char **av)
         exit(1);
     }
 
+    plot = "true";
+    numNeurons = 16384;
+    timesteps = 50000;
+    clfft = "true";
+    fftw = "false";
+
     auto logger = make_shared<cpplog::StdErrLogger>();
     state state0;
     state0.V = V0;
@@ -125,7 +148,7 @@ int main(int ac, char **av)
         timesteps,
         dt,
         state0,
-        stringToBool(plot) ? Simulator::PLOT : Simulator::NO_PLOT,
+        stringToBool(plot) ? Simulator::PLOT_OPENGL : Simulator::NO_PLOT,
         stringToBool(measure) ? Simulator::MEASURE : Simulator::NO_MEASURE,
         stringToBool(fftw) ? Simulator::FFTW : Simulator::NO_FFTW,
         stringToBool(clfft) ? Simulator::CLFFT : Simulator::NO_CLFFT,
@@ -136,5 +159,5 @@ int main(int ac, char **av)
 
     ////measureTimes(logger, state0, path);
 
-    exit(0);
+    return finish();
 }

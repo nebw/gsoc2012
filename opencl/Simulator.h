@@ -2,7 +2,7 @@
 
 #include "Definitions.h"
 #include "CLWrapper.h"
-#include "Plotter.h"
+#include "BasePlotter.h"
 
 #include "OpenCL_FFT\clFFT.h"
 #include "fftw3.h"
@@ -14,7 +14,8 @@ class Simulator
 public:
     enum Plot {
         NO_PLOT = 0,
-        PLOT
+        PLOT_GNUPLOT,
+        PLOT_OPENGL
     };
 
     enum Measure {
@@ -63,7 +64,7 @@ private:
     cl::Event _event;
     cl_int _err;
 
-    Plotter _plotter;
+    std::unique_ptr<BasePlotter> _plotter;
     Logger _logger;
 
     // Simulation configuration

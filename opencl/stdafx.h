@@ -2,6 +2,10 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 
+#include <GL/glew.h>
+
+#include "cpplog/cpplog.hpp"
+
 #include "CL/cl.h"
 #include "CL/cl.hpp"
 

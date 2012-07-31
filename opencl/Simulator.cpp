@@ -2,6 +2,8 @@
 
 #include "Simulator.h"
 #include "util.h"
+#include "GnuPlotPlotter.h"
+#include "OpenGLPlotter.h"
 
 #include "CL/cl.hpp"
 
@@ -26,13 +28,11 @@ Simulator::Simulator(const unsigned int numNeurons,
                      boost::filesystem3::path const& programPath,
                      Logger const& logger)
     : _wrapper(CLWrapper()),
-      _plotter(Plotter(numNeurons, 0, dt)),
       _numNeurons(numNeurons),
       _timesteps(timesteps),
       _dt(dt),
       _state_0(_state_0),
       _t(0),
-      _plot(plot == PLOT),
       _measure(measure == MEASURE),
       _fftw(fftw == FFTW),
       _clfft(clfft == CLFFT),
@@ -42,6 +42,20 @@ Simulator::Simulator(const unsigned int numNeurons,
       _scaleFFT(1.f / _nFFT),
       _err(CL_SUCCESS)
 {
+    switch(plot)
+    {
+    case NO_PLOT:
+        _plot = false;
+        break;
+    case PLOT_GNUPLOT:
+        _plot = true;
+        _plotter = std::unique_ptr<BasePlotter>(new GnuPlotPlotter(numNeurons, 0, dt));
+    	break;
+    case PLOT_OPENGL:
+        _plot = true;
+        _plotter = std::unique_ptr<BasePlotter>(new OpenGLPlotter(numNeurons, 0, dt));
+        break;
+    }
 
     _program = _wrapper.loadProgram(programPath.string());
 
@@ -85,6 +99,7 @@ Simulator::Simulator(const unsigned int numNeurons,
         clFFT_Dim3 n = { _nFFT, 1, 1 };
         clFFT_DataFormat dataFormat = clFFT_SplitComplexFormat;
         clFFT_Dimension dim = clFFT_1D;
+        //TODO: Memory leak
         _p_cl = clFFT_CreatePlan(_wrapper.getContextC(), n, dim, dataFormat, &_err);
         handleClError(_err);
 
@@ -249,10 +264,10 @@ Simulator::Simulator(const unsigned int numNeurons,
         boost::scoped_array<float> distances_f_real(new float[_nFFT]);
         boost::scoped_array<float> distances_f_imag(new float[_nFFT]);
 
-        _err = _wrapper.getQueue().enqueueReadBuffer(_distances_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_real.get(), NULL, &_event);
-        _err = _wrapper.getQueue().enqueueReadBuffer(_distances_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_imag.get(), NULL, &_event);
-        _err = _wrapper.getQueue().enqueueReadBuffer(_distances_f_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_f_real.get(), NULL, &_event);
-        _err = _wrapper.getQueue().enqueueReadBuffer(_distances_f_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_f_imag.get(), NULL, &_event);
+        _err = _wrapper.getQueue().enqueueReadBuffer(_distances_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_real.get(), NULL, NULL);
+        _err = _wrapper.getQueue().enqueueReadBuffer(_distances_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_imag.get(), NULL, NULL);
+        _err = _wrapper.getQueue().enqueueReadBuffer(_distances_f_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_f_real.get(), NULL, NULL);
+        _err = _wrapper.getQueue().enqueueReadBuffer(_distances_f_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_f_imag.get(), NULL, NULL);
 
         for(unsigned int i = 0; i < _nFFT; ++i)
         {
@@ -320,7 +335,7 @@ Simulator::Simulator(const unsigned int numNeurons,
 
     if(_plot)
     {
-        _plotter.step(&_states[0], _numNeurons, _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA);
+        _plotter->step(&_states[0], _numNeurons, _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA);
     }
 }
 
@@ -352,9 +367,9 @@ void Simulator::step()
         }
 
         f_I_FFT_fftw(ind_old, AMPA);
-        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, &_event);
+        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, NULL);
         f_I_FFT_fftw(ind_old, NMDA);
-        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintNMDA_cl, CL_TRUE, 0, _numNeurons * sizeof(float), _sumFootprintNMDA.get(), NULL, &_event);
+        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintNMDA_cl, CL_TRUE, 0, _numNeurons * sizeof(float), _sumFootprintNMDA.get(), NULL, NULL);
         //f_I_FFT(ind_old, "GABAA");
 
         if(_measure)
@@ -389,9 +404,9 @@ void Simulator::step()
         }
 
         f_I_FFT_clFFT(ind_old, AMPA);
-        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, &_event);
+        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, NULL);
         f_I_FFT_clFFT(ind_old, NMDA);
-        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintNMDA_cl, CL_TRUE, 0, _numNeurons * sizeof(float), _sumFootprintNMDA.get(), NULL, &_event);
+        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintNMDA_cl, CL_TRUE, 0, _numNeurons * sizeof(float), _sumFootprintNMDA.get(), NULL, NULL);
 
         if(_measure)
         {
@@ -402,16 +417,16 @@ void Simulator::step()
 #endif
         }
     }
-
-    if(_fftw && _clfft)
-    {
-        for(unsigned int i = 0; i < _numNeurons; ++i)
-        {
-            assertNear(_sumFootprintAMPA[i], sumFootPrintAMPA_tmp[i], 0.05);
-            assertNear(_sumFootprintNMDA[i], sumFootPrintNMDA_tmp[i], 0.05);
-        }
-    }
-    
+//
+//    if(_fftw && _clfft)
+//    {
+//        for(unsigned int i = 0; i < _numNeurons; ++i)
+//        {
+//            assertNear(_sumFootprintAMPA[i], sumFootPrintAMPA_tmp[i], 0.05);
+//            assertNear(_sumFootprintNMDA[i], sumFootPrintNMDA_tmp[i], 0.05);
+//        }
+//    }
+//    
     unsigned long startTime;
     if(_measure)
     {
@@ -420,13 +435,17 @@ void Simulator::step()
         startTime = timeGetTime();
 #endif
     }
-    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dV_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
-    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dn_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
-    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_I_Na_dh_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
-    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dz_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
-    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dsAMPA_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
-    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dxNMDA_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
-    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dsNMDA_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
+
+    cl::NDRange nullRange = cl::NullRange;
+    cl::NDRange neuronRange = cl::NDRange(_numNeurons);
+
+    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dV_dt, nullRange, neuronRange, nullRange, NULL, NULL);
+    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dn_dt, nullRange, neuronRange, nullRange, NULL, NULL);
+    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_I_Na_dh_dt, nullRange, neuronRange, nullRange, NULL, NULL);
+    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dz_dt, nullRange, neuronRange, nullRange, NULL, NULL);
+    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dsAMPA_dt, nullRange, neuronRange, nullRange, NULL, NULL);
+    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dxNMDA_dt, nullRange, neuronRange, nullRange, NULL, NULL);
+    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dsNMDA_dt, nullRange, neuronRange, nullRange, NULL, NULL);
 
     _wrapper.getQueue().finish();
     if(_measure)
@@ -438,7 +457,7 @@ void Simulator::step()
 #endif
     }
 
-    _err = _wrapper.getQueue().enqueueReadBuffer(_states_cl, CL_TRUE, ind_new * _numNeurons * sizeof(state), _numNeurons * sizeof(state), &_states[ind_new * _numNeurons], NULL, &_event);
+    _err = _wrapper.getQueue().enqueueReadBuffer(_states_cl, CL_TRUE, ind_new * _numNeurons * sizeof(state), _numNeurons * sizeof(state), &_states[ind_new * _numNeurons], NULL, NULL);
 }
 
 void Simulator::simulate()
@@ -472,7 +491,7 @@ void Simulator::simulate()
             unsigned int ind_old = _t % 2;
             unsigned int ind_new = 1 - ind_old;
 
-            _plotter.step(&_states[ind_new * _numNeurons], _t, _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA);
+            _plotter->step(&_states[ind_new * _numNeurons], _t, _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA);
         }
     }
 
@@ -502,7 +521,7 @@ void Simulator::simulate()
 
     if(_plot)
     {
-        _plotter.plot();
+        _plotter->plot();
     }    
 }
 
@@ -582,7 +601,7 @@ void Simulator::f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec)
         }
     }
 
-    _err = _wrapper.getQueue().enqueueWriteBuffer(_sVals_real_cl, CL_TRUE, 0, _numNeurons * sizeof(float), _sVals_real.get(), NULL, &_event);
+    _err = _wrapper.getQueue().enqueueWriteBuffer(_sVals_real_cl, CL_TRUE, 0, _numNeurons * sizeof(float), _sVals_real.get(), NULL, NULL);
 
     handleClError(clFFT_ExecutePlannar(_wrapper.getQueueC(),
         _p_cl,
@@ -598,7 +617,7 @@ void Simulator::f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec)
 
     _wrapper.getQueue().finish();
 
-    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_convolution, cl::NullRange, cl::NDRange(_nFFT), cl::NullRange, NULL, &_event);
+    _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_convolution, cl::NullRange, cl::NDRange(_nFFT), cl::NullRange, NULL, NULL);
 
     _wrapper.getQueue().finish();
 
@@ -616,7 +635,7 @@ void Simulator::f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec)
 
     _wrapper.getQueue().finish();
 
-    _err = _wrapper.getQueue().enqueueReadBuffer(_convolution_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), _convolution_real.get(), NULL, &_event);
+    _err = _wrapper.getQueue().enqueueReadBuffer(_convolution_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), _convolution_real.get(), NULL, NULL);
 
     for(unsigned int indexOfNeuron = 0; indexOfNeuron < _numNeurons; ++indexOfNeuron)
     {
