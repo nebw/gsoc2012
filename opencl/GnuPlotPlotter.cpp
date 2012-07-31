@@ -1,13 +1,13 @@
 #include "stdafx.h"
 
-#include "Plotter.h"
+#include "GnuPlotPlotter.h"
 #include "util.h"
 
 #include "gnuplot_i/gnuplot_i.hpp"
 
 #include <boost/foreach.hpp>
 
-Plotter::Plotter(unsigned int numNeurons, unsigned int index, float dt)
+GnuPlotPlotter::GnuPlotPlotter(unsigned int numNeurons, unsigned int index, float dt)
     : _numNeurons(numNeurons),
       _index(index),
       _dt(dt),
@@ -37,7 +37,7 @@ Plotter::Plotter(unsigned int numNeurons, unsigned int index, float dt)
     }
 }
 
-void Plotter::step(const state *curState, const unsigned int t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA)
+void GnuPlotPlotter::step(const state *curState, const unsigned int t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA)
 {
     _V.push_back(curState[_index].V);
     _h.push_back(curState[_index].h);
@@ -66,7 +66,7 @@ void Plotter::step(const state *curState, const unsigned int t, std::unique_ptr<
 
 }
 
-void Plotter::plot()
+void GnuPlotPlotter::plot()
 {
     unsigned int timesteps = _V.size();
 
