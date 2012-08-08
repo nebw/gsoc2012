@@ -8,6 +8,7 @@ include_directories(
       ${OPENCL_INCLUDE_DIRS}
       ${gtest_SOURCE_DIR}/include
       ${gtest_SOURCE_DIR}
+      ${opencl_SOURCE_DIR}
 )
 
 add_executable(openclUnitTests

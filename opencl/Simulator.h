@@ -4,7 +4,7 @@
 #include "CLWrapper.h"
 #include "Plotter.h"
 
-#include "OpenCL_FFT\clFFT.h"
+#include "opencl_fft/clFFT.h"
 #include "fftw3.h"
 
 #include <boost/filesystem.hpp>

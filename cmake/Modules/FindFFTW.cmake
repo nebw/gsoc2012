@@ -14,7 +14,7 @@ endif (FFTW_INCLUDES)
 
 find_path (FFTW_INCLUDES fftw3.h)
 
-find_library (FFTW_LIBRARIES NAMES fftw3)
+find_library (FFTW_LIBRARIES NAMES fftw3f)
 
 # handle the QUIETLY and REQUIRED arguments and set FFTW_FOUND to TRUE if
 # all listed variables are TRUE

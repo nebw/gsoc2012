@@ -2,6 +2,8 @@
 
 #include "Definitions.h"
 
+#include <memory>
+
 class Plotter
 {
 public:

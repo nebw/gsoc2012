@@ -5,6 +5,7 @@
 #include "cpplog/cpplog.hpp"
 
 #include <numeric>
+#include <vector>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -16,17 +17,17 @@ void measureTimes(Logger const& logger, state const& state0, boost::filesystem3:
     const unsigned int start = 0;
     const unsigned int powers = 10;
 
-    std::vector<const unsigned int> numNeurons;
-    std::vector<const double> avgTimesCalculations;
-    std::vector<const double> avgTimesFFTW;
-    std::vector<const double> avgTimesClFFT;
+    std::vector<unsigned int> numNeurons;
+    std::vector<double> avgTimesCalculations;
+    std::vector<double> avgTimesFFTW;
+    std::vector<double> avgTimesClFFT;
 
     for(int i = start; i < powers; ++i)
     {
         auto neurons = static_cast<const unsigned int>(pow(2.f, i));
         numNeurons.push_back(neurons);
 
-        Simulator sim = Simulator(
+        Simulator sim(
             neurons,
             500,
             0.1f,
@@ -101,11 +102,11 @@ int main(int ac, char **av)
     po::notify(vm);    
 
     if (vm.count("help")) {
-        cout << desc << "\n";
+        std::cout << desc << "\n";
         exit(1);
     }
 
-    auto logger = make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::StdErrLogger>();
     state state0;
     state0.V = V0;
     state0.h = h0;
@@ -120,7 +121,7 @@ int main(int ac, char **av)
     auto path = boost::filesystem3::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
 
-    Simulator sim = Simulator(
+    Simulator sim(
         numNeurons,
         timesteps,
         dt,
