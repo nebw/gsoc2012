@@ -1,3 +1,5 @@
+#pragma GCC system_header
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ///  \brief A C++ interface to gnuplot.
@@ -1943,7 +1945,7 @@ std::string Gnuplot::create_tmpfile(std::ofstream &tmp)
     //
     tmpfile_list.push_back(name);
     Gnuplot::tmpfile_num++;
-
+    
     return name;
 }
 
@@ -1956,4 +1958,4 @@ void Gnuplot::remove_tmpfiles(){
         Gnuplot::tmpfile_num -= tmpfile_list.size();
     }
 }
-#endif 
+#endif

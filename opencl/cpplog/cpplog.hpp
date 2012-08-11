@@ -1,3 +1,8 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcpp"
+
+#pragma GCC system_header
+
 #pragma once
 
 #ifndef _CPPLOG_H
@@ -1072,3 +1077,5 @@ namespace cpplog
 #endif
 
 #endif //_CPPLOG_H
+
+#pragma GCC diagnostic pop

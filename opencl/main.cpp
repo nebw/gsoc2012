@@ -12,10 +12,10 @@
 
 namespace po = boost::program_options;
 
-void measureTimes(Logger const& logger, state const& state0, boost::filesystem3::path const& path) 
+void measureTimes(Logger const& logger, state const& state0, boost::filesystem::path const& path) 
 {
-    const unsigned int start = 0;
-    const unsigned int powers = 10;
+    const int start = 0;
+    const int powers = 10;
 
     std::vector<unsigned int> numNeurons;
     std::vector<double> avgTimesCalculations;
@@ -118,9 +118,9 @@ int main(int ac, char **av)
     state0.s_GABAA = sGABAA0;
     state0.I_app = IApp0;
 
-    auto path = boost::filesystem3::path(CL_SOURCE_DIR);
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
-
+    
     Simulator sim(
         numNeurons,
         timesteps,

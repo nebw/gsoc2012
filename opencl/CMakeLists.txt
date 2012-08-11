@@ -4,11 +4,12 @@ add_subdirectory(gtest)
 enable_testing()
 
 include_directories(
+      ${opencl_SOURCE_DIR}
+      SYSTEM
       ${Boost_INCLUDE_DIR}
       ${OPENCL_INCLUDE_DIRS}
       ${gtest_SOURCE_DIR}/include
       ${gtest_SOURCE_DIR}
-      ${opencl_SOURCE_DIR}
 )
 
 add_executable(openclUnitTests

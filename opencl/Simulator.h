@@ -40,7 +40,7 @@ public:
               const Measure measure,
               const FFT_FFTW fftw,
               const FFT_clFFT clfft,
-              boost::filesystem3::path const& programPath,
+              boost::filesystem::path const& programPath,
               Logger const& logger);
 
     void step();
