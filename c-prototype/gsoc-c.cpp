@@ -35,7 +35,7 @@
 std::mutex m;
 #endif // ifdef USE_STD_THREADS
 
-template <typename T = double>
+template <typename T>
 std::vector<T> linSpaceVec(T a, T b, size_t N) {
   T h = (b - a) / static_cast<T>(N-1);
   std::vector<T> xs(N);
@@ -64,7 +64,7 @@ void f_I_FFT(
     const double       scale,
     double               (*footprint)(
       int)
-	    )
+        )
 {
       unsigned int ind = 0;
 
@@ -244,9 +244,9 @@ int runge_kutta_generic(
     const double       dt,
     void               (*f)(
         const          double **,
-	const double   *,
-	const double   *,
-	const double   *,
+    const double   *,
+    const double   *,
+    const double   *,
         const unsigned int,
         const unsigned int,
         const unsigned int,
@@ -590,7 +590,7 @@ void f_I_NMDA_FFT(
     }
 }
 
-double f_I_AMPA_FFT(
+void f_I_AMPA_FFT(
     const double     **states,
     const unsigned int numNeurons,
     const unsigned int stateSize,
@@ -626,7 +626,7 @@ double f_I_AMPA_FFT(
       n,
       scale,
       *_f_w_EE
- 	);
+    );
   
     for (unsigned int indexOfNeuron = 0; indexOfNeuron < numNeurons; ++indexOfNeuron)
     {
@@ -634,7 +634,7 @@ double f_I_AMPA_FFT(
     }
 }
 
-double f_I_GABAA_FFT(
+void f_I_GABAA_FFT(
     const double     **states,
     const unsigned int numNeurons,
     const unsigned int stateSize,
@@ -670,7 +670,7 @@ double f_I_GABAA_FFT(
       n,
       scale,
       *_f_w_EE
- 	);
+    );
 
     for (unsigned int indexOfNeuron = 0; indexOfNeuron < numNeurons; ++indexOfNeuron)
     {
@@ -911,25 +911,25 @@ void stepFunction(
         {
             state[ind_new][indexOfNeuron][0] =
                 state[ind_old][indexOfNeuron][0] + 1;
-	    runge_kutta_generic(
-	      (const double **)state[ind_old],
-	      state_K1,
-	      state_K2,
-	      state_K3,
-	      state_K4,
-	      state_temp_1,
-	      state_temp_2,
-	      state_temp_3,
-	      numNeurons,
-	      stateSize,
-	      indexOfNeuron,
-	      1,
-	      sumFootprintAMPA,
-	      sumFootprintNMDA,
-	      sumFootprintGABAA,
-	      dt,
-	      (*golomb::f_dV_dt),
-	      state[ind_new][indexOfNeuron]);
+        runge_kutta_generic(
+          (const double **)state[ind_old],
+          state_K1,
+          state_K2,
+          state_K3,
+          state_K4,
+          state_temp_1,
+          state_temp_2,
+          state_temp_3,
+          numNeurons,
+          stateSize,
+          indexOfNeuron,
+          1,
+          sumFootprintAMPA,
+          sumFootprintNMDA,
+          sumFootprintGABAA,
+          dt,
+          (*golomb::f_dV_dt),
+          state[ind_new][indexOfNeuron]);
             runge_kutta((*golomb::f_I_Na_dh_dt), 2);
             runge_kutta((*golomb::f_dn_dt), 3);
             runge_kutta((*golomb::f_dz_dt), 4);
@@ -953,25 +953,25 @@ void stepFunction(
         } else {
             state[ind_new][indexOfNeuron][0] =
                 state[ind_old][indexOfNeuron][0] + 1;
-	    runge_kutta_generic(
-	      (const double **)state[ind_old],
-	      state_K1,
-	      state_K2,
-	      state_K3,
-	      state_K4,
-	      state_temp_1,
-	      state_temp_2,
-	      state_temp_3,
-	      numNeurons,
-	      stateSize,
-	      indexOfNeuron,
-	      1,
-	      sumFootprintAMPA,
-	      sumFootprintNMDA,
-	      sumFootprintGABAA,
-	      dt,
-	      (*wang_buzsaki::f_dV_dt),
-	      state[ind_new][indexOfNeuron]);
+        runge_kutta_generic(
+          (const double **)state[ind_old],
+          state_K1,
+          state_K2,
+          state_K3,
+          state_K4,
+          state_temp_1,
+          state_temp_2,
+          state_temp_3,
+          numNeurons,
+          stateSize,
+          indexOfNeuron,
+          1,
+          sumFootprintAMPA,
+          sumFootprintNMDA,
+          sumFootprintGABAA,
+          dt,
+          (*wang_buzsaki::f_dV_dt),
+          state[ind_new][indexOfNeuron]);
             runge_kutta((*wang_buzsaki::f_I_Na_dh_dt), 2);
             runge_kutta((*wang_buzsaki::f_I_Kdr_dn_dt), 3);
             state[ind_new][indexOfNeuron][4] =
@@ -1016,7 +1016,7 @@ int simulate()
     const double I_app_0                = 1;
     const double dt                     = 0.1;
     const unsigned int timesteps        = 5000;
-    const unsigned int numNeurons       = 20000;
+    const unsigned int numNeurons       = 1000;
     const unsigned int stateSize        = 10;
     const unsigned int chanceInhibitory = 10;
     const unsigned int numFFTs          = 4;
@@ -1212,61 +1212,61 @@ int simulate()
     last
 
       golomb::f_I_NMDA_FFT(
-		  (const double **)state[ind_old],
-		  numNeurons,
-		  stateSize,
-		  state[ind_new],
-		  distances,
-		  sNMDAs,
-		  convolution,
-		  distances_f,
-		  sNMDAs_f,
-		  convolution_f,
-		  p_distances,
-		  p_sNMDAs,
-		  p_inv,
-		  n,
-		  scale,
-		  sumFootprintNMDA
-		  );
+          (const double **)state[ind_old],
+          numNeurons,
+          stateSize,
+          state[ind_new],
+          distances,
+          sNMDAs,
+          convolution,
+          distances_f,
+          sNMDAs_f,
+          convolution_f,
+          p_distances,
+          p_sNMDAs,
+          p_inv,
+          n,
+          scale,
+          sumFootprintNMDA
+          );
 
       golomb::f_I_AMPA_FFT(
-		  (const double **)state[ind_old],
-		  numNeurons,
-		  stateSize,
-		  state[ind_new],
-		  distances,
-		  sNMDAs,
-		  convolution,
-		  distances_f,
-		  sNMDAs_f,
-		  convolution_f,
-		  p_distances,
-		  p_sNMDAs,
-		  p_inv,
-		  n,
-		  scale,
-		  sumFootprintAMPA
-		  );
+          (const double **)state[ind_old],
+          numNeurons,
+          stateSize,
+          state[ind_new],
+          distances,
+          sNMDAs,
+          convolution,
+          distances_f,
+          sNMDAs_f,
+          convolution_f,
+          p_distances,
+          p_sNMDAs,
+          p_inv,
+          n,
+          scale,
+          sumFootprintAMPA
+          );
 
       golomb::f_I_GABAA_FFT(
-		  (const double **)state[ind_old],
-		  numNeurons,
-		  stateSize,
-		  state[ind_new],
-		  distances,
-		  sNMDAs,
-		  convolution,
-		  distances_f,
-		  sNMDAs_f,
-		  convolution_f,
-		  p_distances,
-		  p_sNMDAs,
-		  p_inv,
-		  n,
-		  scale,
-		  sumFootprintGABAA
-		  );
+          (const double **)state[ind_old],
+          numNeurons,
+          stateSize,
+          state[ind_new],
+          distances,
+          sNMDAs,
+          convolution,
+          distances_f,
+          sNMDAs_f,
+          convolution_f,
+          p_distances,
+          p_sNMDAs,
+          p_inv,
+          n,
+          scale,
+          sumFootprintGABAA
+          );
 
       //TODO: FFT for IE
 
@@ -1305,6 +1305,9 @@ int simulate()
                 state_temp_1,
                 state_temp_2,
                 state_temp_3,
+                sumFootprintAMPA,
+                sumFootprintNMDA,
+                sumFootprintGABAA,
                 numNeurons,
                 stateSize,
                 dt,
@@ -1317,23 +1320,62 @@ int simulate()
                 );
         }
 
-	golomb::f_I_NMDA_FFT(
-	    (const double **)state[ind_old],
-	    numNeurons,
-	    stateSize,
-	    state[ind_new],
-	    distances,
-	    sNMDAs,
-	    convolution,
-	    distances_f,
-	    sNMDAs_f,
-	    convolution_f,
-	    p_distances,
-	    p_sNMDAs,
-	    p_inv,
-	    n,
-	    scale
-	    );
+    golomb::f_I_NMDA_FFT(
+        (const double **)state[ind_old],
+        numNeurons,
+        stateSize,
+        state[ind_new],
+        distances,
+        sNMDAs,
+        convolution,
+        distances_f,
+        sNMDAs_f,
+        convolution_f,
+        p_distances,
+        p_sNMDAs,
+        p_inv,
+        n,
+        scale,
+        sumFootprintNMDA
+        );
+
+    golomb::f_I_AMPA_FFT(
+        (const double **)state[ind_old],
+        numNeurons,
+        stateSize,
+        state[ind_new],
+        distances,
+        sNMDAs,
+        convolution,
+        distances_f,
+        sNMDAs_f,
+        convolution_f,
+        p_distances,
+        p_sNMDAs,
+        p_inv,
+        n,
+        scale,
+        sumFootprintAMPA
+        );
+
+    golomb::f_I_GABAA_FFT(
+        (const double **)state[ind_old],
+        numNeurons,
+        stateSize,
+        state[ind_new],
+        distances,
+        sNMDAs,
+        convolution,
+        distances_f,
+        sNMDAs_f,
+        convolution_f,
+        p_distances,
+        p_sNMDAs,
+        p_inv,
+        n,
+        scale,
+        sumFootprintGABAA
+        );
 #endif // ifdef USE_STD_THREADS
 
         V_t_e.push_back(state[ind_new][neuronToPlot_e][1]);
