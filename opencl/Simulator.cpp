@@ -810,14 +810,20 @@ void Simulator::initializeCLKernelsAndBuffers()
 
 Simulator::~Simulator()
 {
-    clFFT_DestroyPlan(_p_cl);
-    fftwf_free(_distances_split);
-    fftwf_free(_convolution_split);
-    fftwf_free(_sVals_split);
-    fftwf_free(_distances_f_split);
-    fftwf_free(_convolution_f_split);
-    fftwf_free(_sVals_f_split);
-    fftwf_destroy_plan(_p_distances_fftw);
-    fftwf_destroy_plan(_p_sVals_fftw);
-    fftwf_destroy_plan(_p_inv_fftw);
+    if(_fftw)
+    {
+        fftwf_free(_distances_split);
+        fftwf_free(_convolution_split);
+        fftwf_free(_sVals_split);
+        fftwf_free(_distances_f_split);
+        fftwf_free(_convolution_f_split);
+        fftwf_free(_sVals_f_split);
+        fftwf_destroy_plan(_p_distances_fftw);
+        fftwf_destroy_plan(_p_sVals_fftw);
+        fftwf_destroy_plan(_p_inv_fftw);
+    }
+    if(_clfft)
+    {
+        clFFT_DestroyPlan(_p_cl);
+    }
 }
