@@ -87,6 +87,8 @@ OpenGLPlotter::OpenGLPlotter(unsigned int numNeurons, unsigned int index, float 
         throw;
     }
 
+    glViewport(0, 0, _graphsize, 500);
+
 //    /* Enable blending */
 //    glEnable(GL_BLEND);
 //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -94,13 +96,13 @@ OpenGLPlotter::OpenGLPlotter(unsigned int numNeurons, unsigned int index, float 
     // Create the vertex buffer object
     glGenBuffers(1, &_vbo);
 
-    for(unsigned int i = 0; i < _graphsize - 1; ++i)
-    {
-        _V.push_back(-100);
-        _sAMPA.push_back(-100);
-        _sNMDA.push_back(-100);
-        _xNMDA.push_back(-100);
-    }
+    //for(unsigned int i = 0; i < _graphsize - 1; ++i)
+    //{
+    //    _V.push_back(-100);
+    //    _sAMPA.push_back(-100);
+    //    _sNMDA.push_back(-100);
+    //    _xNMDA.push_back(-100);
+    //}
 }
 
 OpenGLPlotter::~OpenGLPlotter()
@@ -119,20 +121,20 @@ void OpenGLPlotter::step(const state *curState, const unsigned int t, std::uniqu
     _xNMDA.push_back(curState[_index].x_NMDA);
     int size = _V.size();
 
-    if((size >= _graphsize) && (t % interval == 0))
+    if(t % interval == 0)
     {
         glUseProgram(_program);
 
-        glClearColor(0.0, 0.0, 0.0, 0.0);
+        glClearColor(255.0, 255.0, 255.0, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
         /* Draw using the vertices in our vertex buffer object */
         glBindBuffer(GL_ARRAY_BUFFER, _vbo);
 
-        for(int i=0; i < static_cast<int>(_graphsize); ++i)
+        for(int i=0; i < size; ++i)
         {
             _graph[i].x = (i - (static_cast<int>(_graphsize)/2)) / (size/2.0);
-            _graph[i].y = _sAMPA[i] - 1;
+            _graph[i].y = _sAMPA[size-i-1] - 1;
         }
 
         // Tell OpenGL to copy our array to the buffer object
@@ -151,10 +153,10 @@ void OpenGLPlotter::step(const state *curState, const unsigned int t, std::uniqu
         glUniform4f(_uniform_color, 0, 0, 1, 1);
         glDrawArrays(GL_LINE_STRIP, 0, size);
 
-        for(int i=0; i < static_cast<int>(_graphsize); ++i)
+        for(int i=0; i < size; ++i)
         {
             _graph[i].x = (i - (static_cast<int>(_graphsize)/2)) / (size/2.0);
-            _graph[i].y = _sNMDA[i] - 1;
+            _graph[i].y = _sNMDA[size-i-1] - 1;
         }
 
         // Tell OpenGL to copy our array to the buffer object
@@ -173,10 +175,10 @@ void OpenGLPlotter::step(const state *curState, const unsigned int t, std::uniqu
         glUniform4f(_uniform_color, 0, 1, 0, 1);
         glDrawArrays(GL_LINE_STRIP, 0, size);
 
-        for(int i=0; i < static_cast<int>(_graphsize); ++i)
+        for(int i=0; i < size; ++i)
         {
             _graph[i].x = (i - (static_cast<int>(_graphsize)/2)) / (size/2.0);
-            _graph[i].y = _xNMDA[i] - 1;
+            _graph[i].y = _xNMDA[size-i-1] - 1;
         }
 
         // Tell OpenGL to copy our array to the buffer object
@@ -195,10 +197,10 @@ void OpenGLPlotter::step(const state *curState, const unsigned int t, std::uniqu
         glUniform4f(_uniform_color, 0, 0.5, 0.5, 1);
         glDrawArrays(GL_LINE_STRIP, 0, size);
 
-        for(int i=0; i < static_cast<int>(_graphsize); ++i)
+        for(int i=0; i < size; ++i)
         {
             _graph[i].x = (i - (static_cast<int>(_graphsize)/2)) / (size/2.0);
-            _graph[i].y = _V[i] / 80.0 + 0.2;
+            _graph[i].y = _V[size-i-1] / 80.0 + 0.2;
         }
 
         // Tell OpenGL to copy our array to the buffer object
@@ -223,13 +225,15 @@ void OpenGLPlotter::step(const state *curState, const unsigned int t, std::uniqu
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glfwSwapBuffers();
-
-        for(unsigned int j = 0; j < interval; ++j)
+        if(size >= _graphsize)
         {
-            _V.pop_front();
-            _sAMPA.pop_front();
-            _sNMDA.pop_front();
-            _xNMDA.pop_front();
+            for(unsigned int j = 0; j < interval; ++j)
+            {
+                _V.pop_front();
+                _sAMPA.pop_front();
+                _sNMDA.pop_front();
+                _xNMDA.pop_front();
+            }
         }
     }
 }
