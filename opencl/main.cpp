@@ -1,6 +1,9 @@
 #include "Definitions.h"
+#include "Plotter.h"
 #include "Simulator.h"
 #include "util.h"
+
+#include "gnuplot_i/gnuplot_i.h"
 
 #include "cpplog/cpplog.hpp"
 
@@ -12,10 +15,10 @@
 
 namespace po = boost::program_options;
 
-void measureTimes(Logger const& logger, state const& state0, boost::filesystem::path const& path)
+void measureTimes(Logger const& logger, state const& state0, const unsigned int timesteps, float dt, boost::filesystem::path const& path)
 {
-    const int start = 0;
-    const int powers = 10;
+    const int start = 14;
+    const int powers = 20;
 
     std::vector<unsigned int> numNeurons;
     std::vector<double> avgTimesCalculations;
@@ -29,8 +32,8 @@ void measureTimes(Logger const& logger, state const& state0, boost::filesystem::
 
         Simulator sim(
             neurons,
-            500,
-            0.1f,
+            timesteps,
+            dt,
             state0,
             Simulator::NO_PLOT,
             Simulator::MEASURE,
@@ -64,9 +67,23 @@ void measureTimes(Logger const& logger, state const& state0, boost::filesystem::
             / timesClFFT.size());
     }
 
+    std::cout << std::endl << "Results" << std::endl << "=======" << std::endl;
     for (int i = 0; i < powers - start; ++i)
     {
         std::cout << static_cast<const unsigned int>(pow(2.f, (int)(i + start))) << "\t" << avgTimesCalculations[i] << "\t" << avgTimesFFTW[i] << "\t" << avgTimesClFFT[i] << std::endl;
+    }
+
+    {
+        Gnuplot plot_performance;
+        plot_performance.set_title("Performance measurements (NVIDIA NVS 4200M)");
+        plot_performance.set_style("linespoints");
+        plot_performance.set_xlogscale(2);
+        plot_performance.set_xlabel("Neurons");
+        plot_performance.set_ylabel("Average execution time (ms)");
+        plot_performance.plot_xy(numNeurons, avgTimesCalculations, "Runge-kutta approximations");
+        plot_performance.plot_xy(numNeurons, avgTimesFFTW, "Convolution using FFTW");
+        plot_performance.plot_xy(numNeurons, avgTimesClFFT, "Convolution using ClFFT");
+        getchar();
     }
 }
 
@@ -74,7 +91,7 @@ int main(int ac, char **av)
 {
     float V0, h0, n0, z0, sAMPA0, sNMDA0, xNMDA0, sGABAA0, IApp0, dt;
     unsigned int numNeurons, timesteps;
-    std::string plot, measure, fftw, clfft;
+    std::string plot, measure, fftw, clfft, perfplot;
 
     po::options_description desc("Allowed options");
 
@@ -96,6 +113,7 @@ int main(int ac, char **av)
         ("measure", po::value<std::string>(&measure)->default_value("true"), "measure execution time")
         ("fftw", po::value<std::string>(&fftw)->default_value("false"), "compute synaptic fields using fftw")
         ("clfft", po::value<std::string>(&clfft)->default_value("true"), "compute synaptic fields using clFFT")
+        ("perfplot", po::value<std::string>(&perfplot)->default_value("false"), "measure and plot performance for various network sizes")
     ;
 
     po::variables_map vm;
@@ -122,25 +140,25 @@ int main(int ac, char **av)
     auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
 
-    plot = "true";
-    fftw = "true";
-    clfft = "true";
+    if (stringToBool(perfplot))
+    {
+        measureTimes(logger, state0, timesteps, dt, path);
+    } else
+    {
+        Simulator sim(
+            numNeurons,
+            timesteps,
+            dt,
+            state0,
+            stringToBool(plot) ? Simulator::PLOT : Simulator::NO_PLOT,
+            stringToBool(measure) ? Simulator::MEASURE : Simulator::NO_MEASURE,
+            stringToBool(fftw) ? Simulator::FFTW : Simulator::NO_FFTW,
+            stringToBool(clfft) ? Simulator::CLFFT : Simulator::NO_CLFFT,
+            path,
+            logger);
 
-    Simulator sim(
-        numNeurons,
-        timesteps,
-        dt,
-        state0,
-        stringToBool(plot) ? Simulator::PLOT : Simulator::NO_PLOT,
-        stringToBool(measure) ? Simulator::MEASURE : Simulator::NO_MEASURE,
-        stringToBool(fftw) ? Simulator::FFTW : Simulator::NO_FFTW,
-        stringToBool(clfft) ? Simulator::CLFFT : Simulator::NO_CLFFT,
-        path,
-        logger);
-
-    sim.simulate();
-
-    // //measureTimes(logger, state0, path);
+        sim.simulate();
+    }
 
     exit(0);
 }

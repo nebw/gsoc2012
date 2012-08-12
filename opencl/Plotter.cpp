@@ -3,7 +3,7 @@
 #include "Plotter.h"
 #include "util.h"
 
-#include "gnuplot_i/gnuplot_i.hpp"
+#include "gnuplot_i/gnuplot_i.h"
 
 #include <boost/foreach.hpp>
 
