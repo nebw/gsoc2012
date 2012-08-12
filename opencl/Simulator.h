@@ -133,6 +133,9 @@ private:
 
     clFFT_Plan _p_cl;
     cl::Kernel _kernel_convolution;
+    cl::Kernel _kernel_prepareFFT_AMPA;
+    cl::Kernel _kernel_prepareFFT_NMDA;
+    cl::Kernel _kernel_prepareFFT_GABAA;
 
     // Kernels
     cl::Kernel _kernel_f_dV_dt;
@@ -144,6 +147,7 @@ private:
     cl::Kernel _kernel_f_dsNMDA_dt;
 
     void handleClError(cl_int err);
+    void handleClError(cl::Error err);
 
     static inline float _f_w_EE(const int j);
 

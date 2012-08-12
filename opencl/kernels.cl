@@ -356,3 +356,26 @@ __kernel void convolution(__global float* convolution_f_real, __global float* co
                               - distances_f_imag[idx] * sVals_f_real[idx])
                               * scaleFFT;
 }    
+
+__kernel void prepareFFT_AMPA(__global struct state* states, __global float* sVals_real, const unsigned int numNeurons, const unsigned int ind_old)
+{
+    const unsigned int idx = get_global_id(0);
+
+    sVals_real[idx] = states[ind_old*numNeurons+idx].s_AMPA;
+}
+
+
+__kernel void prepareFFT_NMDA(__global struct state* states, __global float* sVals_real, const unsigned int numNeurons, const unsigned int ind_old)
+{
+    const unsigned int idx = get_global_id(0);
+
+    sVals_real[idx] = states[ind_old*numNeurons+idx].s_NMDA;
+}
+
+__kernel void prepareFFT_GABAA(__global struct state* states, __global float* sVals_real, const unsigned int numNeurons, const unsigned int ind_old)
+{
+    const unsigned int idx = get_global_id(0);
+
+    sVals_real[idx] = states[ind_old*numNeurons+idx].s_GABAA;
+}
+
