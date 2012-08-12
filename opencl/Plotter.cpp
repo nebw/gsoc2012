@@ -7,7 +7,9 @@
 
 #include <boost/foreach.hpp>
 
-Plotter::Plotter(unsigned int numNeurons, unsigned int index, float dt)
+Plotter::Plotter(unsigned int numNeurons,
+                 unsigned int index,
+                 float dt)
     : _numNeurons(numNeurons),
       _index(index),
       _dt(dt),
@@ -51,19 +53,18 @@ void Plotter::step(const state *curState, const unsigned int t, std::unique_ptr<
     _sumFootprintNMDA.push_back(sumFootprintNMDA[_index]);
     _sumFootprintGABAA.push_back(sumFootprintGABAA[_index]);
 
-    for(unsigned int i = 0; i < _numNeurons; ++i)
+    for (unsigned int i = 0; i < _numNeurons; ++i)
     {
-        if (curState[i].V >= 20 && _spikeArr[i] == false)
+        if ((curState[i].V >= 20) && (_spikeArr[i] == false))
         {
             _spikeTimes.push_back(t * _dt);
             _spikeNeuronIndices.push_back(i);
             _spikeArr[i] = true;
-        } else if (curState[i].V < 20 && _spikeArr[i] == true)
+        } else if ((curState[i].V < 20) && (_spikeArr[i] == true))
         {
             _spikeArr[i] = false;
         }
     }
-
 }
 
 void Plotter::plot()
@@ -71,49 +72,50 @@ void Plotter::plot()
     unsigned int timesteps = _V.size();
 
     Gnuplot plot_V_Iapp_e;
+
     plot_V_Iapp_e.set_style("lines");
     plot_V_Iapp_e.set_title("Excitatory neuron");
     plot_V_Iapp_e.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _V, "V");
     plot_V_Iapp_e.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _IApp, "I_app");
     Gnuplot plot_sumFootprints;
     plot_sumFootprints.set_style("lines");
     plot_sumFootprints.set_title("Excitatory neuron");
     plot_sumFootprints.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _sumFootprintAMPA, "AMPA");
     plot_sumFootprints.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _sumFootprintNMDA, "NMDA");
     plot_sumFootprints.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _sumFootprintGABAA, "GABAA");
     Gnuplot plot_hnz_e;
     plot_hnz_e.set_style("lines");
     plot_hnz_e.set_title("Excitatory neuron");
     plot_hnz_e.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _h, "h");
     plot_hnz_e.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _n, "n");
     plot_hnz_e.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _z, "z");
     Gnuplot plot_Syn_e;
     plot_Syn_e.set_style("lines");
     plot_Syn_e.set_title("Excitatory neuron");
     plot_Syn_e.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _sAMPA, "s_AMPA");
     plot_Syn_e.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _xNMDA, "x_NMDA");
     plot_Syn_e.plot_xy(
-        linSpaceVec<float>(0, (float) timesteps, timesteps),
+        linSpaceVec<float>(0, (float)timesteps, timesteps),
         _sNMDA, "s_NMDA");
     Gnuplot plot_Spikes;
     plot_Spikes.set_title("Spikes");

@@ -12,7 +12,7 @@
 
 namespace po = boost::program_options;
 
-void measureTimes(Logger const& logger, state const& state0, boost::filesystem::path const& path) 
+void measureTimes(Logger const& logger, state const& state0, boost::filesystem::path const& path)
 {
     const int start = 0;
     const int powers = 10;
@@ -22,7 +22,7 @@ void measureTimes(Logger const& logger, state const& state0, boost::filesystem::
     std::vector<double> avgTimesFFTW;
     std::vector<double> avgTimesClFFT;
 
-    for(int i = start; i < powers; ++i)
+    for (int i = start; i < powers; ++i)
     {
         auto neurons = static_cast<const unsigned int>(pow(2.f, i));
         numNeurons.push_back(neurons);
@@ -47,24 +47,24 @@ void measureTimes(Logger const& logger, state const& state0, boost::filesystem::
 
         avgTimesCalculations.push_back(
             std::accumulate(
-                timesCalculations.begin(), 
-                timesCalculations.end(), 0.0) 
+                timesCalculations.begin(),
+                timesCalculations.end(), 0.0)
             / timesCalculations.size());
 
         avgTimesFFTW.push_back(
             std::accumulate(
-            timesFFTW.begin(), 
-            timesFFTW.end(), 0.0) 
+                timesFFTW.begin(),
+                timesFFTW.end(), 0.0)
             / timesFFTW.size());
 
         avgTimesClFFT.push_back(
             std::accumulate(
-            timesClFFT.begin(), 
-            timesClFFT.end(), 0.0) 
+                timesClFFT.begin(),
+                timesClFFT.end(), 0.0)
             / timesClFFT.size());
     }
 
-    for(int i = 0; i < powers - start; ++i)
+    for (int i = 0; i < powers - start; ++i)
     {
         std::cout << static_cast<const unsigned int>(pow(2.f, (int)(i + start))) << "\t" << avgTimesCalculations[i] << "\t" << avgTimesFFTW[i] << "\t" << avgTimesClFFT[i] << std::endl;
     }
@@ -77,6 +77,7 @@ int main(int ac, char **av)
     std::string plot, measure, fftw, clfft;
 
     po::options_description desc("Allowed options");
+
     desc.add_options()
         ("help", "produce help message")
         ("V", po::value<float>(&V0)->default_value(-70.0), "initial value for membrane potential")
@@ -99,7 +100,7 @@ int main(int ac, char **av)
 
     po::variables_map vm;
     po::store(po::parse_command_line(ac, av, desc), vm);
-    po::notify(vm);    
+    po::notify(vm);
 
     if (vm.count("help")) {
         std::cout << desc << "\n";
@@ -120,7 +121,11 @@ int main(int ac, char **av)
 
     auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
-    
+
+    plot = "true";
+    fftw = "true";
+    clfft = "true";
+
     Simulator sim(
         numNeurons,
         timesteps,
@@ -135,7 +140,7 @@ int main(int ac, char **av)
 
     sim.simulate();
 
-    ////measureTimes(logger, state0, path);
+    // //measureTimes(logger, state0, path);
 
     exit(0);
 }

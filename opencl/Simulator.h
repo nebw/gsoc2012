@@ -67,12 +67,12 @@ private:
     Logger _logger;
 
     // Simulation configuration
-    unsigned int _numNeurons;
-    unsigned int _timesteps;
-    float _dt;
+    const unsigned int _numNeurons;
+    const unsigned int _timesteps;
+    const float _dt;
 
     // Initial state
-    state _state_0;
+    const state _state_0;
     unsigned int _t;
 
     // Configuration
@@ -149,11 +149,21 @@ private:
     cl::Kernel _kernel_f_dxNMDA_dt;
     cl::Kernel _kernel_f_dsNMDA_dt;
 
-    void handleClError(cl_int err);
-    void handleClError(cl::Error err);
+    void initializeFFTW();
+    void initializeHostVariables(state const& state_0);
+    void initializeClFFT();
+    void initializeCLKernelsAndBuffers();
 
-    static inline float _f_w_EE(const int j);
+    void convolutionFFTW(const unsigned int ind_old);
+    void convolutionClFFT(const unsigned int ind_old);
 
     void f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec);
     void f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec);
+
+    void executeKernels();
+
+    void assertConvolutionResults();
+    void assertInitializationResults();
+
+    static inline float _f_w_EE(const int j);
 };

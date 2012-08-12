@@ -8,6 +8,7 @@
 
 class CLWrapper {
 public:
+
     CLWrapper();
 
     cl::Program loadProgram(std::string path);
@@ -19,6 +20,7 @@ public:
     cl_command_queue getQueueC() const;
 
 private:
+
     unsigned int _deviceUsed;
     std::vector<cl::Device> _devices;
 

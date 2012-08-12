@@ -1,6 +1,6 @@
+#include <iostream>
 #include <stdio.h>
 #include <string>
-#include <iostream>
 
 #include "CLWrapper.h"
 #include "util.h"
@@ -15,13 +15,13 @@ CLWrapper::CLWrapper()
 
         std::vector<cl::Platform> platforms;
         _err = cl::Platform::get(&platforms);
-        std::cout << "cl::Platform::get(): " << oclErrorString(_err) << std::endl;;
+        std::cout << "cl::Platform::get(): " << oclErrorString(_err) << std::endl;
 
         assert(platforms.size() > 0);
 
         unsigned int numPlatform = 0;
         std::cout << std::endl;
-        BOOST_FOREACH(cl::Platform const& platform, platforms)
+        BOOST_FOREACH(cl::Platform const & platform, platforms)
         {
             std::cout << "Platform " << numPlatform << ":" << std::endl;
             std::cout << platform.getInfo<CL_PLATFORM_VENDOR>() << std::endl;
@@ -37,7 +37,7 @@ CLWrapper::CLWrapper()
         { CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[0])(), 0 };
 
         _context = cl::Context(CL_DEVICE_TYPE_GPU, properties);
-        
+
         _devices = _context.getInfo<CL_CONTEXT_DEVICES>();
         _queue = cl::CommandQueue(_context, _devices[0], 0, &_err);
     }
@@ -53,9 +53,9 @@ cl::Program CLWrapper::loadProgram(std::string path)
     {
         cl::Program program;
 
-        std::cout << ("Loading the program...") << std::endl;;
+        std::cout << ("Loading the program...") << std::endl;
 
-        int   pl;
+        int pl;
         char *kernel_source;
         kernel_source = file_contents(path.c_str(), &pl);
 
@@ -69,13 +69,13 @@ cl::Program CLWrapper::loadProgram(std::string path)
         std::string includes(CL_SOURCE_DIR);
         includes = "-I" + includes;
         _err      = program.build(_devices, includes.c_str());
-        
+
         std::cout << "Done building OpenCL program" << std::endl;
 
         std::cout << "Build Status: " << oclErrorString(program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(
-            _devices[0])) << std::endl;
+                                                            _devices[0])) << std::endl;
         std::cout << "Build Options:\t" <<
-            program.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>(_devices[0]) << std::endl;
+        program.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>(_devices[0]) << std::endl;
         std::cout << "Build Log:\t " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(
             _devices[0]) << std::endl;
 
