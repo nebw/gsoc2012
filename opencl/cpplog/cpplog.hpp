@@ -314,8 +314,8 @@ namespace cpplog
 #endif
 
 			m_logData->stream << std::setfill(' ') << std::setw(5) << std::left << std::dec 
-						<< LogMessage::getLevelName(m_logData->level) << " - " 
-						<< m_logData->fileName << "(" << m_logData->line << "): ";
+						<< LogMessage::getLevelName(m_logData->level) << " - " ;
+						//<< m_logData->fileName << "(" << m_logData->line << "): ";
 		}
 
 		void Flush()
