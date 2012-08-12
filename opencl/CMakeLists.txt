@@ -12,14 +12,14 @@ include_directories(
       ${gtest_SOURCE_DIR}
 )
 
-add_executable(openclUnitTests
+add_executable(execute_unit_tests
       openclUnitTests.cpp
       opencl_fft/fft_execute.cpp
       opencl_fft/fft_setup.cpp
       opencl_fft/fft_kernelstring.cpp
 )
 
-target_link_libraries(openclUnitTests 
+target_link_libraries(execute_unit_tests
       ${Boost_LIBRARIES}
       ${OPENCL_LIBRARIES}
       gtest
@@ -37,6 +37,7 @@ SET(SOURCE
   Simulator.cpp
   Plotter.cpp
   kernels.cl
+  gnuplot_i/gnuplot_i.cpp
 )
 
 SET(HEADERS
@@ -46,7 +47,7 @@ SET(HEADERS
   Simulator.h
   Plotter.h
   Definitions.h
-  gnuplot_i/gnuplot_i.hpp
+  gnuplot_i/gnuplot_i.h
 )
 
 SET(OPENCL_FFT
@@ -60,7 +61,7 @@ SET(OPENCL_FFT
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" SOURCE)
 
-add_executable(opencl
+add_executable(simulate
       ${SOURCE} 
       ${HEADERS}
       ${OPENCL_FFT}
@@ -83,14 +84,14 @@ if(MSVC)
   
   message("  FFTW_LIBRARIES: ${FFTW_LIBRARIES}")
   
-  target_link_libraries(opencl 
+  target_link_libraries(simulate
         ${Boost_LIBRARIES}
         ${OPENCL_LIBRARIES}
         ${FFTW_LIBRARIES}
         Winmm
   )
 else()
-  target_link_libraries(opencl 
+  target_link_libraries(simulate
         ${Boost_LIBRARIES}
         ${OPENCL_LIBRARIES}
         ${FFTW_LIBRARIES}
