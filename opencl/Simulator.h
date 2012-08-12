@@ -76,10 +76,10 @@ private:
     unsigned int _t;
 
     // Configuration
-    bool _plot;
-    bool _measure;
-    bool _fftw;
-    bool _clfft;
+    const bool _plot;
+    const bool _measure;
+    const bool _fftw;
+    const bool _clfft;
 
     // Measurements
     std::vector<unsigned long> _timesCalculations;
