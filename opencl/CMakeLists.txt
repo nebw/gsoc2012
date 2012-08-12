@@ -4,6 +4,8 @@ add_subdirectory(gtest)
 enable_testing()
 
 include_directories(
+      ${opencl_SOURCE_DIR}
+      SYSTEM
       ${Boost_INCLUDE_DIR}
       ${OPENCL_INCLUDE_DIRS}
       ${gtest_SOURCE_DIR}/include
@@ -48,12 +50,12 @@ SET(HEADERS
 )
 
 SET(OPENCL_FFT
-  OpenCL_FFT/fft_execute.cpp
-  OpenCL_FFT/fft_setup.cpp
-  OpenCL_FFT/fft_kernelstring.cpp
-  OpenCL_FFT/clFFT.h
-  OpenCL_FFT/fft_internal.h
-  OpenCL_FFT/fft_base_kernels.h
+  opencl_fft/fft_execute.cpp
+  opencl_fft/fft_setup.cpp
+  opencl_fft/fft_kernelstring.cpp
+  opencl_fft/clFFT.h
+  opencl_fft/fft_internal.h
+  opencl_fft/fft_base_kernels.h
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" SOURCE)

@@ -124,7 +124,7 @@ bool isPowerOfTwo(unsigned int x)
     return (x != 0) && ((x & (x - 1)) == 0);
 }
 
-bool stringToBool( const string& str )
+bool stringToBool(const std::string& str)
 {
     if (str.empty()) {
         return false;

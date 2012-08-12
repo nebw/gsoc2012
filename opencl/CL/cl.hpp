@@ -1,3 +1,5 @@
+#pragma GCC system_header
+
 /*******************************************************************************
  * Copyright (c) 2008-2010 The Khronos Group Inc.
  *

@@ -2,6 +2,8 @@
 
 #include "cpplog/cpplog.hpp"
 
+#include <memory>
+
 typedef struct
 {
     float V;
@@ -17,4 +19,4 @@ typedef struct
 
 typedef float splitComplex[2];
 
-typedef shared_ptr<cpplog::BaseLogger> Logger;
+typedef std::shared_ptr<cpplog::BaseLogger> Logger;

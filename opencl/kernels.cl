@@ -14,7 +14,7 @@ struct state
 inline float _f_I_Na_m_inf(const float V)
 {
     const float theta_m = -30;
-    const float sigma_m = 9.5;
+    const float sigma_m = 9.5f;
 
     return pow((1 + exp(-(V - theta_m) / sigma_m)), -1);
 }
@@ -37,7 +37,7 @@ inline float _f_p_inf(const float V)
 
 inline float _f_I_NaP(const float V)
 {
-    const float g_NaP = 0.2;
+    const float g_NaP = 0.2f;
     const float V_Na  = 55;
 
     return g_NaP * _f_p_inf(V) * (V - V_Na);
@@ -53,7 +53,7 @@ inline float _f_I_Kdr(const float V, const float n)
 
 inline float _f_I_Leak(const float V)
 {
-    const float g_L = 0.05;
+    const float g_L = 0.05f;
     const float V_L = -70;
 
     return g_L * (V - V_L);
@@ -61,7 +61,7 @@ inline float _f_I_Leak(const float V)
 
 inline float _f_I_Kslow(const float V, const float z)
 {
-    const float g_Kslow = 1.8;
+    const float g_Kslow = 1.8f;
     const float V_K     = -90;
 
     return g_Kslow * z * (V - V_K);
@@ -69,7 +69,7 @@ inline float _f_I_Kslow(const float V, const float z)
 
 inline float _f_I_AMPA(const float V, const float sumFootprintAMPA)
 {
-    const float g_AMPA = 0.08;
+    const float g_AMPA = 0.08f;
     const float V_Glu  = 0;
 
     return g_AMPA * (V - V_Glu) * sumFootprintAMPA;
@@ -88,7 +88,7 @@ inline float _f_f_NMDA(const float V)
 
 inline float _f_I_NMDA(const float V, const float sumFootprintNMDA)
 {
-    const float g_NMDA = 0.07;
+    const float g_NMDA = 0.07f;
     const float V_Glu  = 0;
 
     return g_NMDA * _f_f_NMDA(V) * (V - V_Glu) * sumFootprintNMDA;
@@ -96,7 +96,7 @@ inline float _f_I_NMDA(const float V, const float sumFootprintNMDA)
 
 inline float _f_I_GABAA(const float V, const float sumFootprintGABAA)
 {
-    const float g_GABAA = 0.05;
+    const float g_GABAA = 0.05f;
     const float V_GABAA = -70;
 
     return g_GABAA * (V - V_GABAA) * sumFootprintGABAA;
@@ -141,11 +141,11 @@ __kernel void f_dV_dt(__global struct state* states,
     float f1, f2, f3, f4;
 
     f1 = _f_dV_dt(state_0.V, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
-    f2 = _f_dV_dt(state_0.V + dt * f1 / 2.0, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
-    f3 = _f_dV_dt(state_0.V + dt * f2 / 2.0, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
+    f2 = _f_dV_dt(state_0.V + dt * f1 / 2.0f, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
+    f3 = _f_dV_dt(state_0.V + dt * f2 / 2.0f, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
     f4 = _f_dV_dt(state_0.V + dt * f3, state_0.h, state_0.n, state_0.z, state_0.I_app, sumFootprintAMPA_loc, sumFootprintNMDA_loc, sumFootprintGABAA_loc);
 
-    states[ind_new*numNeurons+idx].V = state_0.V + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+    states[ind_new*numNeurons+idx].V = state_0.V + dt * ( f1 + 2.0f * f2 + 2.0f * f3 + f4 ) / 6.0f;
 }
 
 inline float _f_I_Na_h_inf(const float V)
@@ -158,10 +158,10 @@ inline float _f_I_Na_h_inf(const float V)
 
 inline float _f_I_Na_tau_h(const float V)
 {
-    const float theta_th = -40.5;
+    const float theta_th = -40.5f;
     const float sigma_th = -6;
 
-    return 0.1 + 0.75 * pow((1 + exp(-(V - theta_th) / sigma_th)), -1);
+    return 0.1f + 0.75f * pow((1 + exp(-(V - theta_th) / sigma_th)), -1);
 }
 
 inline float _f_I_Na_dh_dt(const float h, const float V)
@@ -179,11 +179,11 @@ __kernel void f_I_Na_dh_dt(__global struct state* states, const unsigned int num
     float f1, f2, f3, f4;
 
     f1 = _f_I_Na_dh_dt(state_0.h, state_0.V);
-    f2 = _f_I_Na_dh_dt(state_0.h + dt * f1 / 2.0, state_0.V);
-    f3 = _f_I_Na_dh_dt(state_0.h + dt * f2 / 2.0, state_0.V);
+    f2 = _f_I_Na_dh_dt(state_0.h + dt * f1 / 2.0f, state_0.V);
+    f3 = _f_I_Na_dh_dt(state_0.h + dt * f2 / 2.0f, state_0.V);
     f4 = _f_I_Na_dh_dt(state_0.h + dt * f3, state_0.V);
 
-    states[ind_new*numNeurons+idx].h = state_0.h + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+    states[ind_new*numNeurons+idx].h = state_0.h + dt * ( f1 + 2.0f * f2 + 2.0f * f3 + f4 ) / 6.0f;
 }
 
 inline float _f_n_inf(const float V)
@@ -199,7 +199,7 @@ inline float _f_tau_n(const float V)
     const float theta_tn = -33;
     const float sigma_tn = -15;
 
-    return 0.1 + 0.5 * pow(1 + exp(-(V - theta_tn) / sigma_tn), -1);
+    return 0.1f + 0.5f * pow(1 + exp(-(V - theta_tn) / sigma_tn), -1);
 }
 
 inline float _f_dn_dt(const float n, const float V)
@@ -217,11 +217,11 @@ __kernel void f_dn_dt(__global struct state* states, const unsigned int numNeuro
     float f1, f2, f3, f4;
 
     f1 = _f_dn_dt(state_0.n, state_0.V);
-    f2 = _f_dn_dt(state_0.n + dt * f1 / 2.0, state_0.V);
-    f3 = _f_dn_dt(state_0.n + dt * f2 / 2.0, state_0.V);
+    f2 = _f_dn_dt(state_0.n + dt * f1 / 2.0f, state_0.V);
+    f3 = _f_dn_dt(state_0.n + dt * f2 / 2.0f, state_0.V);
     f4 = _f_dn_dt(state_0.n + dt * f3, state_0.V);
 
-    states[ind_new*numNeurons+idx].n = state_0.n + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+    states[ind_new*numNeurons+idx].n = state_0.n + dt * ( f1 + 2.0f * f2 + 2.0f * f3 + f4 ) / 6.0f;
 }
 
 inline float _f_z_inf(const float V)
@@ -249,11 +249,11 @@ __kernel void f_dz_dt(__global struct state* states, const unsigned int numNeuro
     float f1, f2, f3, f4;
 
     f1 = _f_dz_dt(state_0.z, state_0.V);
-    f2 = _f_dz_dt(state_0.z + dt * f1 / 2.0, state_0.V);
-    f3 = _f_dz_dt(state_0.z + dt * f2 / 2.0, state_0.V);
+    f2 = _f_dz_dt(state_0.z + dt * f1 / 2.0f, state_0.V);
+    f3 = _f_dz_dt(state_0.z + dt * f2 / 2.0f, state_0.V);
     f4 = _f_dz_dt(state_0.z + dt * f3, state_0.V);
 
-    states[ind_new*numNeurons+idx].z = state_0.z + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+    states[ind_new*numNeurons+idx].z = state_0.z + dt * ( f1 + 2.0f * f2 + 2.0f * f3 + f4 ) / 6.0f;
 }
 
 inline float _f_s_inf(const float V)
@@ -283,17 +283,17 @@ __kernel void f_dsAMPA_dt(__global struct state* states, const unsigned int numN
     float f1, f2, f3, f4;
 
     f1 = _f_dsAMPA_dt(state_0.s_AMPA, state_0.V);
-    f2 = _f_dsAMPA_dt(state_0.s_AMPA + dt * f1 / 2.0, state_0.V);
-    f3 = _f_dsAMPA_dt(state_0.s_AMPA + dt * f2 / 2.0, state_0.V);
+    f2 = _f_dsAMPA_dt(state_0.s_AMPA + dt * f1 / 2.0f, state_0.V);
+    f3 = _f_dsAMPA_dt(state_0.s_AMPA + dt * f2 / 2.0f, state_0.V);
     f4 = _f_dsAMPA_dt(state_0.s_AMPA + dt * f3, state_0.V);
 
-    states[ind_new*numNeurons+idx].s_AMPA = state_0.s_AMPA + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+    states[ind_new*numNeurons+idx].s_AMPA = state_0.s_AMPA + dt * ( f1 + 2.0f * f2 + 2.0f * f3 + f4 ) / 6.0f;
 }
 
 inline float _f_dxNMDA_dt(const float x_NMDA, const float V)
 {
     const float k_xN      = 1;
-    const float tau2_NMDA = 14.3;
+    const float tau2_NMDA = 14.3f;
 
     return k_xN * _f_s_inf(V) * (1 - x_NMDA)
            - (1 - _f_s_inf(V)) * x_NMDA / tau2_NMDA;
@@ -309,17 +309,17 @@ __kernel void f_dxNMDA_dt(__global struct state* states, const unsigned int numN
     float f1, f2, f3, f4;
 
     f1 = _f_dxNMDA_dt(state_0.x_NMDA, state_0.V);
-    f2 = _f_dxNMDA_dt(state_0.x_NMDA + dt * f1 / 2.0, state_0.V);
-    f3 = _f_dxNMDA_dt(state_0.x_NMDA + dt * f2 / 2.0, state_0.V);
+    f2 = _f_dxNMDA_dt(state_0.x_NMDA + dt * f1 / 2.0f, state_0.V);
+    f3 = _f_dxNMDA_dt(state_0.x_NMDA + dt * f2 / 2.0f, state_0.V);
     f4 = _f_dxNMDA_dt(state_0.x_NMDA + dt * f3, state_0.V);
 
-    states[ind_new*numNeurons+idx].x_NMDA = state_0.x_NMDA + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+    states[ind_new*numNeurons+idx].x_NMDA = state_0.x_NMDA + dt * ( f1 + 2.0f * f2 + 2.0f * f3 + f4 ) / 6.0f;
 }
 
 inline float _f_dsNMDA_dt(const float s_NMDA, const float x_NMDA, const float V)
 {
     const float k_fN     = 1;
-    const float tau_NMDA = 14.3;
+    const float tau_NMDA = 14.3f;
 
     return k_fN * x_NMDA * (1 - s_NMDA)
                      - s_NMDA / tau_NMDA;
@@ -335,11 +335,11 @@ __kernel void f_dsNMDA_dt(__global struct state* states, const unsigned int numN
     float f1, f2, f3, f4;
 
     f1 = _f_dsNMDA_dt(state_0.s_NMDA, state_0.x_NMDA, state_0.V);
-    f2 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f1 / 2.0, state_0.x_NMDA, state_0.V);
-    f3 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f2 / 2.0, state_0.x_NMDA, state_0.V);
+    f2 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f1 / 2.0f, state_0.x_NMDA, state_0.V);
+    f3 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f2 / 2.0f, state_0.x_NMDA, state_0.V);
     f4 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f3, state_0.x_NMDA, state_0.V);
 
-    states[ind_new*numNeurons+idx].s_NMDA = state_0.s_NMDA + dt * ( f1 + 2.0 * f2 + 2.0 * f3 + f4 ) / 6.0;
+    states[ind_new*numNeurons+idx].s_NMDA = state_0.s_NMDA + dt * ( f1 + 2.0f * f2 + 2.0f * f3 + f4 ) / 6.0f;
 }
 
 __kernel void convolution(__global float* convolution_f_real, __global float* convolution_f_imag,

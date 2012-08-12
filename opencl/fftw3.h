@@ -1,3 +1,5 @@
+#pragma GCC system_header
+
 /*
  * Copyright (c) 2003, 2007-11 Matteo Frigo
  * Copyright (c) 2003, 2007-11 Massachusetts Institute of Technology

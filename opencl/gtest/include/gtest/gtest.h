@@ -1,3 +1,5 @@
+#pragma GCC system_header
+
 // Copyright 2005, Google Inc.
 // All rights reserved.
 //

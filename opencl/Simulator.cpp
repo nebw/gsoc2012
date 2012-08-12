@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <numeric>
+#include <ctime>
 
 #include <boost/foreach.hpp>
 #include <boost/scoped_array.hpp>
@@ -23,7 +24,7 @@ Simulator::Simulator(const unsigned int numNeurons,
                      const Measure measure,
                      const FFT_FFTW fftw,
                      const FFT_clFFT clfft,
-                     boost::filesystem3::path const& programPath,
+                     boost::filesystem::path const& programPath,
                      Logger const& logger)
     : _wrapper(CLWrapper()),
       _plotter(Plotter(numNeurons, 0, dt)),
@@ -372,12 +373,18 @@ void Simulator::step()
 
     if(_fftw)
     {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
         unsigned long startTime;
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+        clock_t tStart;
+#endif
         if(_measure)
         {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
             timeBeginPeriod(1);
             startTime = timeGetTime();
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+            tStart = clock();
 #endif
         }
 
@@ -393,6 +400,8 @@ void Simulator::step()
             unsigned long elapsedTime = timeGetTime() - startTime;
             _timesFFTW.push_back(elapsedTime);
             timeEndPeriod(1);
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+            _timesFFTW.push_back((double)(clock() - tStart) / CLOCKS_PER_SEC);
 #endif
         }
     }
@@ -409,12 +418,18 @@ void Simulator::step()
 
     if(_clfft)
     {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
         unsigned long startTime;
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+        clock_t tStart;
+#endif
         if(_measure)
         {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
             timeBeginPeriod(1);
             startTime = timeGetTime();
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+            tStart = clock();
 #endif
         }
 
@@ -429,6 +444,8 @@ void Simulator::step()
             unsigned long elapsedTime = timeGetTime() - startTime;
             _timesClFFT.push_back(elapsedTime);
             timeEndPeriod(1);
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+            _timesClFFT.push_back((double)(clock() - tStart) / CLOCKS_PER_SEC);
 #endif
         }
     }
@@ -442,12 +459,18 @@ void Simulator::step()
         }
     }
     
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     unsigned long startTime;
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+    clock_t tStart;
+#endif
     if(_measure)
     {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
         timeBeginPeriod(1);
         startTime = timeGetTime();
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+        tStart = clock();
 #endif
     }
     _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dV_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
@@ -465,6 +488,8 @@ void Simulator::step()
         unsigned long elapsedTime = timeGetTime() - startTime;
         _timesCalculations.push_back(elapsedTime);
         timeEndPeriod(1);
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+        _timesCalculations.push_back((double)(clock() - tStart) / CLOCKS_PER_SEC);
 #endif
     }
 
@@ -473,12 +498,18 @@ void Simulator::step()
 
 void Simulator::simulate()
 {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     unsigned long startTime;
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+    clock_t tStart;
+#endif
     if(_measure)
     {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
         timeBeginPeriod(1);
         startTime = timeGetTime();
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+        tStart = clock();
 #endif
     }
 
@@ -487,7 +518,7 @@ void Simulator::simulate()
     //    LOG_INFO(*_logger) << "Timestep 1/" << _timesteps;
     //}
 
-    for(_t; _t < _timesteps - 1; ++_t)
+    for(; _t < _timesteps - 1; ++_t)
     {
         if((_t + 2) % (_timesteps / 100) == 0)
         {
@@ -514,6 +545,9 @@ void Simulator::simulate()
         unsigned long elapsedTime = timeGetTime() - startTime;
         LOG_INFO(*_logger) << "Execution time: " << elapsedTime / 1000.0 << "s";
         timeEndPeriod(1);
+#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+        unsigned long elapsedTime = (double)(clock() - tStart) / CLOCKS_PER_SEC;
+        LOG_INFO(*_logger) << "Execution time: " << elapsedTime / 1000.0 << "s";
 #endif
 
         if(_fftw)

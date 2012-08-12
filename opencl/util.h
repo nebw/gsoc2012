@@ -2,6 +2,9 @@
 
 #include "CL/cl.h"
 
+#include <string>
+#include <vector>
+
 char* file_contents(const char *filename,
                     int *length);
 
@@ -24,4 +27,4 @@ void assertNear(const float a, const float b, const double abs_error);
 
 bool isPowerOfTwo(unsigned int x);
 
-bool stringToBool(const string& str);
+bool stringToBool(const std::string& str);
