@@ -4,7 +4,7 @@
 #include "CLWrapper.h"
 #include "BasePlotter.h"
 
-#include "OpenCL_FFT\clFFT.h"
+#include "opencl_fft/clFFT.h"
 #include "fftw3.h"
 
 #include <boost/filesystem.hpp>
@@ -41,8 +41,9 @@ public:
               const Measure measure,
               const FFT_FFTW fftw,
               const FFT_clFFT clfft,
-              boost::filesystem3::path const& programPath,
+              boost::filesystem::path const& programPath,
               Logger const& logger);
+    ~Simulator();
 
     void step();
     void simulate();
@@ -68,19 +69,19 @@ private:
     Logger _logger;
 
     // Simulation configuration
-    unsigned int _numNeurons;
-    unsigned int _timesteps;
-    float _dt;
+    const unsigned int _numNeurons;
+    const unsigned int _timesteps;
+    const float _dt;
 
     // Initial state
-    state _state_0;
+    const state _state_0;
     unsigned int _t;
 
     // Configuration
-    bool _plot;
-    bool _measure;
-    bool _fftw;
-    bool _clfft;
+    const bool _plot;
+    const bool _measure;
+    const bool _fftw;
+    const bool _clfft;
 
     // Measurements
     std::vector<unsigned long> _timesCalculations;
@@ -134,6 +135,12 @@ private:
 
     clFFT_Plan _p_cl;
     cl::Kernel _kernel_convolution;
+    cl::Kernel _kernel_prepareFFT_AMPA;
+    cl::Kernel _kernel_prepareFFT_NMDA;
+    cl::Kernel _kernel_prepareFFT_GABAA;
+    cl::Kernel _kernel_postConvolution_AMPA;
+    cl::Kernel _kernel_postConvolution_NMDA;
+    cl::Kernel _kernel_postConvolution_GABAA;
 
     // Kernels
     cl::Kernel _kernel_f_dV_dt;
@@ -144,10 +151,21 @@ private:
     cl::Kernel _kernel_f_dxNMDA_dt;
     cl::Kernel _kernel_f_dsNMDA_dt;
 
-    void handleClError(cl_int err);
+    void initializeFFTW();
+    void initializeHostVariables(state const& state_0);
+    void initializeClFFT();
+    void initializeCLKernelsAndBuffers();
 
-    static inline float _f_w_EE(const int j);
+    void convolutionFFTW(const unsigned int ind_old);
+    void convolutionClFFT(const unsigned int ind_old);
 
     void f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec);
     void f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec);
+
+    void executeKernels();
+
+    void assertConvolutionResults();
+    void assertInitializationResults();
+
+    static inline float _f_w_EE(const int j);
 };

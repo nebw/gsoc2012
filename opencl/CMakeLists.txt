@@ -45,6 +45,8 @@ if(MSVC)
 endif()
 
 SET(INCLUDEDIRS
+      ${opencl_SOURCE_DIR}
+      SYSTEM
       ${Boost_INCLUDE_DIR}
       ${OPENCL_INCLUDE_DIRS}
       ${OPENGL_INCLUDE_DIR}
@@ -54,20 +56,16 @@ SET(INCLUDEDIRS
       ${gtest_SOURCE_DIR}
 )
 
-if(VLD_FOUND)
-      SET(INCLUDEDIRS ${VLD_INCLUDE_DIRS} ${INCLUDEDIRS})
-endif()
-
 include_directories(${INCLUDEDIRS})
 
-add_executable(openclUnitTests
-      openclUnitTests.cpp
+add_executable(execute_unit_tests
+      openclUnitTests.cpp      
       opencl_fft/fft_execute.cpp
       opencl_fft/fft_setup.cpp
       opencl_fft/fft_kernelstring.cpp
 )
 
-target_link_libraries(openclUnitTests 
+target_link_libraries(execute_unit_tests
       ${Boost_LIBRARIES}
       ${OPENCL_LIBRARIES}
       gtest
@@ -84,11 +82,12 @@ SET(HEADERS
   utilShader.h
   CLWrapper.h
   Simulator.h
+  Plotter.h
   BasePlotter.h
   GnuPlotPlotter.h
   OpenGLPlotter.h
   Definitions.h
-  gnuplot_i/gnuplot_i.hpp
+  gnuplot_i/gnuplot_i.h
 )
 
 SET(SOURCE
@@ -102,20 +101,21 @@ SET(SOURCE
   kernels.cl
   vertexShader.glsl
   fragmentShader.glsl
+  gnuplot_i/gnuplot_i.cpp
 )
 
 SET(OPENCL_FFT
-  OpenCL_FFT/fft_execute.cpp
-  OpenCL_FFT/fft_setup.cpp
-  OpenCL_FFT/fft_kernelstring.cpp
-  OpenCL_FFT/clFFT.h
-  OpenCL_FFT/fft_internal.h
-  OpenCL_FFT/fft_base_kernels.h
+  opencl_fft/fft_execute.cpp
+  opencl_fft/fft_setup.cpp
+  opencl_fft/fft_kernelstring.cpp
+  opencl_fft/clFFT.h
+  opencl_fft/fft_internal.h
+  opencl_fft/fft_base_kernels.h
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" SOURCE)
 
-add_executable(opencl
+add_executable(simulate
       ${SOURCE} 
       ${HEADERS}
       ${OPENCL_FFT}
@@ -130,17 +130,47 @@ SET(LIBRARIES
   ${GLEW_LIBRARY}
 )
 
-if(VLD_FOUND)
-      SET(LIBRARIES ${VLD_LIBRARIES} ${LIBRARIES})
-endif()
-
 if(MSVC)
-  target_link_libraries(opencl 
+  if(CMAKE_GENERATOR MATCHES "Win64")
+    set(FFTW_LIBRARIES
+      "${opencl_SOURCE_DIR}/fftw_win64/libfftw3-3.lib"
+      "${opencl_SOURCE_DIR}/fftw_win64/libfftw3f-3.lib"
+      "${opencl_SOURCE_DIR}/fftw_win64/libfftw3l-3.lib"
+    )
+  else()
+    set(FFTW_LIBRARIES
+      "${opencl_SOURCE_DIR}/fftw_win32/libfftw3-3.lib"
+      "${opencl_SOURCE_DIR}/fftw_win32/libfftw3f-3.lib"
+      "${opencl_SOURCE_DIR}/fftw_win32/libfftw3l-3.lib"
+    )
+  endif()
+  
+  message("  FFTW_LIBRARIES: ${FFTW_LIBRARIES}")
+  
+  target_link_libraries(simulate
         ${LIBRARIES}
         Winmm
   )
 else()
-  target_link_libraries(opencl 
+  target_link_libraries(simulate
         ${LIBRARIES}
   )
+endif()
+
+if(MSVC)
+#  list(REMOVE_ITEM Boost_LIBRARIES debug)
+#  list(REMOVE_ITEM Boost_LIBRARIES optimized)
+#  INSTALL(FILES ${GLEW_LIBRARY} ${GLFW_LIBRARY} ${FFTW_LIBRARIES} ${Boost_LIBRARIES}
+  INSTALL(FILES 
+    "${opencl_SOURCE_DIR}/fftw_win32/libfftw3f-3.dll"
+    "${opencl_SOURCE_DIR}/glfw/x86/GLFW.dll"
+    "${opencl_SOURCE_DIR}/glew/x86/glew32.dll"
+    DESTINATION "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/Debug"
+    CONFIGURATIONS Debug)
+  INSTALL(FILES 
+    "${opencl_SOURCE_DIR}/fftw_win32/libfftw3f-3.dll"
+    "${opencl_SOURCE_DIR}/glfw/x86/GLFW.dll"
+    "${opencl_SOURCE_DIR}/glew/x86/glew32.dll"
+    DESTINATION "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/Release"
+    CONFIGURATIONS Release)
 endif()

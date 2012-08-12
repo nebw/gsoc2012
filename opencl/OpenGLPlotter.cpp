@@ -31,7 +31,7 @@ OpenGLPlotter::OpenGLPlotter(unsigned int numNeurons, unsigned int index, float 
         throw;
     };
 
-    if(!glfwOpenWindow(1600, 900, 0, 0, 0, 0, 0, 0, GLFW_FULLSCREEN))
+    if(!glfwOpenWindow(800, 600, 0, 0, 0, 0, 0, 0, GLFW_WINDOW))
     {
         throw;
     };

@@ -61,16 +61,12 @@ TEST(FFTTest, InverseFFTTest)
     data_cl_split.real = (float *)malloc(sizeof(float) * length);
     data_cl_split.imag = (float *)malloc(sizeof(float) * length);
 
-    // std::cout << "Input: " << std::endl;
     for (int i = 0; i < length; i++)
     {
         data_i_split.real[i]  = 2.0f * (float)rand() / (float)RAND_MAX - 1.0f;
         data_i_split.imag[i]  = 2.0f * (float)rand() / (float)RAND_MAX - 1.0f;
         data_cl_split.real[i] = 0.0f;
         data_cl_split.imag[i] = 0.0f;
-
-        // std::cout << "data[" << i << "] = { " << data_i_split.real[i] << ", "
-        // << data_i_split.imag[i] << " } " << std::endl;
     }
 
     clFFT_Plan plan = clFFT_CreatePlan(context, n, dim, dataFormat, &error_code);
@@ -178,13 +174,6 @@ TEST(FFTTest, InverseFFTTest)
         exit(1);
     }
 
-    //   std::cout << "Output: " << std::endl;
-    //   for(int i = 0; i < length; i++)
-    // {
-    //       std::cout << "data[" << i << "] = { " << data_cl_split.real[i] <<
-    // ", " << data_cl_split.imag[i] << " } " << std::endl;
-    // }
-
     dir = clFFT_Inverse;
 
     error_code = CL_SUCCESS;
@@ -234,13 +223,6 @@ TEST(FFTTest, InverseFFTTest)
         std::cout << "clEnqueueReadBuffer failed" << std::endl;
         exit(1);
     }
-
-    //   std::cout << "Inverse Output: " << std::endl;
-    //   for(int i = 0; i < length; i++)
-    // {
-    //       std::cout << "data[" << i << "] = { " << data_cl_split.real[i] /
-    // length << ", " << data_cl_split.imag[i] / length << " } " << std::endl;
-    // }
 
     for (int i = 0; i < length; i++)
     {

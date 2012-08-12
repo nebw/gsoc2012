@@ -1,3 +1,7 @@
+#ifdef __GNUC__
+#pragma GCC system_header
+#endif
+
 /*
  * Copyright (c) 2003, 2007-11 Matteo Frigo
  * Copyright (c) 2003, 2007-11 Massachusetts Institute of Technology

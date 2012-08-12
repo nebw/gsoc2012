@@ -114,9 +114,9 @@ void assertAlmostEquals(const float a, const float b)
 void assertNear(const float a, const float b, const double abs_error)
 {
     const double diff = fabs(a - b);
+
     assert(diff <= abs_error);
 }
-
 
 // see: http://stackoverflow.com/a/600306/1474346
 bool isPowerOfTwo(unsigned int x)
@@ -124,14 +124,14 @@ bool isPowerOfTwo(unsigned int x)
     return (x != 0) && ((x & (x - 1)) == 0);
 }
 
-bool stringToBool( const string& str )
+bool stringToBool(const std::string& str)
 {
     if (str.empty()) {
         return false;
     }
 
     if (
-        str == "1" 
+        (str == "1")
         || boost::iequals(str, "y")
         || boost::iequals(str, "yes")
         || boost::iequals(str, "true")
@@ -141,5 +141,19 @@ bool stringToBool( const string& str )
     }
 
     return false;
+}
 
+void handleClError(cl_int err)
+{
+    if (err)
+    {
+        handleClError(cl::Error(err));
+    }
+}
+
+void handleClError(cl::Error err)
+{
+    std::cout << "OpenCL Error: " << err.what() << " " << oclErrorString(err.err()) << std::endl;
+    getchar();
+    throw err;
 }

@@ -1,3 +1,7 @@
+#ifdef __GNUC__
+#pragma GCC system_header
+#endif
+
 // Copyright 2005, Google Inc.
 // All rights reserved.
 //

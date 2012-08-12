@@ -1,3 +1,7 @@
+#ifdef __GNUC__
+#pragma GCC system_header
+#endif
+
 /*******************************************************************************
  * Copyright (c) 2008-2010 The Khronos Group Inc.
  *

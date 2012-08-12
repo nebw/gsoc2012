@@ -1,13 +1,3 @@
-//#ifdef _DEBUG
-//#define _CRTDBG_MAP_ALLOC
-//#include <stdlib.h>
-//#include <crtdbg.h>
-//#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
-//#define new DEBUG_NEW
-//#endif
-
-#include <vld.h>
-
 #include "Definitions.h"
 #include "Simulator.h"
 #include "util.h"
@@ -105,7 +95,7 @@ int main(int ac, char **av)
         ("sGABAA", po::value<float>(&sGABAA0)->default_value(0.0), "initial value for xNMDA")
         ("IApp", po::value<float>(&IApp0)->default_value(1.0), "initial value for IApp")
         ("dt", po::value<float>(&dt)->default_value(0.1f), "length of one timestep")
-        ("timesteps", po::value<unsigned int>(&timesteps)->default_value(500), "number of timesteps")
+        ("timesteps", po::value<unsigned int>(&timesteps)->default_value(50000), "number of timesteps")
         ("neurons", po::value<unsigned int>(&numNeurons)->default_value(1024), "number of neurons in network")
         ("plot", po::value<std::string>(&plot)->default_value("true"), "plot results")
         ("measure", po::value<std::string>(&measure)->default_value("true"), "measure execution time")
@@ -121,12 +111,6 @@ int main(int ac, char **av)
         cout << desc << "\n";
         exit(1);
     }
-
-    plot = "true";
-    numNeurons = 16384;
-    timesteps = 50000;
-    clfft = "true";
-    fftw = "false";
 
     auto logger = make_shared<cpplog::StdErrLogger>();
     state state0;

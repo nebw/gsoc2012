@@ -73,15 +73,6 @@ if(NOT MSVC)
   endif()
 endif()
 
-if(MSVC)
-  find_package(VLD)
-  if(VLD_FOUND)
-  message("Visual Leak detector information:") 
-    message("  VLD_INCLUDE_DIRS: ${VLD_INCLUDE_DIRS}") 
-    message("  VLD_LIBRARIES: ${VLD_LIBRARIES}") 
-  endif()
-endif()
-
 ## Compiler flags for GCC and Clang
 if(NOT MSVC)
   # enable extra compiler warnings
@@ -93,6 +84,7 @@ if(NOT MSVC)
   # treat warnings as errors
   # set(CMAKE_CXX_FLAGS "-Werror ${CMAKE_CXX_FLAGS}")
   # set(CMAKE_CXX_FLAGS "-Weffc++ ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-Wno-deprecated ${CMAKE_CXX_FLAGS}")
 else()
   # enable visual studio static code analysis
   # set(CMAKE_CXX_FLAGS "-analyze ${CMAKE_CXX_FLAGS}")
