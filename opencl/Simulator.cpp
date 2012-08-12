@@ -396,6 +396,11 @@ void Simulator::convolutionFFTW(const unsigned int ind_old)
 #endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     }
 
+    if(!_plot)
+    {
+        _err = _wrapper.getQueue().enqueueReadBuffer(_states_cl, CL_TRUE, ind_old * _numNeurons * sizeof(state), _numNeurons * sizeof(state), &_states[ind_old * _numNeurons], NULL, &_event);
+    }
+
     f_I_FFT_fftw(ind_old, AMPA);
     _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, &_event);
     f_I_FFT_fftw(ind_old, NMDA);
