@@ -343,8 +343,8 @@ __kernel void f_dsNMDA_dt(__global struct state* states, const unsigned int numN
 }
 
 __kernel void convolution(__global float* convolution_f_real, __global float* convolution_f_imag,
-                          __global float* distances_f_real, __global float* distances_f_imag,
-                          __global float* sVals_f_real, __global float* sVals_f_imag, 
+                          __global const float* distances_f_real, __global const float* distances_f_imag,
+                          __global const float* sVals_f_real, __global const float* sVals_f_imag, 
                           const float scaleFFT)
 {
     const unsigned int idx = get_global_id(0);
@@ -357,25 +357,44 @@ __kernel void convolution(__global float* convolution_f_real, __global float* co
                               * scaleFFT;
 }    
 
-__kernel void prepareFFT_AMPA(__global struct state* states, __global float* sVals_real, const unsigned int numNeurons, const unsigned int ind_old)
+__kernel void prepareFFT_AMPA(__global const struct state* states, __global float* sVals_real, const unsigned int numNeurons, const unsigned int ind_old)
 {
     const unsigned int idx = get_global_id(0);
 
     sVals_real[idx] = states[ind_old*numNeurons+idx].s_AMPA;
 }
 
-
-__kernel void prepareFFT_NMDA(__global struct state* states, __global float* sVals_real, const unsigned int numNeurons, const unsigned int ind_old)
+__kernel void prepareFFT_NMDA(__global const struct state* states, __global float* sVals_real, const unsigned int numNeurons, const unsigned int ind_old)
 {
     const unsigned int idx = get_global_id(0);
 
     sVals_real[idx] = states[ind_old*numNeurons+idx].s_NMDA;
 }
 
-__kernel void prepareFFT_GABAA(__global struct state* states, __global float* sVals_real, const unsigned int numNeurons, const unsigned int ind_old)
+__kernel void prepareFFT_GABAA(__global const struct state* states, __global float* sVals_real, const unsigned int numNeurons, const unsigned int ind_old)
 {
     const unsigned int idx = get_global_id(0);
 
     sVals_real[idx] = states[ind_old*numNeurons+idx].s_GABAA;
 }
 
+__kernel void postConvolution_AMPA(__global const float* convolution_real, __global float* sumFootprintAMPA, const unsigned int numNeurons)
+{
+    const unsigned int idx = get_global_id(0);
+
+    sumFootprintAMPA[idx] = convolution_real[idx+numNeurons - 1];
+}
+
+__kernel void postConvolution_NMDA(__global const float* convolution_real, __global float* sumFootprintNMDA, const unsigned int numNeurons)
+{
+    const unsigned int idx = get_global_id(0);
+
+    sumFootprintNMDA[idx] = convolution_real[idx+numNeurons - 1];
+}
+
+__kernel void postConvolution_GABAA(__global const float* convolution_real, __global float* sumFootprintGABAA, const unsigned int numNeurons)
+{
+    const unsigned int idx = get_global_id(0);
+
+    sumFootprintGABAA[idx] = convolution_real[idx+numNeurons - 1];
+}

@@ -136,6 +136,9 @@ private:
     cl::Kernel _kernel_prepareFFT_AMPA;
     cl::Kernel _kernel_prepareFFT_NMDA;
     cl::Kernel _kernel_prepareFFT_GABAA;
+    cl::Kernel _kernel_postConvolution_AMPA;
+    cl::Kernel _kernel_postConvolution_NMDA;
+    cl::Kernel _kernel_postConvolution_GABAA;
 
     // Kernels
     cl::Kernel _kernel_f_dV_dt;

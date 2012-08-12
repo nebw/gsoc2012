@@ -319,6 +319,21 @@ Simulator::Simulator(const unsigned int numNeurons,
     handleClError(_kernel_prepareFFT_GABAA.setArg(1, _sVals_real_cl));
     handleClError(_kernel_prepareFFT_GABAA.setArg(2, _numNeurons));
 
+    _kernel_postConvolution_AMPA = cl::Kernel(_program, "postConvolution_AMPA", &_err);
+    handleClError(_kernel_postConvolution_AMPA.setArg(0, _convolution_real_cl));
+    handleClError(_kernel_postConvolution_AMPA.setArg(1, _sumFootprintAMPA_cl));
+    handleClError(_kernel_postConvolution_AMPA.setArg(2, numNeurons));
+
+    _kernel_postConvolution_NMDA = cl::Kernel(_program, "postConvolution_NMDA", &_err);
+    handleClError(_kernel_postConvolution_NMDA.setArg(0, _convolution_real_cl));
+    handleClError(_kernel_postConvolution_NMDA.setArg(1, _sumFootprintNMDA_cl));
+    handleClError(_kernel_postConvolution_NMDA.setArg(2, numNeurons));
+
+    _kernel_postConvolution_GABAA = cl::Kernel(_program, "postConvolution_GABAA", &_err);
+    handleClError(_kernel_postConvolution_GABAA.setArg(0, _convolution_real_cl));
+    handleClError(_kernel_postConvolution_GABAA.setArg(1, _sumFootprintGABAA_cl));
+    handleClError(_kernel_postConvolution_GABAA.setArg(2, numNeurons));
+
     handleClError(_kernel_f_dV_dt.setArg(0, _states_cl));
     handleClError(_kernel_f_dV_dt.setArg(1, _sumFootprintAMPA_cl));
     handleClError(_kernel_f_dV_dt.setArg(2, _sumFootprintNMDA_cl));
@@ -404,9 +419,9 @@ void Simulator::step()
         }
 
         f_I_FFT_clFFT(ind_old, AMPA);
-        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, &_event);
+        //_err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, &_event);
         f_I_FFT_clFFT(ind_old, NMDA);
-        _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintNMDA_cl, CL_TRUE, 0, _numNeurons * sizeof(float), _sumFootprintNMDA.get(), NULL, &_event);
+        //_err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintNMDA_cl, CL_TRUE, 0, _numNeurons * sizeof(float), _sumFootprintNMDA.get(), NULL, &_event);
 
         if(_measure)
         {
@@ -636,70 +651,25 @@ void Simulator::f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec)
 
         _wrapper.getQueue().finish();
 
-        _err = _wrapper.getQueue().enqueueReadBuffer(_convolution_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), _convolution_real.get(), NULL, &_event);
-
-        for(unsigned int indexOfNeuron = 0; indexOfNeuron < _numNeurons; ++indexOfNeuron)
+        switch (rec)
         {
-            if(rec == AMPA)
-            {
-                _sumFootprintAMPA[indexOfNeuron] = _convolution_real[indexOfNeuron+_numNeurons-1];
-            } else if(rec == NMDA)
-            {
-                _sumFootprintNMDA[indexOfNeuron] = _convolution_real[indexOfNeuron+_numNeurons-1];
-            } else if(rec == GABAA)
-            {
-                _sumFootprintGABAA[indexOfNeuron] = _convolution_real[indexOfNeuron+_numNeurons-1];
-            }
+        case AMPA:
+            _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_postConvolution_AMPA, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
+    	    break;
+        case NMDA:
+            _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_postConvolution_NMDA, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
+            break;
+        case GABAA:
+            _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_postConvolution_GABAA, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, &_event);
+            break;
         }
+
+        _wrapper.getQueue().finish();
     }
     catch (cl::Error err) 
     {
         handleClError(err);
     }
-
-    //if(_clfft && _fftw)
-    //{
-    //    boost::scoped_array<float> distances_real(new float[_nFFT]);
-    //    boost::scoped_array<float> distances_imag(new float[_nFFT]);
-    //    boost::scoped_array<float> distances_f_real(new float[_nFFT]);
-    //    boost::scoped_array<float> distances_f_imag(new float[_nFFT]);
-    //    boost::scoped_array<float> sVals_real(new float[_nFFT]);
-    //    boost::scoped_array<float> sVals_imag(new float[_nFFT]);
-    //    boost::scoped_array<float> sVals_f_real(new float[_nFFT]);
-    //    boost::scoped_array<float> sVals_f_imag(new float[_nFFT]);
-    //    boost::scoped_array<float> convolution_real(new float[_nFFT]);
-    //    boost::scoped_array<float> convolution_imag(new float[_nFFT]);
-    //    boost::scoped_array<float> convolution_f_real(new float[_nFFT]);
-    //    boost::scoped_array<float> convolution_f_imag(new float[_nFFT]);
-
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_distances_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_real.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_distances_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_imag.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_distances_f_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_f_real.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_distances_f_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_f_imag.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_sVals_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), sVals_real.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_sVals_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), sVals_imag.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_sVals_f_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), sVals_f_real.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_sVals_f_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), sVals_f_imag.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_convolution_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), convolution_real.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_convolution_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), convolution_imag.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_convolution_f_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), convolution_f_real.get(), NULL, &_event);
-    //    _err = _wrapper.getQueue().enqueueReadBuffer(_convolution_f_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), convolution_f_imag.get(), NULL, &_event);
-
-    //    for(unsigned int i = 0; i < _nFFT; ++i) {
-    //        /*assertNear(_distances_split[i][0], distances_real[i], 0.000001);
-    //        assertNear(_distances_split[i][1], distances_imag[i], 0.000001);
-    //        assertNear(_distances_f_split[i][0], distances_f_real[i], 0.000001);
-    //        assertNear(_distances_f_split[i][1], distances_f_imag[i], 0.000001);
-    //        assertNear(_sVals_split[i][0], sVals_real[i], 0.000001);
-    //        assertNear(_sVals_split[i][1], sVals_imag[i], 0.000001);
-    //        assertNear(_sVals_f_split[i][0], sVals_f_real[i], 0.0001);
-    //        assertNear(_sVals_f_split[i][1], sVals_f_imag[i], 0.0001);
-    //        assertNear(_convolution_split[i][0], convolution_real[i], 0.000001);
-    //        assertNear(_convolution_split[i][1], convolution_imag[i], 0.000001);
-    //        assertNear(_convolution_f_split[i][0], convolution_f_real[i], 0.000001);
-    //        assertNear(_convolution_f_split[i][1], convolution_f_imag[i], 0.000001);*/
-    //    }
-    //}
 }
 
 void Simulator::handleClError(cl_int err)
