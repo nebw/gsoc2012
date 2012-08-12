@@ -1,5 +1,7 @@
-#pragma GCC diagnostic push
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic push
+#endif
 //
 // File:       fft_execute.cpp
 //
@@ -404,4 +406,6 @@ clFFT_1DTwistPlannar(clFFT_Plan Plan, cl_command_queue queue, cl_mem array_real,
     return err;	
 }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif

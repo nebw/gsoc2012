@@ -1,7 +1,8 @@
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcpp"
-
 #pragma GCC system_header
+#endif
 
 #pragma once
 
@@ -1078,4 +1079,6 @@ namespace cpplog
 
 #endif //_CPPLOG_H
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
