@@ -71,7 +71,9 @@ void measureTimes(Logger const& logger, state const& state0, boost::filesystem3:
 
 int finish()
 {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     _CrtDumpMemoryLeaks();
+#endif
 
     return(0);
 }
@@ -95,7 +97,7 @@ int main(int ac, char **av)
         ("sGABAA", po::value<float>(&sGABAA0)->default_value(0.0), "initial value for xNMDA")
         ("IApp", po::value<float>(&IApp0)->default_value(1.0), "initial value for IApp")
         ("dt", po::value<float>(&dt)->default_value(0.1f), "length of one timestep")
-        ("timesteps", po::value<unsigned int>(&timesteps)->default_value(50000), "number of timesteps")
+        ("timesteps", po::value<unsigned int>(&timesteps)->default_value(500), "number of timesteps")
         ("neurons", po::value<unsigned int>(&numNeurons)->default_value(1024), "number of neurons in network")
         ("plot", po::value<std::string>(&plot)->default_value("true"), "plot results")
         ("measure", po::value<std::string>(&measure)->default_value("true"), "measure execution time")
@@ -126,6 +128,10 @@ int main(int ac, char **av)
 
     auto path = boost::filesystem3::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
+
+    plot = "false";
+    measure = "false";
+    timesteps = 500000;
 
     Simulator sim = Simulator(
         numNeurons,
