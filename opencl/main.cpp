@@ -12,10 +12,10 @@
 
 namespace po = boost::program_options;
 
-void measureTimes(Logger const& logger, state const& state0, boost::filesystem::path const& path) 
+void measureTimes(Logger const& logger, state const& state0, const unsigned int timesteps, float dt, boost::filesystem::path const& path)
 {
-    const unsigned int start = 0;
-    const unsigned int powers = 10;
+    const unsigned int start = 14;
+    const unsigned int powers = 20;
 
     std::vector<const unsigned int> numNeurons;
     std::vector<const double> avgTimesCalculations;
@@ -29,10 +29,10 @@ void measureTimes(Logger const& logger, state const& state0, boost::filesystem::
 
         Simulator sim = Simulator(
             neurons,
-            500,
             1,
             1,
-            0.1f,
+            timesteps,
+            dt,
             state0,
             Simulator::NO_PLOT,
             Simulator::MEASURE,
@@ -66,26 +66,40 @@ void measureTimes(Logger const& logger, state const& state0, boost::filesystem::
             / timesClFFT.size());
     }
 
-    for(int i = 0; i < powers - start; ++i)
+    std::cout << std::endl << "Results" << std::endl << "=======" << std::endl;
+    for (int i = 0; i < powers - start; ++i)
     {
         std::cout << static_cast<const unsigned int>(pow(2.f, (int)(i + start))) << "\t" << avgTimesCalculations[i] << "\t" << avgTimesFFTW[i] << "\t" << avgTimesClFFT[i] << std::endl;
     }
+
+    {
+        Gnuplot plot_performance;
+        plot_performance.set_title("Performance measurements (NVIDIA NVS 4200M)");
+        plot_performance.set_style("linespoints");
+        plot_performance.set_xlogscale(2);
+        plot_performance.set_xlabel("Neurons");
+        plot_performance.set_ylabel("Average execution time (ms)");
+        plot_performance.plot_xy(numNeurons, avgTimesCalculations, "Runge-kutta approximations");
+        plot_performance.plot_xy(numNeurons, avgTimesFFTW, "Convolution using FFTW");
+        plot_performance.plot_xy(numNeurons, avgTimesClFFT, "Convolution using ClFFT");
+        getchar();
+    }
 }
 
-int finish()
+int finish(const int rc)
 {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     _CrtDumpMemoryLeaks();
 #endif
 
-    return(0);
+    return(rc);
 }
 
 int main(int ac, char **av)
 {
     float V0, h0, n0, z0, sAMPA0, sNMDA0, xNMDA0, sGABAA0, IApp0, dt;
     unsigned int nX, nY, nZ, timesteps;
-    std::string plotStr, measureStr, fftwStr, clfftStr;
+    std::string plotStr, measureStr, fftwStr, clfftStr, perfplot;
 
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -108,27 +122,28 @@ int main(int ac, char **av)
         ("measure", po::value<std::string>(&measureStr)->default_value("true"), "measure execution time")
         ("fftw", po::value<std::string>(&fftwStr)->default_value("false"), "compute synaptic fields using fftw")
         ("clfft", po::value<std::string>(&clfftStr)->default_value("true"), "compute synaptic fields using clFFT")
+        ("perfplot", po::value<std::string>(&perfplot)->default_value("false"), "measure and plot performance for various network sizes")
     ;
 
     po::variables_map vm;
     try {
         po::store(po::parse_command_line(ac, av, desc), vm);
-    } catch (po::error& err) {
+    } catch (po::error&) {
         std::cout << desc << std::endl;
-        exit(1);
+        return finish(1);
     }
 
     po::notify(vm);    
 
     if (vm.count("help")) {
         std::cout << desc << std::endl;
-        exit(1);
+        return finish(1);
     }
 
     if(stringToBool(clfftStr) && !isPowerOfTwo(nX * nY * nZ))
     {
         std::cout << "Error: numNeurons (nX * nY * nZ) must be radix 2" << std::endl;
-        exit(1);
+        return finish(1);
     }
 
     auto logger = make_shared<cpplog::StdErrLogger>();
@@ -146,35 +161,39 @@ int main(int ac, char **av)
     auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
 
-    Simulator::Plot plot;
-    if(boost::iequals(plotStr, "gnuplot"))
+    if (stringToBool(perfplot))
     {
-        plot = Simulator::PLOT_GNUPLOT;
-    } else if(boost::iequals(plotStr, "opengl"))
-    {
-        plot = Simulator::PLOT_OPENGL;
+        measureTimes(logger, state0, timesteps, dt, path);
     } else
     {
-        plot = Simulator::NO_PLOT;
+        Simulator::Plot plot;
+        if(boost::iequals(plotStr, "gnuplot"))
+        {
+            plot = Simulator::PLOT_GNUPLOT;
+        } else if(boost::iequals(plotStr, "opengl"))
+        {
+            plot = Simulator::PLOT_OPENGL;
+        } else
+        {
+            plot = Simulator::NO_PLOT;
+        }
+
+        Simulator sim = Simulator(
+            nX,
+            nY,
+            nZ,
+            timesteps,
+            dt,
+            state0,
+            plot,
+            stringToBool(measureStr) ? Simulator::MEASURE : Simulator::NO_MEASURE,
+            stringToBool(fftwStr) ? Simulator::FFTW : Simulator::NO_FFTW,
+            stringToBool(clfftStr) ? Simulator::CLFFT : Simulator::NO_CLFFT,
+            path,
+            logger);
+
+        sim.simulate();
     }
 
-    Simulator sim = Simulator(
-        nX,
-        nY,
-        nZ,
-        timesteps,
-        dt,
-        state0,
-        plot,
-        stringToBool(measureStr) ? Simulator::MEASURE : Simulator::NO_MEASURE,
-        stringToBool(fftwStr) ? Simulator::FFTW : Simulator::NO_FFTW,
-        stringToBool(clfftStr) ? Simulator::CLFFT : Simulator::NO_CLFFT,
-        path,
-        logger);
-
-    sim.simulate();
-
-    ////measureTimes(logger, state0, path);
-
-    return finish();
+    return finish(0);
 }
