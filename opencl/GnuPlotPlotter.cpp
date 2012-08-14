@@ -7,8 +7,16 @@
 
 #include <boost/foreach.hpp>
 
-GnuPlotPlotter::GnuPlotPlotter(unsigned int numNeurons, unsigned int index, float dt)
-    : _numNeurons(numNeurons),
+GnuPlotPlotter::GnuPlotPlotter(
+    const unsigned int nX,
+    const unsigned int nY,
+    const unsigned int nZ,
+    unsigned int index, 
+    float dt)
+    : _nX(nX),
+      _nY(nY),
+      _nZ(nZ),
+      _numNeurons(nX * nY * nZ),
       _index(index),
       _dt(dt),
       _V(std::vector<float>()),
@@ -23,18 +31,10 @@ GnuPlotPlotter::GnuPlotPlotter(unsigned int numNeurons, unsigned int index, floa
       _sumFootprintNMDA(std::vector<float>()),
       _sumFootprintGABAA(std::vector<float>()),
       _spikeTimes(std::vector<float>()),
-      _spikeNeuronIndices(std::vector<float>()),
-      _spikeArr(std::vector<bool>(numNeurons))
+      _spikeNeuronIndicesX(std::vector<unsigned int>()),
+      _spikeNeuronIndicesY(std::vector<unsigned int>()),
+      _spikeArr(std::vector<bool>(nX * nY * nZ))
 {
-    std::vector<float> _V, _h, _n, _z, _sAMPA, _xNMDA, _sNMDA, IApp;
-    std::vector<float> _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA;
-    std::vector<float> _spikeTimes, _spikeNeuronIndices;
-    std::vector<bool> spikeArr;
-
-    BOOST_FOREACH(bool val, spikeArr)
-    {
-        val = false;
-    }
 }
 
 void GnuPlotPlotter::step(const state *curState, const unsigned int t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA)
@@ -51,12 +51,18 @@ void GnuPlotPlotter::step(const state *curState, const unsigned int t, std::uniq
     _sumFootprintNMDA.push_back(sumFootprintNMDA[_index]);
     _sumFootprintGABAA.push_back(sumFootprintGABAA[_index]);
 
+    unsigned int y = 0;
     for (unsigned int i = 0; i < _numNeurons; ++i)
     {
+        if ((i >= _nX) && (i % _nX == 0))
+        {
+            ++y;
+        }
         if ((curState[i].V >= 20) && (_spikeArr[i] == false))
         {
             _spikeTimes.push_back(t * _dt);
-            _spikeNeuronIndices.push_back(i);
+            _spikeNeuronIndicesX.push_back(i % _nX);
+            _spikeNeuronIndicesY.push_back(y);
             _spikeArr[i] = true;
         } else if ((curState[i].V < 20) && (_spikeArr[i] == true))
         {
@@ -118,10 +124,26 @@ void GnuPlotPlotter::plot()
     Gnuplot plot_Spikes;
     plot_Spikes.set_title("Spikes");
     plot_Spikes.set_style("points");
-    plot_Spikes.set_xrange(0, timesteps * _dt);
-    plot_Spikes.set_yrange(0, _numNeurons - 1);
-    plot_Spikes.plot_xy(
-        _spikeTimes, _spikeNeuronIndices, "Excitatory Spikes");
-
-    getchar();
+    if(_nY == 1 && _nZ == 1)
+    {
+        plot_Spikes.set_xrange(0, timesteps * _dt);
+        plot_Spikes.set_yrange(0, _numNeurons - 1);
+        plot_Spikes.plot_xy(
+            _spikeTimes, _spikeNeuronIndicesX, "Excitatory Spikes");
+        getchar();
+    } else if(_nZ == 1)
+    {
+        plot_Spikes.set_xlabel("Time");
+        plot_Spikes.set_ylabel("X");
+        plot_Spikes.set_zlabel("Y");
+        plot_Spikes.set_xrange(0, timesteps * _dt);
+        plot_Spikes.set_yrange(0, _nX - 1);
+        plot_Spikes.set_zrange(0, _nY - 1);
+        plot_Spikes.plot_xyz(
+            _spikeTimes, _spikeNeuronIndicesX, _spikeNeuronIndicesY, "Excitatory Spikes");
+        getchar();
+    } else
+    {
+        getchar();
+    }
 }

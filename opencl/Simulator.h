@@ -33,7 +33,9 @@ public:
         CLFFT
     };
 
-    Simulator(const unsigned int numNeurons,
+    Simulator(const unsigned int nX,
+              const unsigned int nY,
+              const unsigned int nZ,
               const unsigned int timesteps,
               const float dt,
               state const& state_0,
@@ -69,6 +71,9 @@ private:
     Logger _logger;
 
     // Simulation configuration
+    const unsigned int _nX;
+    const unsigned int _nY;
+    const unsigned int _nZ;
     const unsigned int _numNeurons;
     const unsigned int _timesteps;
     const float _dt;

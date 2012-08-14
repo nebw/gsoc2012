@@ -4,6 +4,8 @@
 
 #include "cpplog/cpplog.hpp"
 
+#include "gnuplot_i/gnuplot_i.h"
+
 #include <GL/glew.h>
 
 #include "CL/cl.h"

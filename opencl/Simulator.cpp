@@ -18,7 +18,9 @@
 # include <Windows.h>
 #endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
 
-Simulator::Simulator(const unsigned int numNeurons,
+Simulator::Simulator(const unsigned int nX,
+                     const unsigned int nY,
+                     const unsigned int nZ,
                      const unsigned int timesteps,
                      const float dt,
                      state const& state_0,
@@ -29,7 +31,10 @@ Simulator::Simulator(const unsigned int numNeurons,
                      boost::filesystem::path const& programPath,
                      Logger const& logger)
     : _wrapper(CLWrapper()),
-      _numNeurons(numNeurons),
+      _nX(nX),
+      _nY(nY),
+      _nZ(nZ),
+      _numNeurons(nX * nY * nZ),
       _timesteps(timesteps),
       _dt(dt),
       _state_0(_state_0),
@@ -40,7 +45,7 @@ Simulator::Simulator(const unsigned int numNeurons,
       _clfft(clfft == CLFFT),
       _logger(logger),
       // TODO: _nFFT(2 * numNeurons - 1),
-      _nFFT(2 * numNeurons),
+      _nFFT(2 * nX * nY * nZ),
       _scaleFFT(1.f / _nFFT),
       _err(CL_SUCCESS)
 {
@@ -49,16 +54,19 @@ Simulator::Simulator(const unsigned int numNeurons,
     case NO_PLOT:
         break;
     case PLOT_GNUPLOT:
-        _plotter = std::unique_ptr<BasePlotter>(new GnuPlotPlotter(numNeurons, 0, dt));
+        _plotter = std::unique_ptr<BasePlotter>(new GnuPlotPlotter(_nX, _nY, _nZ, 0, dt));
     	break;
     case PLOT_OPENGL:
-        _plotter = std::unique_ptr<BasePlotter>(new OpenGLPlotter(numNeurons, 0, dt));
+        _plotter = std::unique_ptr<BasePlotter>(new OpenGLPlotter(_numNeurons, 0, dt));
         break;
     }
 
     _program = _wrapper.loadProgram(programPath.string());
     LOG_INFO(*logger) << "Configuration: ";
     LOG_INFO(*logger) << "numNeurons: " << _numNeurons;
+    LOG_INFO(*logger) << "nX: " << _nX;
+    LOG_INFO(*logger) << "nY: " << _nY;
+    LOG_INFO(*logger) << "nZ: " << _nZ;
     LOG_INFO(*logger) << "timesteps: " << _timesteps;
     LOG_INFO(*logger) << "dt: " << _dt;
     LOG_INFO(*logger) << "V_0: " << state_0.V;

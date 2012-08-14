@@ -21,9 +21,9 @@ OpenGLPlotter::OpenGLPlotter(unsigned int numNeurons, unsigned int index, float 
     _sNMDA(std::deque<float>()),
     _graph(std::unique_ptr<point[]>(new point[1000]))
 {
-    auto pathVertexShader = boost::filesystem3::path(CL_SOURCE_DIR);
+    auto pathVertexShader = boost::filesystem::path(CL_SOURCE_DIR);
     pathVertexShader /= "/vertexShader.glsl";
-    auto pathFragmentShader = boost::filesystem3::path(CL_SOURCE_DIR);
+    auto pathFragmentShader = boost::filesystem::path(CL_SOURCE_DIR);
     pathFragmentShader /= "/fragmentShader.glsl";
 
     if(!glfwInit())
