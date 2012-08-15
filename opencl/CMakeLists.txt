@@ -74,7 +74,6 @@ SET(HEADERS
 )
 
 SET(SOURCE
-  main.cpp
   util.cpp
   utilShader.cpp
   CLWrapper.cpp
@@ -99,6 +98,7 @@ SET(OPENCL_FFT
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" SOURCE)
 
 add_executable(simulate
+      main.cpp
       ${SOURCE} 
       ${HEADERS}
       ${OPENCL_FFT}
@@ -116,17 +116,12 @@ SET(LIBRARIES
 include_directories(${INCLUDEDIRS})
 
 add_executable(execute_unit_tests
-      Definitions.h
-      BaseSimulator.h
-      CPUSimulator.h
-      CLSimulator.h
+      openclUnitTests.cpp
       CPUSimulator.cpp
-      openclUnitTests.cpp 
-      stdafx.h
-      stdafx.cpp      
-      opencl_fft/fft_execute.cpp
-      opencl_fft/fft_setup.cpp
-      opencl_fft/fft_kernelstring.cpp
+      ${SOURCE} 
+      CPUSimulator.h
+      ${HEADERS}
+      ${OPENCL_FFT}
 )
 
 if(MSVC)
@@ -152,6 +147,7 @@ if(MSVC)
   
   target_link_libraries(execute_unit_tests
       ${LIBRARIES}
+      Winmm
       gtest
       gtest_main)
 else()
@@ -161,7 +157,6 @@ else()
   
   target_link_libraries(execute_unit_tests
       ${LIBRARIES}
-      Winmm
       gtest
       gtest_main)
 endif()
