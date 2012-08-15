@@ -3,6 +3,7 @@
 #include "util.h"
 
 #include "cpplog/cpplog.hpp"
+#include "gnuplot_i/gnuplot_i.h"
 
 #include <numeric>
 
@@ -146,7 +147,7 @@ int main(int ac, char **av)
         return finish(1);
     }
 
-    auto logger = make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::StdErrLogger>();
     state state0;
     state0.V = V0;
     state0.h = h0;

@@ -8,30 +8,32 @@
 #include <cassert>
 
 #include <boost/foreach.hpp>
-//#include <boost/thread/thread.hpp>
+#include <boost/format.hpp>
 
-CLWrapper::CLWrapper()
+CLWrapper::CLWrapper(Logger const& logger)
+    : _logger(logger)
 {
     try {
-        std::cout << "Initializing OpenCL..." << std::endl;
+        LOG_INFO(*_logger) << ("Initializing OpenCL...");
 
         std::vector<cl::Platform> platforms;
         _err = cl::Platform::get(&platforms);
-        std::cout << "cl::Platform::get(): " << oclErrorString(_err) << std::endl;
+        LOG_INFO(*_logger) << boost::format("cl::Platform::get(): %1%") 
+            % std::string(oclErrorString(_err));
 
         assert(platforms.size() > 0);
 
         unsigned int numPlatform = 0;
-        std::cout << std::endl;
+        LOG_INFO(*_logger) << std::endl;
         BOOST_FOREACH(cl::Platform const & platform, platforms)
         {
-            std::cout << "Platform " << numPlatform << ":" << std::endl;
-            std::cout << platform.getInfo<CL_PLATFORM_VENDOR>() << std::endl;
-            std::cout << platform.getInfo<CL_PLATFORM_NAME>() << std::endl;
-            std::cout << platform.getInfo<CL_PLATFORM_VERSION>() << std::endl;
-            std::cout << platform.getInfo<CL_PLATFORM_PROFILE>() << std::endl;
-            std::cout << platform.getInfo<CL_PLATFORM_EXTENSIONS>() << std::endl;
-            std::cout << std::endl;
+            LOG_INFO(*_logger) << boost::format("Platform %1%:") % numPlatform;
+            LOG_INFO(*_logger) << (platform.getInfo<CL_PLATFORM_VENDOR>());
+            LOG_INFO(*_logger) << (platform.getInfo<CL_PLATFORM_NAME>());
+            LOG_INFO(*_logger) << (platform.getInfo<CL_PLATFORM_VERSION>());
+            LOG_INFO(*_logger) << (platform.getInfo<CL_PLATFORM_PROFILE>());
+            LOG_INFO(*_logger) << (platform.getInfo<CL_PLATFORM_EXTENSIONS>());
+            LOG_INFO(*_logger) << std::endl;
             ++numPlatform;
         }
 
@@ -44,7 +46,8 @@ CLWrapper::CLWrapper()
         _queue = cl::CommandQueue(_context, _devices[0], 0, &_err);
     }
     catch (cl::Error er) {
-        std::cout << "OpenCL Error: " << er.what() << " " << oclErrorString(er.err()) << std::endl;
+        LOG_INFO(*_logger) << boost::format("OpenCl Error: %1% %2%") 
+            % er.what() % oclErrorString(er.err());
         throw er;
     }
 }
@@ -55,36 +58,37 @@ cl::Program CLWrapper::loadProgram(std::string path)
     {
         cl::Program program;
 
-        std::cout << ("Loading the program...") << std::endl;
+        LOG_INFO(*_logger) << "Loading the program...";
 
         int pl;
         char *kernel_source;
         kernel_source = file_contents(path.c_str(), &pl);
 
-        std::cout << "Kernel size: " << pl << std::endl;
+        LOG_INFO(*_logger) << boost::format("Kernel size: %1%") % pl;
 
         cl::Program::Sources source(1, std::make_pair(kernel_source, pl));
         program = cl::Program(_context, source);
 
-        std::cout << "Building OpenCL program..." << std::endl;
+        LOG_INFO(*_logger) << ("Building OpenCL program...");
 
         std::string includes(CL_SOURCE_DIR);
         includes = "-I" + includes;
         _err      = program.build(_devices, includes.c_str());
 
-        std::cout << "Done building OpenCL program" << std::endl;
+        LOG_INFO(*_logger) << ("Done building OpenCL program");
 
-        std::cout << "Build Status: " << oclErrorString(program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(
-                                                            _devices[0])) << std::endl;
-        std::cout << "Build Options:\t" <<
-        program.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>(_devices[0]) << std::endl;
-        std::cout << "Build Log:\t " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(
-            _devices[0]) << std::endl;
+        LOG_INFO(*_logger) << boost::format("Build Status: %1%") 
+            % oclErrorString(program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(_devices[0]));
+        LOG_INFO(*_logger) << boost::format("Build Options:\t%1%") 
+            % program.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>(_devices[0]);
+        LOG_INFO(*_logger) << boost::format("Build Log:\t%1%")
+            % program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_devices[0]);
 
         return program;
     }
     catch (cl::Error er) {
-        std::cout << "OpenCL Error: " << er.what() << " " << oclErrorString(er.err()) << std::endl;
+        LOG_INFO(*_logger) << boost::format("OpenCL Error: %1% %2%") 
+            % er.what() % oclErrorString(er.err());
         throw er;
     }
 }

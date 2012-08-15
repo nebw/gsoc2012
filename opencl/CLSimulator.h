@@ -12,17 +12,17 @@ class CLSimulator : public BaseSimulator
 {
 public:
     CLSimulator(const unsigned int nX,
-              const unsigned int nY,
-              const unsigned int nZ,
-              const unsigned int timesteps,
-              const float dt,
-              state const& state_0,
-              const Plot plot,
-              const Measure measure,
-              const FFT_FFTW fftw,
-              const FFT_clFFT clfft,
-              boost::filesystem::path const& programPath,
-              Logger const& logger);
+                const unsigned int nY,
+                const unsigned int nZ,
+                const unsigned int timesteps,
+                const float dt,
+                state const& state_0,
+                const Plot plot,
+                const Measure measure,
+                const FFT_FFTW fftw,
+                const FFT_clFFT clfft,
+                boost::filesystem::path const& programPath,
+                Logger const& logger);
     ~CLSimulator();
 
     void step() override;

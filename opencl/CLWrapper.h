@@ -2,6 +2,8 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 
+#include "Definitions.h"
+
 #include "CL/cl.hpp"
 
 #include <vector>
@@ -9,7 +11,7 @@
 class CLWrapper {
 public:
 
-    CLWrapper();
+    CLWrapper(Logger const& logger);
 
     cl::Program loadProgram(std::string path);
 
@@ -20,6 +22,7 @@ public:
     cl_command_queue getQueueC() const;
 
 private:
+    Logger _logger;
 
     unsigned int _deviceUsed;
     std::vector<cl::Device> _devices;
