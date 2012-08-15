@@ -56,24 +56,6 @@ SET(INCLUDEDIRS
       ${gtest_SOURCE_DIR}
 )
 
-include_directories(${INCLUDEDIRS})
-
-add_executable(execute_unit_tests
-      openclUnitTests.cpp      
-      opencl_fft/fft_execute.cpp
-      opencl_fft/fft_setup.cpp
-      opencl_fft/fft_kernelstring.cpp
-)
-
-target_link_libraries(execute_unit_tests
-      ${Boost_LIBRARIES}
-      ${OPENCL_LIBRARIES}
-      gtest
-      gtest_main
-)
-
-add_test(openclUnitTests openclUnitTests)
-
 ADD_DEFINITIONS(-DCL_SOURCE_DIR="${opencl_SOURCE_DIR}")
 
 SET(HEADERS
@@ -131,6 +113,22 @@ SET(LIBRARIES
   ${GLEW_LIBRARY}
 )
 
+include_directories(${INCLUDEDIRS})
+
+add_executable(execute_unit_tests
+      Definitions.h
+      BaseSimulator.h
+      CPUSimulator.h
+      CLSimulator.h
+      CPUSimulator.cpp
+      openclUnitTests.cpp 
+      stdafx.h
+      stdafx.cpp      
+      opencl_fft/fft_execute.cpp
+      opencl_fft/fft_setup.cpp
+      opencl_fft/fft_kernelstring.cpp
+)
+
 if(MSVC)
   if(CMAKE_GENERATOR MATCHES "Win64")
     set(FFTW_LIBRARIES
@@ -150,13 +148,25 @@ if(MSVC)
   
   target_link_libraries(simulate
         ${LIBRARIES}
-        Winmm
-  )
+        Winmm)
+  
+  target_link_libraries(execute_unit_tests
+      ${LIBRARIES}
+      gtest
+      gtest_main)
 else()
   target_link_libraries(simulate
         ${LIBRARIES}
   )
+  
+  target_link_libraries(execute_unit_tests
+      ${LIBRARIES}
+      Winmm
+      gtest
+      gtest_main)
 endif()
+
+add_test(openclUnitTests openclUnitTests)
 
 if(MSVC)
 #  list(REMOVE_ITEM Boost_LIBRARIES debug)

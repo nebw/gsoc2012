@@ -1,7 +1,8 @@
-#include <boost/program_options.hpp>
-
 #include "gtest/gtest.h"
 #include "opencl_fft/clFFT.h"
+#include "BaseSimulator.h"
+#include "CLSimulator.h"
+#include "CPUSimulator.h"
 
 #include <iostream>
 
