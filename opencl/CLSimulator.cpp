@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "Simulator.h"
+#include "CLSimulator.h"
 #include "util.h"
 #include "GnuPlotPlotter.h"
 #include "OpenGLPlotter.h"
@@ -18,7 +18,7 @@
 # include <Windows.h>
 #endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
 
-Simulator::Simulator(const unsigned int nX,
+CLSimulator::CLSimulator(const unsigned int nX,
                      const unsigned int nY,
                      const unsigned int nZ,
                      const unsigned int timesteps,
@@ -111,7 +111,7 @@ Simulator::Simulator(const unsigned int nX,
     }
 }
 
-void Simulator::step()
+void CLSimulator::step()
 {
     unsigned int ind_old = _t % 2;
     unsigned int ind_new = 1 - ind_old;
@@ -168,7 +168,7 @@ void Simulator::step()
     }
 }
 
-void Simulator::simulate()
+void CLSimulator::simulate()
 {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     unsigned long startTime;
@@ -244,7 +244,7 @@ void Simulator::simulate()
     }
 }
 
-inline float Simulator::_f_w_EE(const int j)
+inline float CLSimulator::_f_w_EE(const int j)
 {
     static const float sigma = 1;
     static const float p     = 32;
@@ -255,7 +255,7 @@ inline float Simulator::_f_w_EE(const int j)
            * exp(-abs(j) / (sigma * p));
 }
 
-void Simulator::f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec)
+void CLSimulator::f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec)
 {
     for (unsigned int i = 0; i < _numNeurons; ++i)   {
         if (rec == AMPA)
@@ -305,7 +305,7 @@ void Simulator::f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec)
     }
 }
 
-void Simulator::f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec)
+void CLSimulator::f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec)
 {
     // initialize sVals_real for FFT
     switch (rec)
@@ -380,25 +380,25 @@ void Simulator::f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec)
     }
 }
 
-std::vector<unsigned long> Simulator::getTimesCalculations() const
+std::vector<unsigned long> CLSimulator::getTimesCalculations() const
 {
     assert(_measure);
     return _timesCalculations;
 }
 
-std::vector<unsigned long> Simulator::getTimesFFTW() const
+std::vector<unsigned long> CLSimulator::getTimesFFTW() const
 {
     assert(_measure && _fftw);
     return _timesFFTW;
 }
 
-std::vector<unsigned long> Simulator::getTimesClFFT() const
+std::vector<unsigned long> CLSimulator::getTimesClFFT() const
 {
     assert(_measure && _clfft);
     return _timesClFFT;
 }
 
-void Simulator::convolutionFFTW(const unsigned int ind_old)
+void CLSimulator::convolutionFFTW(const unsigned int ind_old)
 {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     unsigned long startTime;
@@ -439,7 +439,7 @@ void Simulator::convolutionFFTW(const unsigned int ind_old)
     }
 }
 
-void Simulator::convolutionClFFT(const unsigned int ind_old)
+void CLSimulator::convolutionClFFT(const unsigned int ind_old)
 {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     unsigned long startTime;
@@ -472,7 +472,7 @@ void Simulator::convolutionClFFT(const unsigned int ind_old)
     }
 }
 
-void Simulator::executeKernels()
+void CLSimulator::executeKernels()
 {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     unsigned long startTime;
@@ -511,7 +511,7 @@ void Simulator::executeKernels()
     }
 }
 
-void Simulator::assertConvolutionResults()
+void CLSimulator::assertConvolutionResults()
 {
     std::unique_ptr<float[]> sumFootprintAMPA_tmp(std::unique_ptr<float[]>(new float[_numNeurons]));
     _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), sumFootprintAMPA_tmp.get(), NULL, NULL);
@@ -525,7 +525,7 @@ void Simulator::assertConvolutionResults()
     }
 }
 
-void Simulator::initializeFFTW()
+void CLSimulator::initializeFFTW()
 {
     _distances_split = (fftwf_complex *)fftwf_malloc(_nFFT * sizeof(fftwf_complex));
     _sVals_split = (fftwf_complex *)fftwf_malloc(_nFFT * sizeof(fftwf_complex));
@@ -563,7 +563,7 @@ void Simulator::initializeFFTW()
     }
 }
 
-void Simulator::initializeHostVariables(state const& state_0)
+void CLSimulator::initializeHostVariables(state const& state_0)
 {
     // 2 states (old and new) per neuron per timestep
     _states = std::unique_ptr<state[]>(new state[2 * _numNeurons]);
@@ -592,7 +592,7 @@ void Simulator::initializeHostVariables(state const& state_0)
     }
 }
 
-void Simulator::initializeClFFT()
+void CLSimulator::initializeClFFT()
 {
     // initialize distances
     unsigned int j = 0;
@@ -708,7 +708,7 @@ void Simulator::initializeClFFT()
     _wrapper.getQueue().finish();
 }
 
-void Simulator::assertInitializationResults()
+void CLSimulator::assertInitializationResults()
 {
     boost::scoped_array<float> distances_real(new float[_nFFT]);
     boost::scoped_array<float> distances_imag(new float[_nFFT]);
@@ -729,7 +729,7 @@ void Simulator::assertInitializationResults()
     }
 }
 
-void Simulator::initializeCLKernelsAndBuffers()
+void CLSimulator::initializeCLKernelsAndBuffers()
 {
     _states_cl = cl::Buffer(_wrapper.getContext(),
                             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
@@ -816,7 +816,7 @@ void Simulator::initializeCLKernelsAndBuffers()
     }
 }
 
-Simulator::~Simulator()
+CLSimulator::~CLSimulator()
 {
     if(_fftw)
     {
@@ -834,4 +834,24 @@ Simulator::~Simulator()
     {
         clFFT_DestroyPlan(_p_cl);
     }
+}
+
+std::unique_ptr<state[]> const& CLSimulator::getCurrentStates() const
+{
+    return _states;
+}
+
+std::unique_ptr<float[]> const& CLSimulator::getCurrentSumFootprintAMPA() const
+{
+    return _sumFootprintAMPA;
+}
+
+std::unique_ptr<float[]> const& CLSimulator::getCurrentSumFootprintNMDA() const
+{
+    return _sumFootprintNMDA;
+}
+
+std::unique_ptr<float[]> const& CLSimulator::getCurrentSumFootprintGABAA() const
+{
+    return _sumFootprintGABAA;
 }

@@ -81,7 +81,8 @@ SET(HEADERS
   util.h
   utilShader.h
   CLWrapper.h
-  Simulator.h
+  BaseSimulator.h
+  CLSimulator.h
   Plotter.h
   BasePlotter.h
   GnuPlotPlotter.h
@@ -95,7 +96,7 @@ SET(SOURCE
   util.cpp
   utilShader.cpp
   CLWrapper.cpp
-  Simulator.cpp
+  CLSimulator.cpp
   GnuPlotPlotter.cpp
   OpenGLPlotter.cpp
   kernels.cl

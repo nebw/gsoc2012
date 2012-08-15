@@ -1,39 +1,17 @@
 #pragma once
 
 #include "Definitions.h"
+#include "BaseSimulator.h"
 #include "CLWrapper.h"
 #include "BasePlotter.h"
 
 #include "opencl_fft/clFFT.h"
 #include "fftw3.h"
 
-#include <boost/filesystem.hpp>
-
-class Simulator
+class CLSimulator : public BaseSimulator
 {
 public:
-    enum Plot {
-        NO_PLOT = 0,
-        PLOT_GNUPLOT,
-        PLOT_OPENGL
-    };
-
-    enum Measure {
-        NO_MEASURE = 0,
-        MEASURE
-    };
-
-    enum FFT_FFTW {
-        NO_FFTW = 0,
-        FFTW
-    };
-
-    enum FFT_clFFT {
-        NO_CLFFT = 0,
-        CLFFT
-    };
-
-    Simulator(const unsigned int nX,
+    CLSimulator(const unsigned int nX,
               const unsigned int nY,
               const unsigned int nZ,
               const unsigned int timesteps,
@@ -45,14 +23,19 @@ public:
               const FFT_clFFT clfft,
               boost::filesystem::path const& programPath,
               Logger const& logger);
-    ~Simulator();
+    ~CLSimulator();
 
-    void step();
-    void simulate();
+    void step() override;
+    void simulate() override;
 
-    std::vector<unsigned long> getTimesCalculations() const;
-    std::vector<unsigned long> getTimesFFTW() const;
-    std::vector<unsigned long> getTimesClFFT() const;
+    std::unique_ptr<state[]> const& getCurrentStates() const override;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const override;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const override;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const override;
+
+    std::vector<unsigned long> getTimesCalculations() const override;
+    std::vector<unsigned long> getTimesFFTW() const override;
+    std::vector<unsigned long> getTimesClFFT() const override;
 
 private:
     enum Receptor {

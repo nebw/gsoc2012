@@ -1,5 +1,5 @@
 #include "Definitions.h"
-#include "Simulator.h"
+#include "CLSimulator.h"
 #include "util.h"
 
 #include "cpplog/cpplog.hpp"
@@ -27,17 +27,17 @@ void measureTimes(Logger const& logger, state const& state0, const unsigned int 
         auto neurons = static_cast<const unsigned int>(pow(2.f, i));
         numNeurons.push_back(neurons);
 
-        Simulator sim = Simulator(
+        CLSimulator sim = CLSimulator(
             neurons,
             1,
             1,
             timesteps,
             dt,
             state0,
-            Simulator::NO_PLOT,
-            Simulator::MEASURE,
-            Simulator::FFTW,
-            Simulator::CLFFT,
+            CLSimulator::NO_PLOT,
+            CLSimulator::MEASURE,
+            CLSimulator::FFTW,
+            CLSimulator::CLFFT,
             path,
             logger);
 
@@ -166,19 +166,19 @@ int main(int ac, char **av)
         measureTimes(logger, state0, timesteps, dt, path);
     } else
     {
-        Simulator::Plot plot;
+        CLSimulator::Plot plot;
         if(boost::iequals(plotStr, "gnuplot"))
         {
-            plot = Simulator::PLOT_GNUPLOT;
+            plot = CLSimulator::PLOT_GNUPLOT;
         } else if(boost::iequals(plotStr, "opengl"))
         {
-            plot = Simulator::PLOT_OPENGL;
+            plot = CLSimulator::PLOT_OPENGL;
         } else
         {
-            plot = Simulator::NO_PLOT;
+            plot = CLSimulator::NO_PLOT;
         }
 
-        Simulator sim = Simulator(
+        CLSimulator sim = CLSimulator(
             nX,
             nY,
             nZ,
@@ -186,9 +186,9 @@ int main(int ac, char **av)
             dt,
             state0,
             plot,
-            stringToBool(measureStr) ? Simulator::MEASURE : Simulator::NO_MEASURE,
-            stringToBool(fftwStr) ? Simulator::FFTW : Simulator::NO_FFTW,
-            stringToBool(clfftStr) ? Simulator::CLFFT : Simulator::NO_CLFFT,
+            stringToBool(measureStr) ? CLSimulator::MEASURE : CLSimulator::NO_MEASURE,
+            stringToBool(fftwStr) ? CLSimulator::FFTW : CLSimulator::NO_FFTW,
+            stringToBool(clfftStr) ? CLSimulator::CLFFT : CLSimulator::NO_CLFFT,
             path,
             logger);
 
