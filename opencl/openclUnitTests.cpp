@@ -4,7 +4,12 @@
 #include "CLSimulator.h"
 #include "CPUSimulator.h"
 
+#include "cpplog/cpplog.hpp"
+
 #include <iostream>
+#include <memory>
+
+#include <boost/filesystem.hpp>
 
 #if defined(__APPLE__)
 # include <OpenCL/opencl.h>
@@ -240,4 +245,225 @@ TEST(FFTTest, InverseFFTTest)
     ret = clFinish(queue);
     ret = clReleaseCommandQueue(queue);
     ret = clReleaseContext(context);
+}
+
+TEST(BasicSimTests, CPUSimInitializationTest)
+{
+    state state0;
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    EXPECT_NO_THROW(
+        CPUSimulator cpuSim = CPUSimulator(1024,
+                                           1,
+                                           1,
+                                           1000,
+                                           0.1f,
+                                           state0)
+    );
+}
+
+TEST(BasicSimTests, CPUSimSimulationReturnsTest)
+{
+    state state0;
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    CPUSimulator cpuSim = CPUSimulator(256,
+                                       1,
+                                       1,
+                                       1000,
+                                       0.1f,
+                                       state0);
+
+    EXPECT_NO_THROW(cpuSim.simulate());
+}
+
+TEST(BasicSimTests, CLSimInitializationTest)
+{
+    state state0;
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
+    path /= "/kernels.cl";
+
+    auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
+
+    EXPECT_NO_THROW(
+        CLSimulator clSim = CLSimulator(1024,
+                                        1,
+                                        1,
+                                        1000,
+                                        0.1f,
+                                        state0,
+                                        BaseSimulator::NO_PLOT,
+                                        BaseSimulator::NO_MEASURE,
+                                        BaseSimulator::NO_FFTW,
+                                        BaseSimulator::NO_CLFFT,
+                                        path,
+                                        logger)
+    );
+}
+
+TEST(BasicSimTests, CLSimSimulationRungeKuttaOnlyReturnsTest)
+{
+    state state0;
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
+    path /= "/kernels.cl";
+
+    auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
+
+    CLSimulator clSim = CLSimulator(256,
+                                    1,
+                                    1,
+                                    1000,
+                                    0.1f,
+                                    state0,
+                                    BaseSimulator::NO_PLOT,
+                                    BaseSimulator::NO_MEASURE,
+                                    BaseSimulator::NO_FFTW,
+                                    BaseSimulator::NO_CLFFT,
+                                    path,
+                                    logger);
+
+    EXPECT_NO_THROW(clSim.simulate());
+}
+
+TEST(BasicSimTests, CLSimSimulationWithFFTWReturnsTest)
+{
+    state state0;
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
+    path /= "/kernels.cl";
+
+    auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
+
+    CLSimulator clSim = CLSimulator(256,
+                                    1,
+                                    1,
+                                    1000,
+                                    0.1f,
+                                    state0,
+                                    BaseSimulator::NO_PLOT,
+                                    BaseSimulator::NO_MEASURE,
+                                    BaseSimulator::FFTW,
+                                    BaseSimulator::NO_CLFFT,
+                                    path,
+                                    logger);
+
+    EXPECT_NO_THROW(clSim.simulate());
+}
+
+TEST(BasicSimTests, CLSimSimulationWithClFFTWReturnsTest)
+{
+    state state0;
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
+    path /= "/kernels.cl";
+
+    auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
+
+    CLSimulator clSim = CLSimulator(256,
+                                    1,
+                                    1,
+                                    1000,
+                                    0.1f,
+                                    state0,
+                                    BaseSimulator::NO_PLOT,
+                                    BaseSimulator::NO_MEASURE,
+                                    BaseSimulator::NO_FFTW,
+                                    BaseSimulator::CLFFT,
+                                    path,
+                                    logger);
+
+    EXPECT_NO_THROW(clSim.simulate());
+}
+
+TEST(BasicSimTests, CLSimSimulationFFTWClFFTWAssertionsReturnsTest)
+{
+    state state0;
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
+    path /= "/kernels.cl";
+
+    auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
+
+    CLSimulator clSim = CLSimulator(256,
+                                    1,
+                                    1,
+                                    1000,
+                                    0.1f,
+                                    state0,
+                                    BaseSimulator::NO_PLOT,
+                                    BaseSimulator::NO_MEASURE,
+                                    BaseSimulator::FFTW,
+                                    BaseSimulator::CLFFT,
+                                    path,
+                                    logger);
+
+    EXPECT_NO_THROW(clSim.simulate());
 }
