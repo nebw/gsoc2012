@@ -5,32 +5,40 @@
 
 class CPUSimulator : public BaseSimulator {
 public:
+
+    enum Convolution {
+        NO_CONVOLUTION = 0,
+        CONVOLUTION = 1
+    };
+
     CPUSimulator(const unsigned int nX,
                  const unsigned int nY,
                  const unsigned int nZ,
                  const unsigned int timesteps,
                  const float dt,
-                 state const& state_0);
+                 state const& state_0,
+                 const Convolution convolution);
 
-    virtual void step() override;
+    void step() override;
 
-    virtual void simulate() override;
+    void simulate() override;
 
-    virtual std::unique_ptr<state[]> const& getCurrentStates() const override;
+    std::unique_ptr<state[]> const& getCurrentStates() const override;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const override;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const override;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const override;
 
-    virtual std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const override;
-
-    virtual std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const override;
-
-    virtual std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const override;
+    void setCurrentStates(std::unique_ptr<state[]> const& states);
+    void setCurrentSumFootprintAMPA(std::unique_ptr<float[]> const& sumFootprintAMPA);
+    void setCurrentSumFootprintNMDA(std::unique_ptr<float[]> const& sumFootprintNMDA);
+    void setCurrentSumFootprintGABAA(std::unique_ptr<float[]> const& sumFootprintGABAA);
 
     virtual std::vector<unsigned long> getTimesCalculations() const override;
-
     virtual std::vector<unsigned long> getTimesFFTW() const override;
-
     virtual std::vector<unsigned long> getTimesClFFT() const override;
 
 private:
+
     std::unique_ptr<state[]> _states;
     std::unique_ptr<float[]> _sumFootprintAMPA;
     std::unique_ptr<float[]> _sumFootprintNMDA;
@@ -46,7 +54,7 @@ private:
     const unsigned int _numNeurons;
     const unsigned int _timesteps;
 
-    unsigned int _t;
+    unsigned int _t;    const Convolution _convolution;    float _f_w_EE(const int d);
 
     float f_I_Na_m_inf(const float V);
     float f_I_Na(const float V,
@@ -109,10 +117,10 @@ private:
     void runge4_f_dsNMDA_dt(const unsigned int idx,
                             const unsigned int ind_old);
 
-    void convolutionAMPA();
-    void convolutionNMDA();
+    void convolutionAMPA(const unsigned int ind_old);
+    void convolutionNMDA(const unsigned int ind_old);
     void convolutionGABAA();
 
-    void computeRungeKuttaApproximations( unsigned int ind_old );
-    void computeConvolutions( unsigned int ind_old );
+    void computeRungeKuttaApproximations(unsigned int ind_old);
+    void computeConvolutions(unsigned int ind_old);
 };

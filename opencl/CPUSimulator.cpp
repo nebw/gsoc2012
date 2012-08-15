@@ -2,14 +2,23 @@
 
 #include "CPUSimulator.h"
 
-CPUSimulator::CPUSimulator( const unsigned int nX, const unsigned int nY, const unsigned int nZ, const unsigned int timesteps, const float dt, state const& state_0 )
+#include <algorithm>
+
+CPUSimulator::CPUSimulator(const unsigned int nX,
+                           const unsigned int nY,
+                           const unsigned int nZ,
+                           const unsigned int timesteps,
+                           const float dt,
+                           state const& state_0,
+                           const Convolution convolution)
     : _nX(nX),
       _nY(nY),
       _nZ(nZ),
       _numNeurons(nX * nY * nZ),
       _timesteps(timesteps),
       _dt(dt),
-      _t(0)
+      _t(0),
+      _convolution(convolution)
 {
     // 2 states (old and new) per neuron per timestep
     _states = std::unique_ptr<state[]>(new state[2 * _numNeurons]);
@@ -39,39 +48,30 @@ CPUSimulator::CPUSimulator( const unsigned int nX, const unsigned int nY, const 
     {
         _states[i] = state_0;
     }
-}
 
-void CPUSimulator::computeRungeKuttaApproximations( unsigned int ind_old )
-{
-    for(unsigned int idx = 0; idx < _numNeurons; ++idx)
+    for (unsigned int i = 0; i < _numNeurons; ++i)
     {
-        runge4_f_dV_dt(idx, ind_old);
-        runge4_f_I_Na_dh_dt(idx, ind_old);
-        runge4_f_dsAMPA_dt(idx, ind_old);
-        runge4_f_dn_dt(idx, ind_old);
-        runge4_f_dz_dt(idx, ind_old);
-        runge4_f_dxNMDA_dt(idx, ind_old);
-        runge4_f_dsNMDA_dt(idx, ind_old);
+        _distances[i] = _f_w_EE(i);
     }
-}
-
-void CPUSimulator::computeConvolutions( unsigned int ind_old )
-{
-    throw std::exception("The method or operation is not implemented.");
 }
 
 void CPUSimulator::step()
 {
     unsigned int ind_old = _t % 2;
 
-    //computeConvolutions(ind_old);
+    if (_convolution)
+    {
+        computeConvolutions(ind_old);
+    }
 
     computeRungeKuttaApproximations(ind_old);
+
+    ++_t;
 }
 
 void CPUSimulator::simulate()
 {
-    for (; _t < _timesteps - 1; ++_t)
+    for (; _t < _timesteps - 1;)
     {
         if ((_t + 2) % (_timesteps / 100) == 0)
         {
@@ -81,6 +81,29 @@ void CPUSimulator::simulate()
         step();
     }
     std::cout << std::endl;
+}
+
+void CPUSimulator::computeConvolutions(unsigned int ind_old)
+{
+    convolutionAMPA(ind_old);
+
+    convolutionNMDA(ind_old);
+
+    // convolutionGABAA();
+}
+
+void CPUSimulator::computeRungeKuttaApproximations(unsigned int ind_old)
+{
+    for (unsigned int idx = 0; idx < _numNeurons; ++idx)
+    {
+        runge4_f_dV_dt(idx, ind_old);
+        runge4_f_I_Na_dh_dt(idx, ind_old);
+        runge4_f_dsAMPA_dt(idx, ind_old);
+        runge4_f_dn_dt(idx, ind_old);
+        runge4_f_dz_dt(idx, ind_old);
+        runge4_f_dxNMDA_dt(idx, ind_old);
+        runge4_f_dsNMDA_dt(idx, ind_old);
+    }
 }
 
 std::unique_ptr<state[]> const& CPUSimulator::getCurrentStates() const
@@ -103,6 +126,26 @@ std::unique_ptr<float[]> const& CPUSimulator::getCurrentSumFootprintGABAA() cons
     return _sumFootprintGABAA;
 }
 
+void CPUSimulator::setCurrentStates(std::unique_ptr<state[]> const& states)
+{
+    std::copy(states.get(), states.get() + (2 * _numNeurons), _states.get());
+}
+
+void CPUSimulator::setCurrentSumFootprintAMPA(std::unique_ptr<float[]> const& sumFootprintAMPA)
+{
+    std::copy(sumFootprintAMPA.get(), sumFootprintAMPA.get() + _numNeurons, _sumFootprintAMPA.get());
+}
+
+void CPUSimulator::setCurrentSumFootprintNMDA(std::unique_ptr<float[]> const& sumFootprintNMDA)
+{
+    std::copy(sumFootprintNMDA.get(), sumFootprintNMDA.get() + _numNeurons, _sumFootprintNMDA.get());
+}
+
+void CPUSimulator::setCurrentSumFootprintGABAA(std::unique_ptr<float[]> const& sumFootprintGABAA)
+{
+    std::copy(sumFootprintGABAA.get(), sumFootprintGABAA.get() + _numNeurons, _sumFootprintGABAA.get());
+}
+
 std::vector<unsigned long> CPUSimulator::getTimesCalculations() const
 {
     throw std::exception("The method or operation is not implemented.");
@@ -116,6 +159,17 @@ std::vector<unsigned long> CPUSimulator::getTimesFFTW() const
 std::vector<unsigned long> CPUSimulator::getTimesClFFT() const
 {
     throw std::exception("The method or operation is not implemented.");
+}
+
+float CPUSimulator::_f_w_EE(const int d)
+{
+    static const float sigma = 1;
+    static const float p     = 32;
+
+    // TODO: p varies between 8 to 64
+    //
+    return tanh(1 / (2 * sigma * p))
+           * exp(-abs(d) / (sigma * p));
 }
 
 float CPUSimulator::f_I_Na_m_inf(const float V)
@@ -429,11 +483,37 @@ void CPUSimulator::runge4_f_dsNMDA_dt(const unsigned int idx, const unsigned int
     _states[ind_new * _numNeurons + idx].s_NMDA = state_0.s_NMDA + _dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }
 
-void CPUSimulator::convolutionAMPA()
-{}
+void CPUSimulator::convolutionAMPA(const unsigned int ind_old)
+{
+    for (int i = 0; i < static_cast<int>(_numNeurons); ++i)
+    {
+        float sumFootprint = 0;
 
-void CPUSimulator::convolutionNMDA()
-{}
+        for (int j = 0; j < static_cast<int>(_numNeurons); ++j)
+        {
+            sumFootprint += _distances[abs(j - i)] * _states[ind_old * _numNeurons + j].s_AMPA;
+        }
+
+        _sumFootprintAMPA[i] = sumFootprint;
+    }
+}
+
+void CPUSimulator::convolutionNMDA(const unsigned int ind_old)
+{
+    for (int i = 0; i < static_cast<int>(_numNeurons); ++i)
+    {
+        float sumFootprint = 0;
+
+        for (int j = 0; j < static_cast<int>(_numNeurons); ++j)
+        {
+            sumFootprint += _distances[abs(j - i)] * _states[ind_old * _numNeurons + j].s_NMDA;
+        }
+
+        _sumFootprintNMDA[i] = sumFootprint;
+    }
+}
 
 void CPUSimulator::convolutionGABAA()
-{}
+{
+    throw std::exception("The method or operation is not implemented.");
+}

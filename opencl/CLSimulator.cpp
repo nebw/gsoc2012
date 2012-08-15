@@ -1,9 +1,9 @@
 #include "stdafx.h"
 
 #include "CLSimulator.h"
-#include "util.h"
 #include "GnuPlotPlotter.h"
 #include "OpenGLPlotter.h"
+#include "util.h"
 
 #include "CL/cl.hpp"
 
@@ -19,17 +19,18 @@
 #endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
 
 CLSimulator::CLSimulator(const unsigned int nX,
-                     const unsigned int nY,
-                     const unsigned int nZ,
-                     const unsigned int timesteps,
-                     const float dt,
-                     state const& state_0,
-                     const Plot plot,
-                     const Measure measure,
-                     const FFT_FFTW fftw,
-                     const FFT_clFFT clfft,
-                     boost::filesystem::path const& programPath,
-                     Logger const& logger)
+                         const unsigned int nY,
+                         const unsigned int nZ,
+                         const unsigned int timesteps,
+                         const float dt,
+                         state const& state_0,
+                         const Plot plot,
+                         const Measure measure,
+                         const FFT_FFTW fftw,
+                         const FFT_clFFT clfft,
+                         boost::filesystem::path const& programPath,
+                         Logger const& logger,
+                         const bool readToHostMemory /*= false*/)
     : _wrapper(CLWrapper(logger)),
       _nX(nX),
       _nY(nY),
@@ -44,18 +45,21 @@ CLSimulator::CLSimulator(const unsigned int nX,
       _fftw(fftw == FFTW),
       _clfft(clfft == CLFFT),
       _logger(logger),
+      _readToHostMemory(readToHostMemory),
       // TODO: _nFFT(2 * numNeurons - 1),
       _nFFT(2 * nX * nY * nZ),
       _scaleFFT(1.f / _nFFT),
       _err(CL_SUCCESS)
 {
-    switch(plot)
+    switch (plot)
     {
     case NO_PLOT:
         break;
+
     case PLOT_GNUPLOT:
         _plotter = std::unique_ptr<BasePlotter>(new GnuPlotPlotter(_nX, _nY, _nZ, 0, dt));
-    	break;
+        break;
+
     case PLOT_OPENGL:
         _plotter = std::unique_ptr<BasePlotter>(new OpenGLPlotter(_numNeurons, 0, dt));
         break;
@@ -153,14 +157,21 @@ void CLSimulator::step()
         // execute opencl kernels for runge-kutta approximations
         executeKernels();
 
-        // read states from GPU memory for gnuplot plotting
-        if (_plot)
+        // read states from GPU memory for gnuplot plotting or unit tests
+        if (_plot || _readToHostMemory)
         {
             _err = _wrapper.getQueue().enqueueReadBuffer(_states_cl, CL_FALSE, ind_new * _numNeurons * sizeof(state), _numNeurons * sizeof(state), &_states[ind_new * _numNeurons], NULL, NULL);
             _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, NULL);
             _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintNMDA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintNMDA.get(), NULL, NULL);
             _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintGABAA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintGABAA.get(), NULL, NULL);
+
+            if (_readToHostMemory)
+            {
+                _wrapper.getQueue().finish();
+            }
         }
+
+        ++_t;
     }
     catch (cl::Error err)
     {
@@ -191,7 +202,7 @@ void CLSimulator::simulate()
     //    LOG_INFO(*_logger) << "Timestep 1/" << _timesteps;
     // }
 
-    for (; _t < _timesteps - 1; ++_t)
+    for (; _t < _timesteps - 1;)
     {
         if ((_t + 2) % (_timesteps / 100) == 0)
         {
@@ -416,7 +427,7 @@ void CLSimulator::convolutionFFTW(const unsigned int ind_old)
 #endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     }
 
-    if(!_plot)
+    if (!_plot)
     {
         _err = _wrapper.getQueue().enqueueReadBuffer(_states_cl, CL_TRUE, ind_old * _numNeurons * sizeof(state), _numNeurons * sizeof(state), &_states[ind_old * _numNeurons], NULL, NULL);
     }
@@ -818,7 +829,7 @@ void CLSimulator::initializeCLKernelsAndBuffers()
 
 CLSimulator::~CLSimulator()
 {
-    if(_fftw)
+    if (_fftw)
     {
         fftwf_free(_distances_split);
         fftwf_free(_convolution_split);
@@ -830,7 +841,8 @@ CLSimulator::~CLSimulator()
         fftwf_destroy_plan(_p_sVals_fftw);
         fftwf_destroy_plan(_p_inv_fftw);
     }
-    if(_clfft)
+
+    if (_clfft)
     {
         clFFT_DestroyPlan(_p_cl);
     }

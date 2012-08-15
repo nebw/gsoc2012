@@ -22,6 +22,7 @@ public:
     cl_command_queue getQueueC() const;
 
 private:
+
     Logger _logger;
 
     unsigned int _deviceUsed;

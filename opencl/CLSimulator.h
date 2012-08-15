@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Definitions.h"
+#include "BasePlotter.h"
 #include "BaseSimulator.h"
 #include "CLWrapper.h"
-#include "BasePlotter.h"
+#include "Definitions.h"
 
-#include "opencl_fft/clFFT.h"
 #include "fftw3.h"
+#include "opencl_fft/clFFT.h"
 
-class CLSimulator : public BaseSimulator
-{
+class CLSimulator : public BaseSimulator {
 public:
+
     CLSimulator(const unsigned int nX,
                 const unsigned int nY,
                 const unsigned int nZ,
@@ -22,7 +22,8 @@ public:
                 const FFT_FFTW fftw,
                 const FFT_clFFT clfft,
                 boost::filesystem::path const& programPath,
-                Logger const& logger);
+                Logger const& logger,
+                const bool readToHostMemory = false);
     ~CLSimulator();
 
     void step() override;
@@ -38,6 +39,7 @@ public:
     std::vector<unsigned long> getTimesClFFT() const override;
 
 private:
+
     enum Receptor {
         AMPA = 0,
         NMDA,
@@ -70,6 +72,7 @@ private:
     const bool _measure;
     const bool _fftw;
     const bool _clfft;
+    const bool _readToHostMemory;
 
     // Measurements
     std::vector<unsigned long> _timesCalculations;
@@ -147,8 +150,10 @@ private:
     void convolutionFFTW(const unsigned int ind_old);
     void convolutionClFFT(const unsigned int ind_old);
 
-    void f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec);
-    void f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec);
+    void f_I_FFT_fftw(const unsigned int ind_old,
+                      const Receptor rec);
+    void f_I_FFT_clFFT(const unsigned int ind_old,
+                       const Receptor rec);
 
     void executeKernels();
 

@@ -1,8 +1,8 @@
-#include "gtest/gtest.h"
-#include "opencl_fft/clFFT.h"
 #include "BaseSimulator.h"
 #include "CLSimulator.h"
 #include "CPUSimulator.h"
+#include "gtest/gtest.h"
+#include "opencl_fft/clFFT.h"
 
 #include "cpplog/cpplog.hpp"
 
@@ -250,6 +250,7 @@ TEST(FFTTest, InverseFFTTest)
 TEST(BasicSimTests, CPUSimInitializationTest)
 {
     state state0;
+
     state0.V = -70.0f;
     state0.h = 1.0f;
     state0.n = 0.0f;
@@ -264,15 +265,17 @@ TEST(BasicSimTests, CPUSimInitializationTest)
         CPUSimulator cpuSim = CPUSimulator(1024,
                                            1,
                                            1,
-                                           1000,
+                                           500,
                                            0.1f,
-                                           state0)
-    );
+                                           state0,
+                                           CPUSimulator::CONVOLUTION)
+        );
 }
 
 TEST(BasicSimTests, CPUSimSimulationReturnsTest)
 {
     state state0;
+
     state0.V = -70.0f;
     state0.h = 1.0f;
     state0.n = 0.0f;
@@ -286,9 +289,10 @@ TEST(BasicSimTests, CPUSimSimulationReturnsTest)
     CPUSimulator cpuSim = CPUSimulator(256,
                                        1,
                                        1,
-                                       1000,
+                                       500,
                                        0.1f,
-                                       state0);
+                                       state0,
+                                       CPUSimulator::CONVOLUTION);
 
     EXPECT_NO_THROW(cpuSim.simulate());
 }
@@ -296,6 +300,7 @@ TEST(BasicSimTests, CPUSimSimulationReturnsTest)
 TEST(BasicSimTests, CLSimInitializationTest)
 {
     state state0;
+
     state0.V = -70.0f;
     state0.h = 1.0f;
     state0.n = 0.0f;
@@ -316,7 +321,7 @@ TEST(BasicSimTests, CLSimInitializationTest)
         CLSimulator clSim = CLSimulator(1024,
                                         1,
                                         1,
-                                        1000,
+                                        500,
                                         0.1f,
                                         state0,
                                         BaseSimulator::NO_PLOT,
@@ -325,12 +330,13 @@ TEST(BasicSimTests, CLSimInitializationTest)
                                         BaseSimulator::NO_CLFFT,
                                         path,
                                         logger)
-    );
+        );
 }
 
 TEST(BasicSimTests, CLSimSimulationRungeKuttaOnlyReturnsTest)
 {
     state state0;
+
     state0.V = -70.0f;
     state0.h = 1.0f;
     state0.n = 0.0f;
@@ -350,7 +356,7 @@ TEST(BasicSimTests, CLSimSimulationRungeKuttaOnlyReturnsTest)
     CLSimulator clSim = CLSimulator(256,
                                     1,
                                     1,
-                                    1000,
+                                    500,
                                     0.1f,
                                     state0,
                                     BaseSimulator::NO_PLOT,
@@ -366,6 +372,7 @@ TEST(BasicSimTests, CLSimSimulationRungeKuttaOnlyReturnsTest)
 TEST(BasicSimTests, CLSimSimulationWithFFTWReturnsTest)
 {
     state state0;
+
     state0.V = -70.0f;
     state0.h = 1.0f;
     state0.n = 0.0f;
@@ -385,7 +392,7 @@ TEST(BasicSimTests, CLSimSimulationWithFFTWReturnsTest)
     CLSimulator clSim = CLSimulator(256,
                                     1,
                                     1,
-                                    1000,
+                                    500,
                                     0.1f,
                                     state0,
                                     BaseSimulator::NO_PLOT,
@@ -401,6 +408,7 @@ TEST(BasicSimTests, CLSimSimulationWithFFTWReturnsTest)
 TEST(BasicSimTests, CLSimSimulationWithClFFTWReturnsTest)
 {
     state state0;
+
     state0.V = -70.0f;
     state0.h = 1.0f;
     state0.n = 0.0f;
@@ -420,7 +428,7 @@ TEST(BasicSimTests, CLSimSimulationWithClFFTWReturnsTest)
     CLSimulator clSim = CLSimulator(256,
                                     1,
                                     1,
-                                    1000,
+                                    500,
                                     0.1f,
                                     state0,
                                     BaseSimulator::NO_PLOT,
@@ -436,6 +444,7 @@ TEST(BasicSimTests, CLSimSimulationWithClFFTWReturnsTest)
 TEST(BasicSimTests, CLSimSimulationFFTWClFFTWAssertionsReturnsTest)
 {
     state state0;
+
     state0.V = -70.0f;
     state0.h = 1.0f;
     state0.n = 0.0f;
@@ -455,7 +464,7 @@ TEST(BasicSimTests, CLSimSimulationFFTWClFFTWAssertionsReturnsTest)
     CLSimulator clSim = CLSimulator(256,
                                     1,
                                     1,
-                                    1000,
+                                    500,
                                     0.1f,
                                     state0,
                                     BaseSimulator::NO_PLOT,
@@ -466,4 +475,326 @@ TEST(BasicSimTests, CLSimSimulationFFTWClFFTWAssertionsReturnsTest)
                                     logger);
 
     EXPECT_NO_THROW(clSim.simulate());
+}
+
+TEST(SimResultTests, RungeKuttaApproximationRelErrorTest)
+{
+    const unsigned int numNeurons = 2;
+    const unsigned int timesteps = 1000;
+
+    state state0;
+
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    CPUSimulator cpuSim = CPUSimulator(numNeurons,
+                                       1,
+                                       1,
+                                       timesteps,
+                                       0.1f,
+                                       state0,
+                                       CPUSimulator::NO_CONVOLUTION);
+
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
+    path /= "/kernels.cl";
+
+    auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
+
+    CLSimulator clSim = CLSimulator(numNeurons,
+                                    1,
+                                    1,
+                                    timesteps,
+                                    0.1f,
+                                    state0,
+                                    BaseSimulator::NO_PLOT,
+                                    BaseSimulator::NO_MEASURE,
+                                    BaseSimulator::NO_FFTW,
+                                    BaseSimulator::NO_CLFFT,
+                                    path,
+                                    logger,
+                                    true);
+
+    unsigned int t;
+
+    for (t = 0; t < timesteps - 1; ++t)
+    {
+        if ((t + 2) % (timesteps / 100) == 0)
+        {
+            std::cout << ".";
+        }
+
+        cpuSim.step();
+        auto& cpuSimState = cpuSim.getCurrentStates();
+        clSim.step();
+        auto& clSimState = clSim.getCurrentStates();
+
+        for (unsigned int i = 0; i < numNeurons; ++i)
+        {
+            EXPECT_NEAR(cpuSimState[i].V, clSimState[i].V, 0.00001);
+            EXPECT_NEAR(cpuSimState[i].h, clSimState[i].h, 0.00001);
+            EXPECT_NEAR(cpuSimState[i].n, clSimState[i].n, 0.00001);
+            EXPECT_NEAR(cpuSimState[i].z, clSimState[i].z, 0.00001);
+            EXPECT_NEAR(cpuSimState[i].s_AMPA, clSimState[i].s_AMPA, 0.00001);
+            EXPECT_NEAR(cpuSimState[i].x_NMDA, clSimState[i].x_NMDA, 0.00001);
+            EXPECT_NEAR(cpuSimState[i].s_NMDA, clSimState[i].s_NMDA, 0.00001);
+            EXPECT_NEAR(cpuSimState[i].s_GABAA, clSimState[i].s_GABAA, 0.00001);
+        }
+
+        cpuSim.setCurrentStates(clSimState);
+    }
+    std::cout << std::endl;
+}
+
+TEST(SimResultTests, RungeKuttaApproximationAbsErrorTest)
+{
+    const unsigned int numNeurons = 2;
+    // cumulative floating point inaccuracies become too large for more than 100 timesteps
+    const unsigned int timesteps = 100;
+
+    state state0;
+
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    CPUSimulator cpuSim = CPUSimulator(numNeurons,
+                                       1,
+                                       1,
+                                       timesteps,
+                                       0.1f,
+                                       state0,
+                                       CPUSimulator::NO_CONVOLUTION);
+
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
+    path /= "/kernels.cl";
+
+    auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
+
+    CLSimulator clSim = CLSimulator(numNeurons,
+                                    1,
+                                    1,
+                                    timesteps,
+                                    0.1f,
+                                    state0,
+                                    BaseSimulator::NO_PLOT,
+                                    BaseSimulator::NO_MEASURE,
+                                    BaseSimulator::NO_FFTW,
+                                    BaseSimulator::NO_CLFFT,
+                                    path,
+                                    logger,
+                                    true);
+
+    unsigned int t;
+
+    for (t = 0; t < timesteps - 1; ++t)
+    {
+        if ((t + 2) % (timesteps / 100) == 0)
+        {
+            std::cout << ".";
+        }
+
+        cpuSim.step();
+        auto& cpuSimState = cpuSim.getCurrentStates();
+        clSim.step();
+        auto& clSimState = clSim.getCurrentStates();
+
+        for (unsigned int i = 0; i < numNeurons; ++i)
+        {
+            EXPECT_FLOAT_EQ(cpuSimState[i].V, clSimState[i].V);
+            EXPECT_FLOAT_EQ(cpuSimState[i].h, clSimState[i].h);
+            EXPECT_FLOAT_EQ(cpuSimState[i].n, clSimState[i].n);
+            EXPECT_FLOAT_EQ(cpuSimState[i].z, clSimState[i].z);
+            EXPECT_FLOAT_EQ(cpuSimState[i].s_AMPA, clSimState[i].s_AMPA);
+            EXPECT_FLOAT_EQ(cpuSimState[i].x_NMDA, clSimState[i].x_NMDA);
+            EXPECT_FLOAT_EQ(cpuSimState[i].s_NMDA, clSimState[i].s_NMDA);
+            EXPECT_FLOAT_EQ(cpuSimState[i].s_GABAA, clSimState[i].s_GABAA);
+        }
+    }
+    std::cout << std::endl;
+}
+
+TEST(SimResultTests, FFTWConvolutionRelErrorTest)
+{
+    const unsigned int numNeurons = 256;
+    const unsigned int timesteps = 1000;
+
+    state state0;
+
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    CPUSimulator cpuSim = CPUSimulator(numNeurons,
+                                       1,
+                                       1,
+                                       timesteps,
+                                       0.1f,
+                                       state0,
+                                       CPUSimulator::CONVOLUTION);
+
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
+    path /= "/kernels.cl";
+
+    auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
+
+    CLSimulator clSim = CLSimulator(numNeurons,
+                                    1,
+                                    1,
+                                    timesteps,
+                                    0.1f,
+                                    state0,
+                                    BaseSimulator::NO_PLOT,
+                                    BaseSimulator::NO_MEASURE,
+                                    BaseSimulator::FFTW,
+                                    BaseSimulator::NO_CLFFT,
+                                    path,
+                                    logger,
+                                    true);
+
+    unsigned int t;
+
+    for (t = 0; t < timesteps - 1; ++t)
+    {
+        if ((t + 2) % (timesteps / 100) == 0)
+        {
+            std::cout << ".";
+        }
+
+        cpuSim.step();
+        auto& cpuSimState = cpuSim.getCurrentStates();
+        auto& cpuSumFootprintAMPA = cpuSim.getCurrentSumFootprintAMPA();
+        auto& cpuSumFootprintNMDA = cpuSim.getCurrentSumFootprintNMDA();
+        clSim.step();
+        auto& clSimState = clSim.getCurrentStates();
+        auto& clSumFootprintAMPA = clSim.getCurrentSumFootprintAMPA();
+        auto& clSumFootprintNMDA = clSim.getCurrentSumFootprintNMDA();
+
+        cpuSim.setCurrentStates(clSimState);
+
+        for (unsigned int i = 0; i < numNeurons; ++i)
+        {
+            EXPECT_FLOAT_EQ(cpuSimState[i].V, clSimState[i].V);
+            EXPECT_FLOAT_EQ(cpuSimState[i].h, clSimState[i].h);
+            EXPECT_FLOAT_EQ(cpuSimState[i].n, clSimState[i].n);
+            EXPECT_FLOAT_EQ(cpuSimState[i].z, clSimState[i].z);
+            EXPECT_FLOAT_EQ(cpuSimState[i].s_AMPA, clSimState[i].s_AMPA);
+            EXPECT_FLOAT_EQ(cpuSimState[i].x_NMDA, clSimState[i].x_NMDA);
+            EXPECT_FLOAT_EQ(cpuSimState[i].s_NMDA, clSimState[i].s_NMDA);
+            EXPECT_FLOAT_EQ(cpuSimState[i].s_GABAA, clSimState[i].s_GABAA);
+            EXPECT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.00001);
+            EXPECT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.00001);
+        }
+
+        cpuSim.setCurrentSumFootprintAMPA(clSumFootprintAMPA);
+        cpuSim.setCurrentSumFootprintNMDA(clSumFootprintNMDA);
+    }
+    std::cout << std::endl;
+}
+
+TEST(SimResultTests, ClFFTConvolutionRelErrorTest)
+{
+    const unsigned int numNeurons = 256;
+    const unsigned int timesteps = 1000;
+
+    state state0;
+
+    state0.V = -70.0f;
+    state0.h = 1.0f;
+    state0.n = 0.0f;
+    state0.z = 0.0f;
+    state0.s_AMPA = 0.0f;
+    state0.s_NMDA = 0.0f;
+    state0.x_NMDA = 0.0f;
+    state0.s_GABAA = 0.0f;
+    state0.I_app = 1.0f;
+
+    CPUSimulator cpuSim = CPUSimulator(numNeurons,
+                                       1,
+                                       1,
+                                       timesteps,
+                                       0.1f,
+                                       state0,
+                                       CPUSimulator::CONVOLUTION);
+
+    auto path = boost::filesystem::path(CL_SOURCE_DIR);
+    path /= "/kernels.cl";
+
+    auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
+    auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
+
+    CLSimulator clSim = CLSimulator(numNeurons,
+                                    1,
+                                    1,
+                                    timesteps,
+                                    0.1f,
+                                    state0,
+                                    BaseSimulator::NO_PLOT,
+                                    BaseSimulator::NO_MEASURE,
+                                    BaseSimulator::NO_FFTW,
+                                    BaseSimulator::CLFFT,
+                                    path,
+                                    logger,
+                                    true);
+
+    unsigned int t;
+
+    for (t = 0; t < timesteps - 1; ++t)
+    {
+        if ((t + 2) % (timesteps / 100) == 0)
+        {
+            std::cout << ".";
+        }
+
+        cpuSim.step();
+        auto& cpuSimState = cpuSim.getCurrentStates();
+        auto& cpuSumFootprintAMPA = cpuSim.getCurrentSumFootprintAMPA();
+        auto& cpuSumFootprintNMDA = cpuSim.getCurrentSumFootprintNMDA();
+        clSim.step();
+        auto& clSimState = clSim.getCurrentStates();
+        auto& clSumFootprintAMPA = clSim.getCurrentSumFootprintAMPA();
+        auto& clSumFootprintNMDA = clSim.getCurrentSumFootprintNMDA();
+
+        cpuSim.setCurrentStates(clSimState);
+
+        for (unsigned int i = 0; i < numNeurons; ++i)
+        {
+            EXPECT_FLOAT_EQ(cpuSimState[i].V, clSimState[i].V);
+            EXPECT_FLOAT_EQ(cpuSimState[i].h, clSimState[i].h);
+            EXPECT_FLOAT_EQ(cpuSimState[i].n, clSimState[i].n);
+            EXPECT_FLOAT_EQ(cpuSimState[i].z, clSimState[i].z);
+            EXPECT_FLOAT_EQ(cpuSimState[i].s_AMPA, clSimState[i].s_AMPA);
+            EXPECT_FLOAT_EQ(cpuSimState[i].x_NMDA, clSimState[i].x_NMDA);
+            EXPECT_FLOAT_EQ(cpuSimState[i].s_NMDA, clSimState[i].s_NMDA);
+            EXPECT_FLOAT_EQ(cpuSimState[i].s_GABAA, clSimState[i].s_GABAA);
+            // error can be > 0.001
+            EXPECT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.01);
+            EXPECT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.01);
+        }
+
+        cpuSim.setCurrentSumFootprintAMPA(clSumFootprintAMPA);
+        cpuSim.setCurrentSumFootprintNMDA(clSumFootprintNMDA);
+    }
+    std::cout << std::endl;
 }

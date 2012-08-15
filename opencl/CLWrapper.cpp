@@ -18,8 +18,8 @@ CLWrapper::CLWrapper(Logger const& logger)
 
         std::vector<cl::Platform> platforms;
         _err = cl::Platform::get(&platforms);
-        LOG_INFO(*_logger) << boost::format("cl::Platform::get(): %1%") 
-            % std::string(oclErrorString(_err));
+        LOG_INFO(*_logger) << boost::format("cl::Platform::get(): %1%")
+        % std::string(oclErrorString(_err));
 
         assert(platforms.size() > 0);
 
@@ -46,8 +46,8 @@ CLWrapper::CLWrapper(Logger const& logger)
         _queue = cl::CommandQueue(_context, _devices[0], 0, &_err);
     }
     catch (cl::Error er) {
-        LOG_INFO(*_logger) << boost::format("OpenCl Error: %1% %2%") 
-            % er.what() % oclErrorString(er.err());
+        LOG_INFO(*_logger) << boost::format("OpenCl Error: %1% %2%")
+        % er.what() % oclErrorString(er.err());
         throw er;
     }
 }
@@ -77,18 +77,18 @@ cl::Program CLWrapper::loadProgram(std::string path)
 
         LOG_INFO(*_logger) << ("Done building OpenCL program");
 
-        LOG_INFO(*_logger) << boost::format("Build Status: %1%") 
-            % oclErrorString(program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(_devices[0]));
-        LOG_INFO(*_logger) << boost::format("Build Options:\t%1%") 
-            % program.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>(_devices[0]);
+        LOG_INFO(*_logger) << boost::format("Build Status: %1%")
+        % oclErrorString(program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>(_devices[0]));
+        LOG_INFO(*_logger) << boost::format("Build Options:\t%1%")
+        % program.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>(_devices[0]);
         LOG_INFO(*_logger) << boost::format("Build Log:\t%1%")
-            % program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_devices[0]);
+        % program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_devices[0]);
 
         return program;
     }
     catch (cl::Error er) {
-        LOG_INFO(*_logger) << boost::format("OpenCL Error: %1% %2%") 
-            % er.what() % oclErrorString(er.err());
+        LOG_INFO(*_logger) << boost::format("OpenCL Error: %1% %2%")
+        % er.what() % oclErrorString(er.err());
         throw er;
     }
 }
