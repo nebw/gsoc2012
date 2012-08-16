@@ -871,10 +871,10 @@ inline void f_dV_dt(
         state_temp_1,                    \
         state_temp_2,                    \
         state_temp_3,                    \
-        numNeurons, stateSize,           \
+        _numNeurons, stateSize,           \
         indexOfNeuron,                   \
         i,                               \
-        dt,                              \
+        _dt,                              \
         f,                               \
         state[ind_new][indexOfNeuron])
 
@@ -1198,12 +1198,12 @@ int simulate()
     state_temp_1[thread],       \
     state_temp_2,               \
     state_temp_3[thread],       \
-    sumFootprintAMPA, \
-    sumFootprintNMDA, \
-    sumFootprintGABAA, \
-    numNeurons,                 \
+    _sumFootprintAMPA, \
+    _sumFootprintNMDA, \
+    _sumFootprintGABAA, \
+    _numNeurons,                 \
     stateSize,                  \
-    dt,                         \
+    _dt,                         \
     &spikeTimes_e,              \
     &spikeNeuronIndices_e,      \
     &spikeTimes_i,              \
