@@ -25,6 +25,11 @@
 #include "Definitions.h"
 #include "BasePlotter.h"
 
+#include <GL/glew.h>
+#include <GL/glfw.h>
+
+#include <glm/glm.hpp>
+
 #include <deque>
 
 class OpenGLPlotter : public BasePlotter
@@ -42,31 +47,74 @@ public:
     virtual void plot() override;
 
 private:
-    struct point {
+    enum GraphType {
+        LINES = 0,
+        POINTS,
+        LINESPOINTS
+    };
+
+    struct Point {
         GLfloat x;
         GLfloat y;
     };
 
-    const unsigned int _graphsize;
+    struct Color {
+        GLfloat red;
+        GLfloat green;
+        GLfloat blue;
+        GLfloat alpha;
+
+        Color() {};
+        Color(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+            : red(r), green(g), blue(b), alpha(a) {};
+    };
+
+    struct GraphDesc {
+        Color color;
+        std::vector<Point> points;
+    };
+
+    struct PlotDesc {
+        GraphType type;
+        std::string title;
+        size_t size;
+        std::vector<GraphDesc> graphs;
+    };
 
     GLuint _program;
 
-    GLuint _vbo;
+    GLuint _vbo[3];
     GLint _attribute_coord2d;
     GLint _uniform_color;
-
-    std::unique_ptr<point[]> _graph;
+    GLint _uniform_transform;
+    int _border;
+    int _ticksize;
 
     unsigned int _numNeurons;
     unsigned int _index;
     float _dt;
 
-    std::deque<float> _V, _sAMPA, _xNMDA, _sNMDA;
+    std::vector<PlotDesc> _plots;
 
-
-
-    //std::vector<float> _V, _h, _n, _z, _sAMPA, _xNMDA, _sNMDA, _IApp;
-    //std::vector<float> _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA;
-    //std::vector<float> _spikeTimes, _spikeNeuronIndices;
+    std::vector<float> _V, _h, _n, _z, _sAMPA, _xNMDA, _sNMDA, _IApp;
+    std::vector<float> _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA;
+    //std::vector<float> _spikeTimes;
+    //std::vector<unsigned int> _spikeNeuronIndicesX, _spikeNeuronIndicesY;
     //std::vector<bool> _spikeArr;
+
+    glm::mat4 viewport_transform(float x, float y, float width, float height, 
+                                 float *pixel_x = 0, float *pixel_y = 0);
+    void display();
+    void initGL();
+    void initGraphs();
+
+    std::vector<Point> getPoints( std::vector<float> const& vec, size_t graphsize, float min, float max );
+    std::pair<float, float> getMinMax( std::vector<std::vector<float>> input, const float scaleMin, const float scaleMax );
+
+    static int _selPlot;
+    static size_t _plotVecSize;
+    static float _offset_x;
+    static float _scale_x;
+
+    static void GLFWCALL keyCallback(int key, int action);
 };
