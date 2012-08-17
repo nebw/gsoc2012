@@ -55,12 +55,10 @@ public:
     void setCurrentSumFootprintNMDA(std::unique_ptr<float[]> const& sumFootprintNMDA);
     void setCurrentSumFootprintGABAA(std::unique_ptr<float[]> const& sumFootprintGABAA);
 
-    virtual std::vector<unsigned long> getTimesCalculations() const override;
-    virtual std::vector<unsigned long> getTimesFFTW() const override;
-    virtual std::vector<unsigned long> getTimesClFFT() const override;
+    std::vector<__int64> getTimesCalculations() const;
+    std::vector<__int64> getTimesConvolutions() const;
 
 private:
-
     std::unique_ptr<state[]> _states;
     std::unique_ptr<float[]> _sumFootprintAMPA;
     std::unique_ptr<float[]> _sumFootprintNMDA;
@@ -68,6 +66,9 @@ private:
 
     std::unique_ptr<float[]> _distances;
     std::unique_ptr<float[]> _sVals;
+
+    std::vector<__int64> _timesConvolutions;
+    std::vector<__int64> _timesCalculations;
 
     const float _dt;
     const unsigned int _nX;

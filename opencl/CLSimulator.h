@@ -30,6 +30,8 @@
 #include "fftw3.h"
 #include "opencl_fft/clFFT.h"
 
+#include <boost/filesystem.hpp>
+
 class CLSimulator : public BaseSimulator {
 public:
 
@@ -56,9 +58,11 @@ public:
     std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const override;
     std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const override;
 
-    std::vector<unsigned long> getTimesCalculations() const override;
-    std::vector<unsigned long> getTimesFFTW() const override;
-    std::vector<unsigned long> getTimesClFFT() const override;
+    std::vector<__int64> getTimesCalculations() const;
+    std::vector<__int64> getTimesFFTW() const;
+    std::vector<__int64> getTimesClFFT() const;
+
+    CLWrapper getClWrapper() const;
 
 private:
 
@@ -97,9 +101,9 @@ private:
     const bool _readToHostMemory;
 
     // Measurements
-    std::vector<unsigned long> _timesCalculations;
-    std::vector<unsigned long> _timesFFTW;
-    std::vector<unsigned long> _timesClFFT;
+    std::vector<__int64> _timesCalculations;
+    std::vector<__int64> _timesFFTW;
+    std::vector<__int64> _timesClFFT;
 
     // FFT variables
     unsigned int _nFFT;

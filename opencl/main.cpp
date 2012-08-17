@@ -20,8 +20,11 @@
  * IN THE SOFTWARE.
  */
 
+#include "stdafx.h"
+
 #include "Definitions.h"
 #include "CLSimulator.h"
+#include "CPUSimulator.h"
 #include "util.h"
 
 #include "cpplog/cpplog.hpp"
@@ -30,6 +33,7 @@
 #include <numeric>
 
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -37,20 +41,21 @@ namespace po = boost::program_options;
 
 void measureTimes(Logger const& logger, state const& state0, const unsigned int timesteps, float dt, boost::filesystem::path const& path)
 {
-    const unsigned int start = 14;
-    const unsigned int powers = 20;
+    const unsigned int start = 1;
+    const unsigned int powers = 12;
 
     std::vector<const unsigned int> numNeurons;
-    std::vector<const double> avgTimesCalculations;
-    std::vector<const double> avgTimesFFTW;
-    std::vector<const double> avgTimesClFFT;
+    std::vector<const double> avgTimesCalculationsCL, avgTimesFFTW, avgTimesClFFT;
+    std::vector<const double> avgTimesCalculationsCPU, avgTimesConvolutionsCPU;
+
+    std::string vendor, name;
 
     for(int i = start; i < powers; ++i)
     {
         auto neurons = static_cast<const unsigned int>(pow(2.f, i));
         numNeurons.push_back(neurons);
 
-        CLSimulator sim = CLSimulator(
+        CLSimulator clSim = CLSimulator(
             neurons,
             1,
             1,
@@ -64,17 +69,32 @@ void measureTimes(Logger const& logger, state const& state0, const unsigned int 
             path,
             logger);
 
-        sim.simulate();
+        clSim.simulate();
 
-        auto timesCalculations = sim.getTimesCalculations();
-        auto timesFFTW = sim.getTimesFFTW();
-        auto timesClFFT = sim.getTimesClFFT();
+        CPUSimulator cpuSim = CPUSimulator(
+            neurons,
+            1,
+            1,
+            timesteps,
+            dt,
+            state0,
+            CPUSimulator::CONVOLUTION);
 
-        avgTimesCalculations.push_back(
+        cpuSim.simulate();
+
+        name = clSim.getClWrapper().getDeviceName();
+
+        auto const& timesCalculationsCL = clSim.getTimesCalculations();
+        auto const& timesFFTW = clSim.getTimesFFTW();
+        auto const& timesClFFT = clSim.getTimesClFFT();
+        auto const& timesCalculationsCPU = cpuSim.getTimesCalculations();
+        auto const& timesConvolutionsCPU = cpuSim.getTimesConvolutions();
+
+        avgTimesCalculationsCL.push_back(
             std::accumulate(
-                timesCalculations.begin(), 
-                timesCalculations.end(), 0.0) 
-            / timesCalculations.size());
+                timesCalculationsCL.begin(), 
+                timesCalculationsCL.end(), 0.0) 
+            / timesCalculationsCL.size());
 
         avgTimesFFTW.push_back(
             std::accumulate(
@@ -87,24 +107,38 @@ void measureTimes(Logger const& logger, state const& state0, const unsigned int 
             timesClFFT.begin(), 
             timesClFFT.end(), 0.0) 
             / timesClFFT.size());
+
+        avgTimesCalculationsCPU.push_back(
+            std::accumulate(
+                timesCalculationsCPU.begin(), 
+                timesCalculationsCPU.end(), 0.0) 
+            / timesCalculationsCPU.size());
+
+        avgTimesConvolutionsCPU.push_back(
+            std::accumulate(
+                timesConvolutionsCPU.begin(), 
+                timesConvolutionsCPU.end(), 0.0) 
+            / timesConvolutionsCPU.size());
     }
 
     std::cout << std::endl << "Results" << std::endl << "=======" << std::endl;
     for (int i = 0; i < powers - start; ++i)
     {
-        std::cout << static_cast<const unsigned int>(pow(2.f, (int)(i + start))) << "\t" << avgTimesCalculations[i] << "\t" << avgTimesFFTW[i] << "\t" << avgTimesClFFT[i] << std::endl;
+        std::cout << static_cast<const unsigned int>(pow(2.f, (int)(i + start))) << "\t" << avgTimesCalculationsCL[i] << "\t" << avgTimesFFTW[i] << "\t" << avgTimesClFFT[i] << std::endl;
     }
 
     {
         Gnuplot plot_performance;
-        plot_performance.set_title("Performance measurements (NVIDIA NVS 4200M)");
+        plot_performance.set_title(boost::str(boost::format("Performance measurements (%1%)") % name));
         plot_performance.set_style("linespoints");
         plot_performance.set_xlogscale(2);
         plot_performance.set_xlabel("Neurons");
-        plot_performance.set_ylabel("Average execution time (ms)");
-        plot_performance.plot_xy(numNeurons, avgTimesCalculations, "Runge-kutta approximations");
-        plot_performance.plot_xy(numNeurons, avgTimesFFTW, "Convolution using FFTW");
-        plot_performance.plot_xy(numNeurons, avgTimesClFFT, "Convolution using ClFFT");
+        plot_performance.set_ylabel("Average execution time (us)");
+        plot_performance.plot_xy(numNeurons, avgTimesCalculationsCPU, "Runge-kutta approximations on CPU");
+        plot_performance.plot_xy(numNeurons, avgTimesConvolutionsCPU, "Manual convolutions on CPU");
+        plot_performance.plot_xy(numNeurons, avgTimesCalculationsCL, "Runge-kutta approximations using OpenCL");
+        plot_performance.plot_xy(numNeurons, avgTimesFFTW, "Convolutions using FFTW");
+        plot_performance.plot_xy(numNeurons, avgTimesClFFT, "Convolutions using ClFFT");
         getchar();
     }
 }

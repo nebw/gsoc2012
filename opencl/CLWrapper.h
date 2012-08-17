@@ -43,6 +43,9 @@ public:
     cl_context getContextC() const;
     cl_command_queue getQueueC() const;
 
+    std::string getDeviceVendor();
+    std::string getDeviceName();
+
 private:
 
     Logger _logger;

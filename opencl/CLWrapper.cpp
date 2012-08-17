@@ -20,14 +20,15 @@
  * IN THE SOFTWARE.
  */
 
-#include <iostream>
-#include <stdio.h>
-#include <string>
+#include "stdafx.h"
 
 #include "CLWrapper.h"
 #include "util.h"
 
 #include <cassert>
+#include <iostream>
+#include <stdio.h>
+#include <string>
 
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
@@ -133,4 +134,18 @@ cl_context CLWrapper::getContextC() const
 cl_command_queue CLWrapper::getQueueC() const
 {
     return _queue();
+}
+
+std::string CLWrapper::getDeviceVendor()
+{
+    std::string vendor;
+    _devices[0].getInfo(CL_DEVICE_VENDOR, &vendor);
+    return vendor;
+}
+
+std::string CLWrapper::getDeviceName()
+{
+    std::string name;
+    _devices[0].getInfo(CL_DEVICE_NAME, &name);
+    return name;
 }

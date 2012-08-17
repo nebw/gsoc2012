@@ -35,6 +35,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/scoped_array.hpp>
+#include <boost/chrono.hpp>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
 # include <Windows.h>
@@ -203,33 +204,17 @@ void CLSimulator::step()
 
 void CLSimulator::simulate()
 {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-    unsigned long startTime;
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-    clock_t tStart;
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-
+    boost::chrono::high_resolution_clock::time_point startTime;
     if (_measure)
     {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-        timeBeginPeriod(1);
-        startTime = timeGetTime();
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-        tStart = clock();
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+        startTime = boost::chrono::high_resolution_clock::now();
     }
-
-    // if(_t == 0)
-    // {
-    //    LOG_INFO(*_logger) << "Timestep 1/" << _timesteps;
-    // }
 
     for (; _t < _timesteps - 1;)
     {
         if ((_t + 2) % (_timesteps / 100) == 0)
         {
             std::cout << ".";
-            // LOG_INFO(*_logger) << "Timestep " << _t + 2 << "/" << _timesteps;
         }
 
         step();
@@ -247,28 +232,24 @@ void CLSimulator::simulate()
 
     if (_measure)
     {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-        unsigned long elapsedTime = timeGetTime() - startTime;
-        LOG_INFO(*_logger) << "Execution time: " << elapsedTime / 1000.0 << "s";
-        timeEndPeriod(1);
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-        unsigned long elapsedTime = (double)(clock() - tStart) / CLOCKS_PER_SEC;
-        LOG_INFO(*_logger) << "Execution time: " << elapsedTime / 1000.0 << "s";
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+    auto const& endTime = 
+        boost::chrono::duration_cast<boost::chrono::microseconds>(
+            boost::chrono::high_resolution_clock::now() - startTime);
+        LOG_INFO(*_logger) << "Execution time: " << endTime.count() / 1000000.0 << "s";
 
         if (_fftw)
         {
-            double avgTimeFFTW = std::accumulate(_timesFFTW.begin(), _timesFFTW.end(), 0.0) / _timesFFTW.size();
-            LOG_INFO(*_logger) << "Average execution time FFTW: " << avgTimeFFTW << "ms";
+            auto const& avgTimeFFTW = std::accumulate(_timesFFTW.begin(), _timesFFTW.end(), 0.0) / _timesFFTW.size();
+            LOG_INFO(*_logger) << "Average execution time FFTW: " << avgTimeFFTW << "us";
         }
 
         if (_clfft)
         {
-            double avgTimeClFFT = std::accumulate(_timesClFFT.begin(), _timesClFFT.end(), 0.0) / _timesClFFT.size();
-            LOG_INFO(*_logger) << "Average execution time clFFT: " << avgTimeClFFT << "ms";
+            auto const& avgTimeClFFT = std::accumulate(_timesClFFT.begin(), _timesClFFT.end(), 0.0) / _timesClFFT.size();
+            LOG_INFO(*_logger) << "Average execution time clFFT: " << avgTimeClFFT << "us";
         }
         double avgTimeCalculations = std::accumulate(_timesCalculations.begin(), _timesCalculations.end(), 0.0) / _timesCalculations.size();
-        LOG_INFO(*_logger) << "Average execution time calculations: " << avgTimeCalculations << "ms";
+        LOG_INFO(*_logger) << "Average execution time calculations: " << avgTimeCalculations << "us";
     }
 
     if (_plot)
@@ -413,19 +394,19 @@ void CLSimulator::f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec)
     }
 }
 
-std::vector<unsigned long> CLSimulator::getTimesCalculations() const
+std::vector<__int64> CLSimulator::getTimesCalculations() const
 {
     assert(_measure);
     return _timesCalculations;
 }
 
-std::vector<unsigned long> CLSimulator::getTimesFFTW() const
+std::vector<__int64> CLSimulator::getTimesFFTW() const
 {
     assert(_measure && _fftw);
     return _timesFFTW;
 }
 
-std::vector<unsigned long> CLSimulator::getTimesClFFT() const
+std::vector<__int64> CLSimulator::getTimesClFFT() const
 {
     assert(_measure && _clfft);
     return _timesClFFT;
@@ -433,20 +414,10 @@ std::vector<unsigned long> CLSimulator::getTimesClFFT() const
 
 void CLSimulator::convolutionFFTW(const unsigned int ind_old)
 {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-    unsigned long startTime;
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-    clock_t tStart;
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-
+    boost::chrono::high_resolution_clock::time_point startTime;
     if (_measure)
     {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-        timeBeginPeriod(1);
-        startTime = timeGetTime();
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-        tStart = clock();
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+        startTime = boost::chrono::high_resolution_clock::now();
     }
 
     if (!_plot)
@@ -462,32 +433,20 @@ void CLSimulator::convolutionFFTW(const unsigned int ind_old)
 
     if (_measure)
     {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-        unsigned long elapsedTime = timeGetTime() - startTime;
-        _timesFFTW.push_back(elapsedTime);
-        timeEndPeriod(1);
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-        _timesFFTW.push_back((double)(clock() - tStart) / CLOCKS_PER_SEC);
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+        auto const& endTime = 
+            boost::chrono::duration_cast<boost::chrono::microseconds>(
+                boost::chrono::high_resolution_clock::now() - startTime);
+        _timesFFTW.push_back(endTime.count());
     }
 }
 
 void CLSimulator::convolutionClFFT(const unsigned int ind_old)
 {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-    unsigned long startTime;
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-    clock_t tStart;
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+    boost::chrono::high_resolution_clock::time_point startTime;
 
     if (_measure)
     {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-        timeBeginPeriod(1);
-        startTime = timeGetTime();
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-        tStart = clock();
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+        startTime = boost::chrono::high_resolution_clock::now();
     }
 
     f_I_FFT_clFFT(ind_old, AMPA);
@@ -495,33 +454,22 @@ void CLSimulator::convolutionClFFT(const unsigned int ind_old)
 
     if (_measure)
     {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-        unsigned long elapsedTime = timeGetTime() - startTime;
-        _timesClFFT.push_back(elapsedTime);
-        timeEndPeriod(1);
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-        _timesClFFT.push_back((double)(clock() - tStart) / CLOCKS_PER_SEC);
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+        auto const& endTime = 
+            boost::chrono::duration_cast<boost::chrono::microseconds>(
+                boost::chrono::high_resolution_clock::now() - startTime);
+        _timesClFFT.push_back(endTime.count());
     }
 }
 
 void CLSimulator::executeKernels()
 {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-    unsigned long startTime;
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-    clock_t tStart;
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+    boost::chrono::high_resolution_clock::time_point startTime;
 
     if (_measure)
     {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-        timeBeginPeriod(1);
-        startTime = timeGetTime();
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-        tStart = clock();
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+        startTime = boost::chrono::high_resolution_clock::now();
     }
+
     _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dV_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, NULL);
     _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_dn_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, NULL);
     _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_f_I_Na_dh_dt, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, NULL);
@@ -534,13 +482,10 @@ void CLSimulator::executeKernels()
 
     if (_measure)
     {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
-        unsigned long elapsedTime = timeGetTime() - startTime;
-        _timesCalculations.push_back(elapsedTime);
-        timeEndPeriod(1);
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-        _timesCalculations.push_back((double)(clock() - tStart) / CLOCKS_PER_SEC);
-#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
+        auto const& endTime = 
+            boost::chrono::duration_cast<boost::chrono::microseconds>(
+                boost::chrono::high_resolution_clock::now() - startTime);
+        _timesCalculations.push_back(endTime.count());
     }
 }
 
@@ -888,4 +833,9 @@ std::unique_ptr<float[]> const& CLSimulator::getCurrentSumFootprintNMDA() const
 std::unique_ptr<float[]> const& CLSimulator::getCurrentSumFootprintGABAA() const
 {
     return _sumFootprintGABAA;
+}
+
+CLWrapper CLSimulator::getClWrapper() const
+{
+    return _wrapper;
 }

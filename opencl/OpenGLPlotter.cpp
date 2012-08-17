@@ -25,11 +25,11 @@
 #include "OpenGLPlotter.h"
 #include "utilShader.h"
 
+#include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <boost/filesystem.hpp>
-#include <boost/scoped_array.hpp>
 #include <boost/foreach.hpp>
 
 OpenGLPlotter::OpenGLPlotter(unsigned int numNeurons, unsigned int index, float dt)
@@ -339,7 +339,8 @@ void OpenGLPlotter::initGL()
     OpenGLPlotter::_selPlot = 0;
     OpenGLPlotter::_offset_x = 0.0f;
     OpenGLPlotter::_scale_x = 0.1f;
-    glfwEnable( GLFW_KEY_REPEAT );    glfwSetKeyCallback(keyCallback);
+    glfwEnable( GLFW_KEY_REPEAT );
+    glfwSetKeyCallback(keyCallback);
 }
 
 void OpenGLPlotter::initGraphs()

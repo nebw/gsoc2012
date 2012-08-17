@@ -41,3 +41,22 @@
 #include "opencl_fft/clFFT.h"
 #include "opencl_fft/fft_base_kernels.h"
 #include "opencl_fft/fft_internal.h"
+
+#include "gtest/internal/gtest-internal.h"
+
+#include <memory>
+#include <string>
+#include <vector>
+#include <cassert>
+#include <ctime>
+#include <numeric>
+#include <iostream>
+#include <stdio.h>
+
+#include <boost/program_options.hpp>
+#include <boost/chrono.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/format.hpp>
+#include <boost/foreach.hpp>
+#include <boost/scoped_array.hpp>
+#include <boost/filesystem.hpp>

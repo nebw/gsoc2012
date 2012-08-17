@@ -26,6 +26,8 @@
 
 #include <algorithm>
 
+#include <boost/chrono.hpp>
+
 CPUSimulator::CPUSimulator(const unsigned int nX,
                            const unsigned int nY,
                            const unsigned int nZ,
@@ -107,15 +109,24 @@ void CPUSimulator::simulate()
 
 void CPUSimulator::computeConvolutions(unsigned int ind_old)
 {
+    auto const& startTime = 
+        boost::chrono::high_resolution_clock::now();
+
     convolutionAMPA(ind_old);
 
     convolutionNMDA(ind_old);
 
-    // convolutionGABAA();
+    auto const& endTime = 
+        boost::chrono::duration_cast<boost::chrono::microseconds>(
+            boost::chrono::high_resolution_clock::now() - startTime);
+    _timesConvolutions.push_back(endTime.count());
 }
 
 void CPUSimulator::computeRungeKuttaApproximations(unsigned int ind_old)
 {
+    auto const& startTime = 
+        boost::chrono::high_resolution_clock::now();
+
     for (unsigned int idx = 0; idx < _numNeurons; ++idx)
     {
         runge4_f_dV_dt(idx, ind_old);
@@ -126,6 +137,11 @@ void CPUSimulator::computeRungeKuttaApproximations(unsigned int ind_old)
         runge4_f_dxNMDA_dt(idx, ind_old);
         runge4_f_dsNMDA_dt(idx, ind_old);
     }
+
+    auto const& endTime = 
+        boost::chrono::duration_cast<boost::chrono::microseconds>(
+            boost::chrono::high_resolution_clock::now() - startTime);
+    _timesCalculations.push_back(endTime.count());
 }
 
 std::unique_ptr<state[]> const& CPUSimulator::getCurrentStates() const
@@ -168,19 +184,14 @@ void CPUSimulator::setCurrentSumFootprintGABAA(std::unique_ptr<float[]> const& s
     std::copy(sumFootprintGABAA.get(), sumFootprintGABAA.get() + _numNeurons, _sumFootprintGABAA.get());
 }
 
-std::vector<unsigned long> CPUSimulator::getTimesCalculations() const
+std::vector<__int64> CPUSimulator::getTimesCalculations() const
 {
-    throw std::exception("The method or operation is not implemented.");
+    return _timesCalculations;
 }
 
-std::vector<unsigned long> CPUSimulator::getTimesFFTW() const
+std::vector<__int64> CPUSimulator::getTimesConvolutions() const
 {
-    throw std::exception("The method or operation is not implemented.");
-}
-
-std::vector<unsigned long> CPUSimulator::getTimesClFFT() const
-{
-    throw std::exception("The method or operation is not implemented.");
+    return _timesConvolutions;
 }
 
 float CPUSimulator::_f_w_EE(const int d)

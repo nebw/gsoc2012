@@ -24,8 +24,6 @@
 
 #include "Definitions.h"
 
-#include <boost/filesystem.hpp>
-
 class BaseSimulator
 {
 public:
@@ -59,8 +57,4 @@ public:
     virtual std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const = 0;
     virtual std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const = 0;
     virtual std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const = 0;
-
-    virtual std::vector<unsigned long> getTimesCalculations() const = 0;
-    virtual std::vector<unsigned long> getTimesFFTW() const = 0;
-    virtual std::vector<unsigned long> getTimesClFFT() const = 0;
 };

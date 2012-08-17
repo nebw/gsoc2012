@@ -87,6 +87,7 @@ SET(HEADERS
   CLWrapper.h
   BaseSimulator.h
   CLSimulator.h
+  CPUSimulator.h
   Plotter.h
   BasePlotter.h
   GnuPlotPlotter.h
@@ -100,6 +101,7 @@ SET(SOURCE
   utilShader.cpp
   CLWrapper.cpp
   CLSimulator.cpp
+  CPUSimulator.cpp
   GnuPlotPlotter.cpp
   OpenGLPlotter.cpp
   kernels.cl
@@ -139,9 +141,7 @@ include_directories(${INCLUDEDIRS})
 
 add_executable(execute_unit_tests
       openclUnitTests.cpp
-      CPUSimulator.cpp
       ${SOURCE} 
-      CPUSimulator.h
       ${HEADERS}
       ${OPENCL_FFT}
 )

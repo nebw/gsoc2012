@@ -25,12 +25,12 @@
 #include "Definitions.h"
 #include "BasePlotter.h"
 
+#include <glm/glm.hpp>
+
 #include <GL/glew.h>
 #include <GL/glfw.h>
 
-#include <glm/glm.hpp>
-
-#include <deque>
+#include <vector>
 
 class OpenGLPlotter : public BasePlotter
 {
