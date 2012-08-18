@@ -73,9 +73,13 @@ CPUSimulator::CPUSimulator(const unsigned int nX,
         _states[i] = state_0;
     }
 
-    for (unsigned int i = 0; i < _numNeurons; ++i)
-    {
-        _distances[i] = _f_w_EE(i);
+    for(size_t x = 0; x < _nX; ++x) {
+        for(size_t y = 0; y < _nY; ++y) {
+            for(size_t z = 0; z < _nZ; ++z) {
+                _distances[x*y*z] = _f_w_EE(
+                    sqrt(pow(float(x),2.0f) + pow(float(y),2.0f) + pow(float(z),2.0f)));
+            }
+        }
     }
 }
 
@@ -194,7 +198,7 @@ std::vector<__int64> CPUSimulator::getTimesConvolutions() const
     return _timesConvolutions;
 }
 
-float CPUSimulator::_f_w_EE(const int d)
+float CPUSimulator::_f_w_EE( const float d )
 {
     static const float sigma = 1;
     static const float p     = 32;

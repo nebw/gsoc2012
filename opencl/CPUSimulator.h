@@ -77,7 +77,7 @@ private:
     const unsigned int _numNeurons;
     const unsigned int _timesteps;
 
-    unsigned int _t;    const Convolution _convolution;    float _f_w_EE(const int d);
+    unsigned int _t;    const Convolution _convolution;    float _f_w_EE(const float d);
 
     float f_I_Na_m_inf(const float V);
     float f_I_Na(const float V,
