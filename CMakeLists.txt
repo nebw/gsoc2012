@@ -51,7 +51,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 add_definitions( -DBOOST_ALL_NO_LIB ) 
 #add_definitions( -DBOOST_ALL_DYN_LINK )
 
-find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
+find_package(Boost COMPONENTS chrono program_options system filesystem REQUIRED)
 message("Boost information:")
 message("  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 message("  Boost_LIBRARIES: ${Boost_LIBRARIES}")
