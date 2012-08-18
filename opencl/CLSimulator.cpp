@@ -258,7 +258,7 @@ void CLSimulator::simulate()
     }
 }
 
-inline float CLSimulator::_f_w_EE(const int j)
+inline float CLSimulator::_f_w_EE( const float j )
 {
     static const float sigma = 1;
     static const float p     = 32;
@@ -522,14 +522,14 @@ void CLSimulator::initializeFFTW()
 
         for (unsigned int i = _numNeurons - 1; i > 0; --i)
         {
-            _distances_split[j][0] = _f_w_EE(i);
+            _distances_split[j][0] = _f_w_EE(float(i));
             _distances_split[j][1] = 0;
             ++j;
         }
 
         for (unsigned int i = 0; i < _numNeurons; ++i)
         {
-            _distances_split[j][0] = _f_w_EE(i);
+            _distances_split[j][0] = _f_w_EE(float(i));
             _distances_split[j][1] = 0;
             ++j;
         }
@@ -577,13 +577,13 @@ void CLSimulator::initializeClFFT()
 
     for (unsigned int i = _numNeurons - 1; i > 0; --i)
     {
-        _distances_real[j] = _f_w_EE(i);
+        _distances_real[j] = _f_w_EE(float(i));
         ++j;
     }
 
     for (unsigned int i = 0; i < _numNeurons; ++i)
     {
-        _distances_real[j] = _f_w_EE(i);
+        _distances_real[j] = _f_w_EE(float(i));
         ++j;
     }
 

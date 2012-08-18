@@ -186,5 +186,5 @@ private:
     void assertConvolutionResults();
     void assertInitializationResults();
 
-    static inline float _f_w_EE(const int j);
+    static inline float _f_w_EE(const float j);
 };
