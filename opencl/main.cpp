@@ -39,12 +39,12 @@
 
 namespace po = boost::program_options;
 
-void measureTimes(Logger const& logger, state const& state0, const unsigned int timesteps, float dt, boost::filesystem::path const& path)
+void measureTimes(Logger const& logger, state const& state0, const size_t timesteps, float dt, boost::filesystem::path const& path)
 {
-    const unsigned int start = 1;
-    const unsigned int powers = 12;
+    const size_t start = 1;
+    const size_t powers = 12;
 
-    std::vector<const unsigned int> numNeurons;
+    std::vector<const size_t> numNeurons;
     std::vector<const double> avgTimesCalculationsCL, avgTimesFFTW, avgTimesClFFT;
     std::vector<const double> avgTimesCalculationsCPU, avgTimesConvolutionsCPU;
 
@@ -52,7 +52,7 @@ void measureTimes(Logger const& logger, state const& state0, const unsigned int 
 
     for(int i = start; i < powers; ++i)
     {
-        auto neurons = static_cast<const unsigned int>(pow(2.f, i));
+        auto neurons = static_cast<const size_t>(pow(2.f, i));
         numNeurons.push_back(neurons);
 
         CLSimulator clSim = CLSimulator(
@@ -124,7 +124,7 @@ void measureTimes(Logger const& logger, state const& state0, const unsigned int 
     std::cout << std::endl << "Results" << std::endl << "=======" << std::endl;
     for (int i = 0; i < powers - start; ++i)
     {
-        std::cout << static_cast<const unsigned int>(pow(2.f, (int)(i + start))) << "\t" << avgTimesCalculationsCL[i] << "\t" << avgTimesFFTW[i] << "\t" << avgTimesClFFT[i] << std::endl;
+        std::cout << static_cast<const size_t>(pow(2.f, (int)(i + start))) << "\t" << avgTimesCalculationsCL[i] << "\t" << avgTimesFFTW[i] << "\t" << avgTimesClFFT[i] << std::endl;
     }
 
     {
@@ -155,7 +155,7 @@ int finish(const int rc)
 int main(int ac, char **av)
 {
     float V0, h0, n0, z0, sAMPA0, sNMDA0, xNMDA0, sGABAA0, IApp0, dt;
-    unsigned int nX, nY, nZ, timesteps;
+    size_t nX, nY, nZ, timesteps;
     std::string plotStr, measureStr, fftwStr, clfftStr, perfplot;
 
     po::options_description desc("Allowed options");
@@ -171,10 +171,10 @@ int main(int ac, char **av)
         ("sGABAA", po::value<float>(&sGABAA0)->default_value(0.0), "initial value for xNMDA")
         ("IApp", po::value<float>(&IApp0)->default_value(1.0), "initial value for IApp")
         ("dt", po::value<float>(&dt)->default_value(0.1f), "length of one timestep")
-        ("timesteps", po::value<unsigned int>(&timesteps)->default_value(500), "number of timesteps")
-        ("nX", po::value<unsigned int>(&nX)->default_value(1024), "number of neurons in network (X axis)")
-        ("nY", po::value<unsigned int>(&nY)->default_value(1), "number of neurons in network (Y axis)")
-        ("nZ", po::value<unsigned int>(&nZ)->default_value(1), "number of neurons in network (Z axis)")
+        ("timesteps", po::value<size_t>(&timesteps)->default_value(500), "number of timesteps")
+        ("nX", po::value<size_t>(&nX)->default_value(1024), "number of neurons in network (X axis)")
+        ("nY", po::value<size_t>(&nY)->default_value(1), "number of neurons in network (Y axis)")
+        ("nZ", po::value<size_t>(&nZ)->default_value(1), "number of neurons in network (Z axis)")
         ("plot", po::value<std::string>(&plotStr)->default_value("false"), "plot results (false | gnuplot | opengl)")
         ("measure", po::value<std::string>(&measureStr)->default_value("true"), "measure execution time")
         ("fftw", po::value<std::string>(&fftwStr)->default_value("false"), "compute synaptic fields using fftw")

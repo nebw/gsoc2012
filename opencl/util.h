@@ -51,7 +51,7 @@ void assertNear(const float a,
                 const float b,
                 const double abs_error);
 
-bool isPowerOfTwo(unsigned int x);
+bool isPowerOfTwo(size_t x);
 
 bool stringToBool(const std::string& str);
 

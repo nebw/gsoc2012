@@ -35,11 +35,11 @@
 class OpenGLPlotter : public BasePlotter
 {
 public:
-    OpenGLPlotter(unsigned int numNeurons, unsigned int index, float dt);
+    OpenGLPlotter(size_t numNeurons, size_t index, float dt);
     ~OpenGLPlotter();
 
     virtual void step(const state *curState, 
-                      const unsigned int t, 
+                      const size_t t, 
                       std::unique_ptr<float[]> const& sumFootprintAMPA, 
                       std::unique_ptr<float[]> const& sumFootprintNMDA, 
                       std::unique_ptr<float[]> const& sumFootprintGABAA) override;
@@ -90,8 +90,8 @@ private:
     int _border;
     int _ticksize;
 
-    unsigned int _numNeurons;
-    unsigned int _index;
+    size_t _numNeurons;
+    size_t _index;
     float _dt;
 
     std::vector<PlotDesc> _plots;
@@ -99,7 +99,7 @@ private:
     std::vector<float> _V, _h, _n, _z, _sAMPA, _xNMDA, _sNMDA, _IApp;
     std::vector<float> _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA;
     //std::vector<float> _spikeTimes;
-    //std::vector<unsigned int> _spikeNeuronIndicesX, _spikeNeuronIndicesY;
+    //std::vector<size_t> _spikeNeuronIndicesX, _spikeNeuronIndicesY;
     //std::vector<bool> _spikeArr;
 
     glm::mat4 viewport_transform(float x, float y, float width, float height, 

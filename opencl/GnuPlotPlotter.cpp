@@ -30,10 +30,10 @@
 #include <boost/foreach.hpp>
 
 GnuPlotPlotter::GnuPlotPlotter(
-    const unsigned int nX,
-    const unsigned int nY,
-    const unsigned int nZ,
-    unsigned int index, 
+    const size_t nX,
+    const size_t nY,
+    const size_t nZ,
+    size_t index, 
     float dt)
     : _nX(nX),
       _nY(nY),
@@ -53,13 +53,13 @@ GnuPlotPlotter::GnuPlotPlotter(
       _sumFootprintNMDA(std::vector<float>()),
       _sumFootprintGABAA(std::vector<float>()),
       _spikeTimes(std::vector<float>()),
-      _spikeNeuronIndicesX(std::vector<unsigned int>()),
-      _spikeNeuronIndicesY(std::vector<unsigned int>()),
+      _spikeNeuronIndicesX(std::vector<size_t>()),
+      _spikeNeuronIndicesY(std::vector<size_t>()),
       _spikeArr(std::vector<bool>(nX * nY * nZ))
 {
 }
 
-void GnuPlotPlotter::step(const state *curState, const unsigned int t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA)
+void GnuPlotPlotter::step(const state *curState, const size_t t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA)
 {
     _V.push_back(curState[_index].V);
     _h.push_back(curState[_index].h);
@@ -73,8 +73,8 @@ void GnuPlotPlotter::step(const state *curState, const unsigned int t, std::uniq
     _sumFootprintNMDA.push_back(sumFootprintNMDA[_index]);
     _sumFootprintGABAA.push_back(sumFootprintGABAA[_index]);
 
-    unsigned int y = 0;
-    for (unsigned int i = 0; i < _numNeurons; ++i)
+    size_t y = 0;
+    for (size_t i = 0; i < _numNeurons; ++i)
     {
         if ((i >= _nX) && (i % _nX == 0))
         {
@@ -95,7 +95,7 @@ void GnuPlotPlotter::step(const state *curState, const unsigned int t, std::uniq
 
 void GnuPlotPlotter::plot()
 {
-    unsigned int timesteps = _V.size();
+    size_t timesteps = _V.size();
 
     Gnuplot plot_V_Iapp_e;
 

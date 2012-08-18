@@ -30,7 +30,7 @@ public:
     virtual ~BasePlotter() {};
 
     virtual void step(const state *curState, 
-                      const unsigned int t, 
+                      const size_t t, 
                       std::unique_ptr<float[]> const& sumFootprintAMPA, 
                       std::unique_ptr<float[]> const& sumFootprintNMDA,
                       std::unique_ptr<float[]> const& sumFootprintGABAA) = 0;

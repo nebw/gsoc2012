@@ -50,7 +50,7 @@ private:
 
     Logger _logger;
 
-    unsigned int _deviceUsed;
+    size_t _deviceUsed;
     std::vector<cl::Device> _devices;
 
     cl::Context _context;

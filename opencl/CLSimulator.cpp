@@ -41,10 +41,10 @@
 # include <Windows.h>
 #endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
 
-CLSimulator::CLSimulator(const unsigned int nX,
-                         const unsigned int nY,
-                         const unsigned int nZ,
-                         const unsigned int timesteps,
+CLSimulator::CLSimulator(const size_t nX,
+                         const size_t nY,
+                         const size_t nZ,
+                         const size_t timesteps,
                          const float dt,
                          state const& state_0,
                          const Plot plot,
@@ -140,8 +140,8 @@ CLSimulator::CLSimulator(const unsigned int nX,
 
 void CLSimulator::step()
 {
-    unsigned int ind_old = _t % 2;
-    unsigned int ind_new = 1 - ind_old;
+    size_t ind_old = _t % 2;
+    size_t ind_new = 1 - ind_old;
 
     try
     {
@@ -221,8 +221,8 @@ void CLSimulator::simulate()
 
         if (_plot)
         {
-            unsigned int ind_old = _t % 2;
-            unsigned int ind_new = 1 - ind_old;
+            size_t ind_old = _t % 2;
+            size_t ind_new = 1 - ind_old;
 
             _plotter->step(&_states[ind_new * _numNeurons], _t, _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA);
         }
@@ -269,9 +269,9 @@ inline float CLSimulator::_f_w_EE( const float j )
            * exp(-abs(j) / (sigma * p));
 }
 
-void CLSimulator::f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec)
+void CLSimulator::f_I_FFT_fftw(const size_t ind_old, const Receptor rec)
 {
-    for (unsigned int i = 0; i < _numNeurons; ++i)   {
+    for (size_t i = 0; i < _numNeurons; ++i)   {
         if (rec == AMPA)
         {
             _sVals_split[i][0] = _states[ind_old * _numNeurons + i].s_AMPA;
@@ -285,7 +285,7 @@ void CLSimulator::f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec)
         _sVals_split[i][1] = 0;
     }
 
-    for (unsigned int i = _numNeurons; i < _nFFT; ++i)
+    for (size_t i = _numNeurons; i < _nFFT; ++i)
     {
         _sVals_split[i][0] = 0;
         _sVals_split[i][1] = 0;
@@ -294,7 +294,7 @@ void CLSimulator::f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec)
     fftwf_execute(_p_sVals_fftw);
 
     // convolution in frequency domain
-    for (unsigned int i = 0; i < _nFFT; ++i)
+    for (size_t i = 0; i < _nFFT; ++i)
     {
         _convolution_f_split[i][0] = (_distances_f_split[i][0] * _sVals_f_split[i][0]
                                       - _distances_f_split[i][1] * _sVals_f_split[i][1]) * _scaleFFT;
@@ -304,7 +304,7 @@ void CLSimulator::f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec)
 
     fftwf_execute(_p_inv_fftw);
 
-    for (unsigned int indexOfNeuron = 0; indexOfNeuron < _numNeurons; ++indexOfNeuron)
+    for (size_t indexOfNeuron = 0; indexOfNeuron < _numNeurons; ++indexOfNeuron)
     {
         if (rec == AMPA)
         {
@@ -319,7 +319,7 @@ void CLSimulator::f_I_FFT_fftw(const unsigned int ind_old, const Receptor rec)
     }
 }
 
-void CLSimulator::f_I_FFT_clFFT(const unsigned int ind_old, const Receptor rec)
+void CLSimulator::f_I_FFT_clFFT(const size_t ind_old, const Receptor rec)
 {
     // initialize sVals_real for FFT
     switch (rec)
@@ -412,7 +412,7 @@ std::vector<__int64> CLSimulator::getTimesClFFT() const
     return _timesClFFT;
 }
 
-void CLSimulator::convolutionFFTW(const unsigned int ind_old)
+void CLSimulator::convolutionFFTW(const size_t ind_old)
 {
     boost::chrono::high_resolution_clock::time_point startTime;
     if (_measure)
@@ -440,7 +440,7 @@ void CLSimulator::convolutionFFTW(const unsigned int ind_old)
     }
 }
 
-void CLSimulator::convolutionClFFT(const unsigned int ind_old)
+void CLSimulator::convolutionClFFT(const size_t ind_old)
 {
     boost::chrono::high_resolution_clock::time_point startTime;
 
@@ -496,7 +496,7 @@ void CLSimulator::assertConvolutionResults()
     std::unique_ptr<float[]> sumFootprintNMDA_tmp(std::unique_ptr<float[]>(new float[_numNeurons]));
     _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintNMDA_cl, CL_TRUE, 0, _numNeurons * sizeof(float), sumFootprintNMDA_tmp.get(), NULL, NULL);
 
-    for (unsigned int i = 0; i < _numNeurons; ++i)
+    for (size_t i = 0; i < _numNeurons; ++i)
     {
         assertNear(_sumFootprintAMPA[i], sumFootprintAMPA_tmp[i], 0.05);
         assertNear(_sumFootprintNMDA[i], sumFootprintNMDA_tmp[i], 0.05);
@@ -518,16 +518,16 @@ void CLSimulator::initializeFFTW()
     if (_fftw)
     {
         // initialize distances
-        unsigned int j = 0;
+        size_t j = 0;
 
-        for (unsigned int i = _numNeurons - 1; i > 0; --i)
+        for (size_t i = _numNeurons - 1; i > 0; --i)
         {
             _distances_split[j][0] = _f_w_EE(float(i));
             _distances_split[j][1] = 0;
             ++j;
         }
 
-        for (unsigned int i = 0; i < _numNeurons; ++i)
+        for (size_t i = 0; i < _numNeurons; ++i)
         {
             _distances_split[j][0] = _f_w_EE(float(i));
             _distances_split[j][1] = 0;
@@ -556,7 +556,7 @@ void CLSimulator::initializeHostVariables(state const& state_0)
     _zeros = std::unique_ptr<float[]>(new float[_nFFT]);
 
     // initialize initial states
-    for (unsigned int i = 0; i < _numNeurons; ++i)
+    for (size_t i = 0; i < _numNeurons; ++i)
     {
         _states[i] = state_0;
         _sumFootprintAMPA[i] = 0;
@@ -564,7 +564,7 @@ void CLSimulator::initializeHostVariables(state const& state_0)
         _sumFootprintGABAA[i] = 0;
     }
 
-    for (unsigned int i = _numNeurons; i < 2 * _numNeurons; ++i)
+    for (size_t i = _numNeurons; i < 2 * _numNeurons; ++i)
     {
         _states[i] = state_0;
     }
@@ -573,15 +573,15 @@ void CLSimulator::initializeHostVariables(state const& state_0)
 void CLSimulator::initializeClFFT()
 {
     // initialize distances
-    unsigned int j = 0;
+    size_t j = 0;
 
-    for (unsigned int i = _numNeurons - 1; i > 0; --i)
+    for (size_t i = _numNeurons - 1; i > 0; --i)
     {
         _distances_real[j] = _f_w_EE(float(i));
         ++j;
     }
 
-    for (unsigned int i = 0; i < _numNeurons; ++i)
+    for (size_t i = 0; i < _numNeurons; ++i)
     {
         _distances_real[j] = _f_w_EE(float(i));
         ++j;
@@ -589,7 +589,7 @@ void CLSimulator::initializeClFFT()
 
     _distances_real[j] = 0;
 
-    for (unsigned int i = 0; i < _nFFT; ++i)
+    for (size_t i = 0; i < _nFFT; ++i)
     {
         _zeros[i] = 0;
     }
@@ -698,7 +698,7 @@ void CLSimulator::assertInitializationResults()
     _err = _wrapper.getQueue().enqueueReadBuffer(_distances_f_real_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_f_real.get(), NULL, NULL);
     _err = _wrapper.getQueue().enqueueReadBuffer(_distances_f_imag_cl, CL_TRUE, 0, _nFFT * sizeof(float), distances_f_imag.get(), NULL, NULL);
 
-    for (unsigned int i = 0; i < _nFFT; ++i)
+    for (size_t i = 0; i < _nFFT; ++i)
     {
         assertAlmostEquals(_distances_split[i][0], distances_real[i]);
         assertAlmostEquals(_distances_split[i][1], distances_imag[i]);

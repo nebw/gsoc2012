@@ -35,10 +35,10 @@
 class CLSimulator : public BaseSimulator {
 public:
 
-    CLSimulator(const unsigned int nX,
-                const unsigned int nY,
-                const unsigned int nZ,
-                const unsigned int timesteps,
+    CLSimulator(const size_t nX,
+                const size_t nY,
+                const size_t nZ,
+                const size_t timesteps,
                 const float dt,
                 state const& state_0,
                 const Plot plot,
@@ -82,16 +82,16 @@ private:
     Logger _logger;
 
     // Simulation configuration
-    const unsigned int _nX;
-    const unsigned int _nY;
-    const unsigned int _nZ;
-    const unsigned int _numNeurons;
-    const unsigned int _timesteps;
+    const size_t _nX;
+    const size_t _nY;
+    const size_t _nZ;
+    const size_t _numNeurons;
+    const size_t _timesteps;
     const float _dt;
 
     // Initial state
     const state _state_0;
-    unsigned int _t;
+    size_t _t;
 
     // Configuration
     const bool _plot;
@@ -106,7 +106,7 @@ private:
     std::vector<__int64> _timesClFFT;
 
     // FFT variables
-    unsigned int _nFFT;
+    size_t _nFFT;
     float _scaleFFT;
 
     // Data
@@ -173,12 +173,12 @@ private:
     void initializeClFFT();
     void initializeCLKernelsAndBuffers();
 
-    void convolutionFFTW(const unsigned int ind_old);
-    void convolutionClFFT(const unsigned int ind_old);
+    void convolutionFFTW(const size_t ind_old);
+    void convolutionClFFT(const size_t ind_old);
 
-    void f_I_FFT_fftw(const unsigned int ind_old,
+    void f_I_FFT_fftw(const size_t ind_old,
                       const Receptor rec);
-    void f_I_FFT_clFFT(const unsigned int ind_old,
+    void f_I_FFT_clFFT(const size_t ind_old,
                        const Receptor rec);
 
     void executeKernels();

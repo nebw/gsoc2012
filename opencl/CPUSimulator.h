@@ -33,10 +33,10 @@ public:
         CONVOLUTION = 1
     };
 
-    CPUSimulator(const unsigned int nX,
-                 const unsigned int nY,
-                 const unsigned int nZ,
-                 const unsigned int timesteps,
+    CPUSimulator(const size_t nX,
+                 const size_t nY,
+                 const size_t nZ,
+                 const size_t timesteps,
                  const float dt,
                  state const& state_0,
                  const Convolution convolution);
@@ -71,13 +71,13 @@ private:
     std::vector<__int64> _timesCalculations;
 
     const float _dt;
-    const unsigned int _nX;
-    const unsigned int _nY;
-    const unsigned int _nZ;
-    const unsigned int _numNeurons;
-    const unsigned int _timesteps;
+    const size_t _nX;
+    const size_t _nY;
+    const size_t _nZ;
+    const size_t _numNeurons;
+    const size_t _timesteps;
 
-    unsigned int _t;    const Convolution _convolution;    float _f_w_EE(const float d);
+    size_t _t;    const Convolution _convolution;    float _f_w_EE(const float d);
 
     float f_I_Na_m_inf(const float V);
     float f_I_Na(const float V,
@@ -125,25 +125,25 @@ private:
                   const float sumFootprintGABAA);
 
     // runge-kutta approximations
-    void runge4_f_dV_dt(const unsigned int idx,
-                        const unsigned int ind_old);
-    void runge4_f_I_Na_dh_dt(const unsigned int idx,
-                             const unsigned int ind_old);
-    void runge4_f_dsAMPA_dt(const unsigned int idx,
-                            const unsigned int ind_old);
-    void runge4_f_dn_dt(const unsigned int idx,
-                        const unsigned int ind_old);
-    void runge4_f_dz_dt(const unsigned int idx,
-                        const unsigned int ind_old);
-    void runge4_f_dxNMDA_dt(const unsigned int idx,
-                            const unsigned int ind_old);
-    void runge4_f_dsNMDA_dt(const unsigned int idx,
-                            const unsigned int ind_old);
+    void runge4_f_dV_dt(const size_t idx,
+                        const size_t ind_old);
+    void runge4_f_I_Na_dh_dt(const size_t idx,
+                             const size_t ind_old);
+    void runge4_f_dsAMPA_dt(const size_t idx,
+                            const size_t ind_old);
+    void runge4_f_dn_dt(const size_t idx,
+                        const size_t ind_old);
+    void runge4_f_dz_dt(const size_t idx,
+                        const size_t ind_old);
+    void runge4_f_dxNMDA_dt(const size_t idx,
+                            const size_t ind_old);
+    void runge4_f_dsNMDA_dt(const size_t idx,
+                            const size_t ind_old);
 
-    void convolutionAMPA(const unsigned int ind_old);
-    void convolutionNMDA(const unsigned int ind_old);
+    void convolutionAMPA(const size_t ind_old);
+    void convolutionNMDA(const size_t ind_old);
     void convolutionGABAA();
 
-    void computeRungeKuttaApproximations(unsigned int ind_old);
-    void computeConvolutions(unsigned int ind_old);
+    void computeRungeKuttaApproximations(size_t ind_old);
+    void computeConvolutions(size_t ind_old);
 };

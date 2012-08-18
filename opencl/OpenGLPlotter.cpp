@@ -32,7 +32,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 
-OpenGLPlotter::OpenGLPlotter(unsigned int numNeurons, unsigned int index, float dt)
+OpenGLPlotter::OpenGLPlotter(size_t numNeurons, size_t index, float dt)
     : _numNeurons(numNeurons),
     _index(index),
     _dt(dt),
@@ -59,7 +59,7 @@ OpenGLPlotter::~OpenGLPlotter()
 }
 
 
-void OpenGLPlotter::step(const state *curState, const unsigned int t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA)
+void OpenGLPlotter::step(const state *curState, const size_t t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA)
 {
     _V.push_back(curState[_index].V);
     _h.push_back(curState[_index].h);

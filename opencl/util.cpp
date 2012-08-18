@@ -141,7 +141,7 @@ void assertNear(const float a, const float b, const double abs_error)
 }
 
 // see: http://stackoverflow.com/a/600306/1474346
-bool isPowerOfTwo(unsigned int x)
+bool isPowerOfTwo(size_t x)
 {
     return (x != 0) && ((x & (x - 1)) == 0);
 }

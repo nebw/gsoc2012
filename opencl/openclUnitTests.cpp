@@ -76,7 +76,7 @@ TEST(FFTTest, InverseFFTTest)
     cl_mem data_out_real = NULL;
     cl_mem data_out_imag = NULL;
 
-    unsigned int batchSize = 1;
+    size_t batchSize = 1;
     int numIter            = 1;
 
     int length = n.x * n.y * n.z * batchSize;
@@ -501,8 +501,8 @@ TEST(BasicSimTests, CLSimSimulationFFTWClFFTWAssertionsReturnsTest)
 
 TEST(SimResultTests, RungeKuttaApproximationRelErrorTest)
 {
-    const unsigned int numNeurons = 2;
-    const unsigned int timesteps = 1000;
+    const size_t numNeurons = 2;
+    const size_t timesteps = 1000;
 
     state state0;
 
@@ -544,7 +544,7 @@ TEST(SimResultTests, RungeKuttaApproximationRelErrorTest)
                                     logger,
                                     true);
 
-    unsigned int t;
+    size_t t;
 
     for (t = 0; t < timesteps - 1; ++t)
     {
@@ -558,7 +558,7 @@ TEST(SimResultTests, RungeKuttaApproximationRelErrorTest)
         clSim.step();
         auto& clSimState = clSim.getCurrentStates();
 
-        for (unsigned int i = 0; i < numNeurons; ++i)
+        for (size_t i = 0; i < numNeurons; ++i)
         {
             EXPECT_NEAR(cpuSimState[i].V, clSimState[i].V, 0.00001);
             EXPECT_NEAR(cpuSimState[i].h, clSimState[i].h, 0.00001);
@@ -577,9 +577,9 @@ TEST(SimResultTests, RungeKuttaApproximationRelErrorTest)
 
 TEST(SimResultTests, RungeKuttaApproximationAbsErrorTest)
 {
-    const unsigned int numNeurons = 2;
+    const size_t numNeurons = 2;
     // cumulative floating point inaccuracies become too large for more than 100 timesteps
-    const unsigned int timesteps = 100;
+    const size_t timesteps = 100;
 
     state state0;
 
@@ -621,7 +621,7 @@ TEST(SimResultTests, RungeKuttaApproximationAbsErrorTest)
                                     logger,
                                     true);
 
-    unsigned int t;
+    size_t t;
 
     for (t = 0; t < timesteps - 1; ++t)
     {
@@ -635,7 +635,7 @@ TEST(SimResultTests, RungeKuttaApproximationAbsErrorTest)
         clSim.step();
         auto& clSimState = clSim.getCurrentStates();
 
-        for (unsigned int i = 0; i < numNeurons; ++i)
+        for (size_t i = 0; i < numNeurons; ++i)
         {
             EXPECT_FLOAT_EQ(cpuSimState[i].V, clSimState[i].V);
             EXPECT_FLOAT_EQ(cpuSimState[i].h, clSimState[i].h);
@@ -652,8 +652,8 @@ TEST(SimResultTests, RungeKuttaApproximationAbsErrorTest)
 
 TEST(SimResultTests, FFTWConvolutionRelErrorTest)
 {
-    const unsigned int numNeurons = 256;
-    const unsigned int timesteps = 1000;
+    const size_t numNeurons = 256;
+    const size_t timesteps = 1000;
 
     state state0;
 
@@ -695,7 +695,7 @@ TEST(SimResultTests, FFTWConvolutionRelErrorTest)
                                     logger,
                                     true);
 
-    unsigned int t;
+    size_t t;
 
     for (t = 0; t < timesteps - 1; ++t)
     {
@@ -715,7 +715,7 @@ TEST(SimResultTests, FFTWConvolutionRelErrorTest)
 
         cpuSim.setCurrentStates(clSimState);
 
-        for (unsigned int i = 0; i < numNeurons; ++i)
+        for (size_t i = 0; i < numNeurons; ++i)
         {
             EXPECT_FLOAT_EQ(cpuSimState[i].V, clSimState[i].V);
             EXPECT_FLOAT_EQ(cpuSimState[i].h, clSimState[i].h);
@@ -737,8 +737,8 @@ TEST(SimResultTests, FFTWConvolutionRelErrorTest)
 
 TEST(SimResultTests, ClFFTConvolutionRelErrorTest)
 {
-    const unsigned int numNeurons = 256;
-    const unsigned int timesteps = 1000;
+    const size_t numNeurons = 256;
+    const size_t timesteps = 1000;
 
     state state0;
 
@@ -780,7 +780,7 @@ TEST(SimResultTests, ClFFTConvolutionRelErrorTest)
                                     logger,
                                     true);
 
-    unsigned int t;
+    size_t t;
 
     for (t = 0; t < timesteps - 1; ++t)
     {
@@ -800,7 +800,7 @@ TEST(SimResultTests, ClFFTConvolutionRelErrorTest)
 
         cpuSim.setCurrentStates(clSimState);
 
-        for (unsigned int i = 0; i < numNeurons; ++i)
+        for (size_t i = 0; i < numNeurons; ++i)
         {
             EXPECT_FLOAT_EQ(cpuSimState[i].V, clSimState[i].V);
             EXPECT_FLOAT_EQ(cpuSimState[i].h, clSimState[i].h);

@@ -46,7 +46,7 @@ CLWrapper::CLWrapper(Logger const& logger)
 
         assert(platforms.size() > 0);
 
-        unsigned int numPlatform = 0;
+        size_t numPlatform = 0;
         LOG_INFO(*_logger) << std::endl;
         BOOST_FOREACH(cl::Platform const & platform, platforms)
         {
