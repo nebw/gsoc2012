@@ -23,6 +23,7 @@
 #include "stdafx.h"
 
 #include "CPUSimulator.h"
+#include "util.h"
 
 #include <algorithm>
 
@@ -72,12 +73,12 @@ CPUSimulator::CPUSimulator(const size_t nX,
     {
         _states[i] = state_0;
     }
-    
+
     for(size_t x = 0; x < _nX; ++x) {
         for(size_t y = 0; y < _nY; ++y) {
             for(size_t z = 0; z < _nZ; ++z) {
-                _distances[x + y * sizeof(float) + z * sizeof(float)] = _f_w_EE(
-                    sqrt(pow(float(x),2.0f) + pow(float(y),2.0f) + pow(float(z),2.0f)));
+                size_t distance = x * x + y * y + z * z; 
+                _distances[x + y * _nX + z * _nY] = _f_w_EE(sqrt(float(distance)));
             }
         }
     }
@@ -522,35 +523,113 @@ void CPUSimulator::runge4_f_dsNMDA_dt(const size_t idx, const size_t ind_old)
 
 void CPUSimulator::convolutionAMPA(const size_t ind_old)
 {
-    for (int i = 0; i < static_cast<int>(_numNeurons); ++i)
-    {
-        float sumFootprint = 0;
+    //bool stop = false;
 
-        for (int j = 0; j < static_cast<int>(_numNeurons); ++j)
-        {
-            sumFootprint += _distances[abs(j - i)] * _states[ind_old * _numNeurons + j].s_AMPA;
+    //if(_states[ind_old * _numNeurons].s_AMPA > 0.5) 
+    //{
+    //    std::cout << std::endl;
+    //    for(size_t x = 0; x < _nX; ++x) {
+    //        for(size_t y = 0; y < _nY; ++y) {
+    //            for(size_t z = 0; z < _nZ; ++z) {
+    //                std::cout << _states[ind_old * _numNeurons + (x + y * _nX + z * _nY)].s_AMPA << "\t";
+    //            }
+    //        }
+    //        std::cout << std::endl;
+    //    }
+
+    //    stop = true;
+    //}
+
+    long nX = long(_nX);
+    long nY = long(_nY);
+    long nZ = long(_nZ);
+    for(long x1 = 0; x1 < nX; ++x1) {
+        for(long y1 = 0; y1 < nY; ++y1) {
+            for(long z1 = 0; z1 < nZ; ++z1) {
+                float sumFootprint = 0;
+                size_t index1 = x1 + y1 * nX + z1 * nY;
+
+                for(long x2 = 0; x2 < nX; ++x2) {
+                    for(long y2 = 0; y2 < nY; ++y2) {
+                        for(long z2 = 0; z2 < nZ; ++z2) {
+                            size_t index2 = x2 + y2 * nX + z2 * nY;
+                            size_t distanceIdx = abs(x2 - x1) + abs(y2 - y1) * nX + abs(z2 - z1) * nY;
+                            sumFootprint += _distances[distanceIdx] * _states[ind_old * _numNeurons + index2].s_AMPA;
+                        }
+                    }
+                }
+
+                _sumFootprintAMPA[index1] = sumFootprint;
+            }
         }
-
-        _sumFootprintAMPA[i] = sumFootprint;
     }
+
+    //if(stop)
+    //{
+    //    std::cout << std::endl;
+    //    for(size_t x = 0; x < _nX; ++x) {
+    //        for(size_t y = 0; y < _nY; ++y) {
+    //            for(size_t z = 0; z < _nZ; ++z) {
+    //                std::cout << _sumFootprintAMPA[(x + y * _nX + z * _nY)] << "\t";
+    //            }
+    //        }
+    //        std::cout << std::endl;
+    //    }
+
+    //    bool test = true;
+    //}
 }
 
 void CPUSimulator::convolutionNMDA(const size_t ind_old)
 {
-    for (int i = 0; i < static_cast<int>(_numNeurons); ++i)
-    {
-        float sumFootprint = 0;
+    long nX = long(_nX);
+    long nY = long(_nY);
+    long nZ = long(_nZ);
+    for(long x1 = 0; x1 < nX; ++x1) {
+        for(long y1 = 0; y1 < nY; ++y1) {
+            for(long z1 = 0; z1 < nZ; ++z1) {
+                float sumFootprint = 0;
+                size_t index1 = x1 + y1 * nX + z1 * nY;
 
-        for (int j = 0; j < static_cast<int>(_numNeurons); ++j)
-        {
-            sumFootprint += _distances[abs(j - i)] * _states[ind_old * _numNeurons + j].s_NMDA;
+                for(long x2 = 0; x2 < nX; ++x2) {
+                    for(long y2 = 0; y2 < nY; ++y2) {
+                        for(long z2 = 0; z2 < nZ; ++z2) {
+                            size_t index2 = x2 + y2 * nX + z2 * nY;
+                            size_t distanceIdx = abs(x2 - x1) + abs(y2 - y1) * nX + abs(z2 - z1) * nY;
+                            sumFootprint += _distances[distanceIdx] * _states[ind_old * _numNeurons + index2].s_NMDA;
+                        }
+                    }
+                }
+
+                _sumFootprintNMDA[index1] = sumFootprint;
+            }
         }
-
-        _sumFootprintNMDA[i] = sumFootprint;
     }
 }
 
-void CPUSimulator::convolutionGABAA()
+void CPUSimulator::convolutionGABAA( const size_t ind_old )
 {
-    throw std::exception("The method or operation is not implemented.");
+    long nX = long(_nX);
+    long nY = long(_nY);
+    long nZ = long(_nZ);
+    for(long x1 = 0; x1 < nX; ++x1) {
+        for(long y1 = 0; y1 < nY; ++y1) {
+            for(long z1 = 0; z1 < nZ; ++z1) {
+                float sumFootprint = 0;
+                size_t index1 = x1 + y1 * nX + z1 * nY;
+
+                for(long x2 = 0; x2 < nX; ++x2) {
+                    for(long y2 = 0; y2 < nY; ++y2) {
+                        for(long z2 = 0; z2 < nZ; ++z2) {
+                            size_t index2 = x2 + y2 * nX + z2 * nY;
+                            size_t distanceIdx = abs(x2 - x1) + abs(y2 - y1) * nX + abs(z2 - z1) * nY;
+                            sumFootprint += _distances[distanceIdx] * _states[ind_old * _numNeurons + index2].s_GABAA;
+                        }
+                    }
+                }
+
+                _sumFootprintGABAA[index1] = sumFootprint;
+            }
+        }
+    }
 }

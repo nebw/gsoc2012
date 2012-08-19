@@ -142,7 +142,7 @@ private:
 
     void convolutionAMPA(const size_t ind_old);
     void convolutionNMDA(const size_t ind_old);
-    void convolutionGABAA();
+    void convolutionGABAA(const size_t ind_old);
 
     void computeRungeKuttaApproximations(size_t ind_old);
     void computeConvolutions(size_t ind_old);
