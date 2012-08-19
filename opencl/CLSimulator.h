@@ -53,7 +53,8 @@ public:
     void step() override;
     void simulate() override;
 
-    std::unique_ptr<state[]> const& getCurrentStates() const override;
+    state const* getCurrentStatesOld() const override;
+    state const* getCurrentStatesNew() const override;
     std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const override;
     std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const override;
     std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const override;
@@ -100,6 +101,9 @@ private:
     const bool _clfft;
     const bool _readToHostMemory;
 
+    size_t _ind_old;
+    size_t _ind_new;
+
     // Measurements
     std::vector<__int64> _timesCalculations;
     std::vector<__int64> _timesFFTW;
@@ -107,10 +111,13 @@ private:
 
     // FFT variables
     size_t _nFFT;
+    size_t _nFFTx;
+    size_t _nFFTy;
+    size_t _nFFTz;
     float _scaleFFT;
 
     // Data
-    std::unique_ptr<state[]> _states;
+    std::vector<std::unique_ptr<state[]>> _states;
     std::unique_ptr<float[]> _sumFootprintAMPA;
     std::unique_ptr<float[]> _sumFootprintNMDA;
     std::unique_ptr<float[]> _sumFootprintGABAA;
@@ -127,7 +134,7 @@ private:
     fftwf_plan _p_inv_fftw;
 
     // Data (OpenCL)
-    cl::Buffer _states_cl;
+    std::vector<cl::Buffer> _states_cl;
     cl::Buffer _sumFootprintAMPA_cl;
     cl::Buffer _sumFootprintNMDA_cl;
     cl::Buffer _sumFootprintGABAA_cl;
@@ -173,13 +180,11 @@ private:
     void initializeClFFT();
     void initializeCLKernelsAndBuffers();
 
-    void convolutionFFTW(const size_t ind_old);
-    void convolutionClFFT(const size_t ind_old);
+    void convolutionFFTW();
+    void convolutionClFFT();
 
-    void f_I_FFT_fftw(const size_t ind_old,
-                      const Receptor rec);
-    void f_I_FFT_clFFT(const size_t ind_old,
-                       const Receptor rec);
+    void f_I_FFT_fftw(const Receptor rec);
+    void f_I_FFT_clFFT(const Receptor rec);
 
     void executeKernels();
 

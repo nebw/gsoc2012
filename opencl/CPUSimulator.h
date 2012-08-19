@@ -45,12 +45,14 @@ public:
 
     void simulate() override;
 
-    std::unique_ptr<state[]> const& getCurrentStates() const override;
+    state const* getCurrentStatesOld() const override;
+    state const* getCurrentStatesNew() const override;
     std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const override;
     std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const override;
     std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const override;
 
-    void setCurrentStates(std::unique_ptr<state[]> const& states);
+    void setCurrentStatesOld(state const* states);
+    void setCurrentStatesNew(state const* states);
     void setCurrentSumFootprintAMPA(std::unique_ptr<float[]> const& sumFootprintAMPA);
     void setCurrentSumFootprintNMDA(std::unique_ptr<float[]> const& sumFootprintNMDA);
     void setCurrentSumFootprintGABAA(std::unique_ptr<float[]> const& sumFootprintGABAA);
@@ -77,7 +79,13 @@ private:
     const size_t _numNeurons;
     const size_t _timesteps;
 
-    size_t _t;    const Convolution _convolution;    float _f_w_EE(const float d);
+    size_t _t;    
+    const Convolution _convolution;    
+
+    size_t _ind_old;
+    size_t _ind_new;
+    
+    float _f_w_EE(const float d);
 
     float f_I_Na_m_inf(const float V);
     float f_I_Na(const float V,
@@ -125,25 +133,18 @@ private:
                   const float sumFootprintGABAA);
 
     // runge-kutta approximations
-    void runge4_f_dV_dt(const size_t idx,
-                        const size_t ind_old);
-    void runge4_f_I_Na_dh_dt(const size_t idx,
-                             const size_t ind_old);
-    void runge4_f_dsAMPA_dt(const size_t idx,
-                            const size_t ind_old);
-    void runge4_f_dn_dt(const size_t idx,
-                        const size_t ind_old);
-    void runge4_f_dz_dt(const size_t idx,
-                        const size_t ind_old);
-    void runge4_f_dxNMDA_dt(const size_t idx,
-                            const size_t ind_old);
-    void runge4_f_dsNMDA_dt(const size_t idx,
-                            const size_t ind_old);
+    void runge4_f_dV_dt(const size_t idx);
+    void runge4_f_I_Na_dh_dt(const size_t idx);
+    void runge4_f_dsAMPA_dt(const size_t idx);
+    void runge4_f_dn_dt(const size_t idx);
+    void runge4_f_dz_dt(const size_t idx);
+    void runge4_f_dxNMDA_dt(const size_t idx);
+    void runge4_f_dsNMDA_dt(const size_t idx);
 
-    void convolutionAMPA(const size_t ind_old);
-    void convolutionNMDA(const size_t ind_old);
-    void convolutionGABAA(const size_t ind_old);
+    void convolutionAMPA();
+    void convolutionNMDA();
+    void convolutionGABAA();
 
-    void computeRungeKuttaApproximations(size_t ind_old);
-    void computeConvolutions(size_t ind_old);
+    void computeRungeKuttaApproximations();
+    void computeConvolutions();
 };

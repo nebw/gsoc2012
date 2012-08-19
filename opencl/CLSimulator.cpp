@@ -69,11 +69,14 @@ CLSimulator::CLSimulator(const size_t nX,
       _clfft(clfft == CLFFT),
       _logger(logger),
       _readToHostMemory(readToHostMemory),
-      // TODO: _nFFT(2 * numNeurons - 1),
-      _nFFT(2 * nX * nY * nZ),
-      _scaleFFT(1.f / _nFFT),
+      _nFFTx(2 * nX),
+      _nFFTy(nY > 1 ? 2 * nY : 1),
+      _nFFTz(nZ > 1 ? 2 * nZ : 1),
       _err(CL_SUCCESS)
 {
+    _nFFT = (_nFFTx * _nFFTy * _nFFTz);
+    _scaleFFT = (1.f / _nFFT);
+
     switch (plot)
     {
     case NO_PLOT:
@@ -134,14 +137,14 @@ CLSimulator::CLSimulator(const size_t nX,
 
     if (_plot)
     {
-        _plotter->step(&_states[0], _numNeurons, _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA);
+        _plotter->step(&_states[0][0], _numNeurons, _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA);
     }
 }
 
 void CLSimulator::step()
 {
-    size_t ind_old = _t % 2;
-    size_t ind_new = 1 - ind_old;
+    _ind_old = _t % 2;
+    _ind_new = 1 - _ind_old;
 
     try
     {
@@ -152,23 +155,30 @@ void CLSimulator::step()
         }
 
         // set dynamic kernel args
-        _err = _kernel_f_dV_dt.setArg(5, ind_old);
-        _err = _kernel_f_dn_dt.setArg(2, ind_old);
-        _err = _kernel_f_I_Na_dh_dt.setArg(2, ind_old);
-        _err = _kernel_f_dz_dt.setArg(2, ind_old);
-        _err = _kernel_f_dsAMPA_dt.setArg(2, ind_old);
-        _err = _kernel_f_dxNMDA_dt.setArg(2, ind_old);
-        _err = _kernel_f_dsNMDA_dt.setArg(2, ind_old);
+        _err = _kernel_f_dV_dt.setArg(0, _states_cl[_ind_old]);
+        _err = _kernel_f_dV_dt.setArg(1, _states_cl[_ind_new]);
+        _err = _kernel_f_dn_dt.setArg(0, _states_cl[_ind_old]);
+        _err = _kernel_f_dn_dt.setArg(1, _states_cl[_ind_new]);
+        _err = _kernel_f_I_Na_dh_dt.setArg(0, _states_cl[_ind_old]);
+        _err = _kernel_f_I_Na_dh_dt.setArg(1, _states_cl[_ind_new]);
+        _err = _kernel_f_dz_dt.setArg(0, _states_cl[_ind_old]);
+        _err = _kernel_f_dz_dt.setArg(1, _states_cl[_ind_new]);
+        _err = _kernel_f_dsAMPA_dt.setArg(0, _states_cl[_ind_old]);
+        _err = _kernel_f_dsAMPA_dt.setArg(1, _states_cl[_ind_new]);
+        _err = _kernel_f_dxNMDA_dt.setArg(0, _states_cl[_ind_old]);
+        _err = _kernel_f_dxNMDA_dt.setArg(1, _states_cl[_ind_new]);
+        _err = _kernel_f_dsNMDA_dt.setArg(0, _states_cl[_ind_old]);
+        _err = _kernel_f_dsNMDA_dt.setArg(1, _states_cl[_ind_new]);
 
         // compute convolution
         if (_fftw)
         {
-            convolutionFFTW(ind_old);
+            convolutionFFTW();
         }
 
         if (_clfft)
         {
-            convolutionClFFT(ind_old);
+            convolutionClFFT();
         }
 
         // compare results of fftw with clfft if both are enabled
@@ -183,7 +193,7 @@ void CLSimulator::step()
         // read states from GPU memory for gnuplot plotting or unit tests
         if (_plot || _readToHostMemory)
         {
-            _err = _wrapper.getQueue().enqueueReadBuffer(_states_cl, CL_FALSE, ind_new * _numNeurons * sizeof(state), _numNeurons * sizeof(state), &_states[ind_new * _numNeurons], NULL, NULL);
+            _err = _wrapper.getQueue().enqueueReadBuffer(_states_cl[_ind_new], CL_FALSE, 0, _numNeurons * sizeof(state), _states[_ind_new].get(), NULL, NULL);
             _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, NULL);
             _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintNMDA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintNMDA.get(), NULL, NULL);
             _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintGABAA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintGABAA.get(), NULL, NULL);
@@ -224,7 +234,7 @@ void CLSimulator::simulate()
             size_t ind_old = _t % 2;
             size_t ind_new = 1 - ind_old;
 
-            _plotter->step(&_states[ind_new * _numNeurons], _t, _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA);
+            _plotter->step(_states[ind_new].get(), _t, _sumFootprintAMPA, _sumFootprintNMDA, _sumFootprintGABAA);
         }
     }
 
@@ -269,29 +279,98 @@ inline float CLSimulator::_f_w_EE( const float j )
            * exp(-abs(j) / (sigma * p));
 }
 
-void CLSimulator::f_I_FFT_fftw(const size_t ind_old, const Receptor rec)
+void CLSimulator::f_I_FFT_fftw( const Receptor rec )
 {
-    for (size_t i = 0; i < _numNeurons; ++i)   {
-        if (rec == AMPA)
-        {
-            _sVals_split[i][0] = _states[ind_old * _numNeurons + i].s_AMPA;
-        } else if (rec == NMDA)
-        {
-            _sVals_split[i][0] = _states[ind_old * _numNeurons + i].s_NMDA;
-        } else if (rec == GABAA)
-        {
-            _sVals_split[i][0] = _states[ind_old * _numNeurons + i].s_GABAA;
+    for(size_t x = 0; x < _nX; ++x) {
+        for(size_t y = 0; y < _nY; ++y) {
+            size_t index_states = x + y * _nY;
+            size_t index_sVals = x + y * _nFFTy;
+            if (rec == AMPA)
+            {
+                _sVals_split[index_sVals][0] = _states[_ind_old][index_states].s_AMPA;
+            } else if (rec == NMDA)
+            {
+                _sVals_split[index_sVals][0] = _states[_ind_old][index_states].s_NMDA;
+            } else if (rec == GABAA)
+            {
+                _sVals_split[index_sVals][0] = _states[_ind_old][index_states].s_GABAA;
+            }
+            _sVals_split[index_sVals][1] = 0;
         }
-        _sVals_split[i][1] = 0;
     }
 
-    for (size_t i = _numNeurons; i < _nFFT; ++i)
+    //bool stop = (rec == AMPA) && true;//_sVals_split[0][0] > 0.5;;
+    //if(stop)
+    //{
+    //    stop = true;
+
+    //    std::cout << "sVals" << std::endl;
+    //    for(size_t x = 0; x < _nFFTx; ++x) {
+    //        for(size_t y = 0; y < _nFFTy; ++y) {
+    //            std::cout << _sVals_split[x + y * _nFFTx][0] << "\t"; 
+    //        }
+    //        std::cout << std::endl;
+    //    }
+
+    //    getchar();
+    //}
+
+    for(size_t x = _nX; x < _nFFTx; ++x)
     {
-        _sVals_split[i][0] = 0;
-        _sVals_split[i][1] = 0;
+        for(size_t y = _nY; y < _nFFTy; ++y)
+        {
+            size_t index = x + y * _nFFTx;
+            _sVals_split[index][0] = 0;
+            _sVals_split[index][1] = 0;
+        }
     }
+
+    //if(stop)
+    //{
+    //    stop = true;
+
+    //    std::cout << "sVals" << std::endl;
+    //    for(size_t x = 0; x < _nFFTx; ++x) {
+    //        for(size_t y = 0; y < _nFFTy; ++y) {
+    //            std::cout << _sVals_split[x + y * _nFFTx][0] << "\t"; 
+    //        }
+    //        std::cout << std::endl;
+    //    }
+
+    //    getchar();
+    //}
 
     fftwf_execute(_p_sVals_fftw);
+
+    //if(stop && rec == AMPA)
+    //{
+    //    stop = true;
+
+    //    std::cout << "sVals_f" << std::endl;
+    //    for(size_t x = 0; x < _nFFTx; ++x) {
+    //        for(size_t y = 0; y < _nFFTy; ++y) {
+    //            std::cout << _sVals_f_split[x + y * _nFFTx][0] << "\t"; 
+    //        }
+    //        std::cout << std::endl;
+    //    }
+
+    //    getchar();
+    //}
+
+    //if(stop && rec == AMPA)
+    //{
+    //    stop = true;
+
+    //    std::cout << "distances_f" << std::endl;
+    //    for(size_t x = 0; x < _nFFTx; ++x) {
+    //        for(size_t y = 0; y < _nFFTy; ++y) {
+    //            std::cout << _distances_f_split[x + y * _nFFTx][0] << "\t"; 
+    //        }
+    //        std::cout << std::endl;
+    //    }
+
+    //    getchar();
+    //}
 
     // convolution in frequency domain
     for (size_t i = 0; i < _nFFT; ++i)
@@ -302,40 +381,98 @@ void CLSimulator::f_I_FFT_fftw(const size_t ind_old, const Receptor rec)
                                       + _distances_f_split[i][1] * _sVals_f_split[i][0]) * _scaleFFT;
     }
 
+    //if(stop && rec == AMPA)
+    //{
+    //    stop = true;
+
+    //    std::cout << "convolution_f" << std::endl;
+    //    for(size_t x = 0; x < _nFFTx; ++x) {
+    //        for(size_t y = 0; y < _nFFTy; ++y) {
+    //            std::cout << _convolution_f_split[x + y * _nFFTx][0] << "\t"; 
+    //        }
+    //        std::cout << std::endl;
+    //    }
+
+    //    getchar();
+    //}
+
     fftwf_execute(_p_inv_fftw);
 
-    for (size_t indexOfNeuron = 0; indexOfNeuron < _numNeurons; ++indexOfNeuron)
+    //if(stop && rec == AMPA)
+    //{
+    //    stop = true;
+
+    //    std::cout << "convolution" << std::endl;
+    //    for(size_t x = 0; x < _nFFTx; ++x) {
+    //        for(size_t y = 0; y < _nFFTy; ++y) {
+    //            std::cout << _convolution_split[x + y * _nFFTx][0] << "\t"; 
+    //        }
+    //        std::cout << std::endl;
+    //    }
+
+    //    getchar();
+    //}
+
+    for(size_t x_conv = _nX - 1, x_fp = 0; x_conv < _nFFTx - 1; ++x_conv, ++x_fp)
     {
-        if (rec == AMPA)
+        size_t t_nFFTy = _nFFTy > 1 ? _nFFTy - 1 : 1;
+        for(size_t y_conv = _nY - 1, y_fp = 0; y_conv < t_nFFTy; ++y_conv, ++y_fp)
         {
-            _sumFootprintAMPA[indexOfNeuron] = _convolution_split[indexOfNeuron + _numNeurons - 1][0];
-        } else if (rec == NMDA)
-        {
-            _sumFootprintNMDA[indexOfNeuron] = _convolution_split[indexOfNeuron + _numNeurons - 1][0];
-        } else if (rec == GABAA)
-        {
-            _sumFootprintGABAA[indexOfNeuron] = _convolution_split[indexOfNeuron + _numNeurons - 1][0];
+            size_t index_conv = x_conv + y_conv * _nFFTx;
+            size_t index_fp = x_fp + y_fp * _nX;
+            if (rec == AMPA)
+            {
+                _sumFootprintAMPA[index_fp] = _convolution_split[index_conv][0];
+            } else if (rec == NMDA)
+            {
+                _sumFootprintNMDA[index_fp] = _convolution_split[index_conv][0];
+            } else if (rec == GABAA)
+            {
+                _sumFootprintGABAA[index_fp] = _convolution_split[index_conv][0];
+            }
         }
     }
+
+    //if(stop && rec == AMPA)
+    //{
+    //    std::cout << std::endl << std::endl;
+
+    //    for(size_t i = 0; i < _numNeurons; ++i)
+    //    {
+    //        std::cout << _sumFootprintAMPA[i] << std::endl;
+
+    //    }
+
+    //    std::cout << std::endl << std::endl;
+
+    //    for(size_t x = 0; x < _nX; ++x) {
+    //        for(size_t y = 0; y < _nY; ++y) {
+    //            std::cout << _sumFootprintAMPA[x + y * _nX] << "\t"; 
+    //        }
+    //        std::cout << std::endl;
+    //    }
+
+    //    getchar();
+    //}
 }
 
-void CLSimulator::f_I_FFT_clFFT(const size_t ind_old, const Receptor rec)
+void CLSimulator::f_I_FFT_clFFT( const Receptor rec )
 {
     // initialize sVals_real for FFT
     switch (rec)
     {
     case AMPA:
-        handleClError(_kernel_prepareFFT_AMPA.setArg(3, ind_old));
+        handleClError(_kernel_prepareFFT_AMPA.setArg(0, _states_cl[_ind_old]));
         _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_prepareFFT_AMPA, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, NULL);
         break;
 
     case NMDA:
-        handleClError(_kernel_prepareFFT_NMDA.setArg(3, ind_old));
+        handleClError(_kernel_prepareFFT_NMDA.setArg(0, _states_cl[_ind_old]));
         _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_prepareFFT_NMDA, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, NULL);
         break;
 
     case GABAA:
-        handleClError(_kernel_prepareFFT_GABAA.setArg(3, ind_old));
+        handleClError(_kernel_prepareFFT_GABAA.setArg(0, _states_cl[_ind_old]));
         _err = _wrapper.getQueue().enqueueNDRangeKernel(_kernel_prepareFFT_GABAA, cl::NullRange, cl::NDRange(_numNeurons), cl::NullRange, NULL, NULL);
         break;
     }
@@ -412,7 +549,7 @@ std::vector<__int64> CLSimulator::getTimesClFFT() const
     return _timesClFFT;
 }
 
-void CLSimulator::convolutionFFTW(const size_t ind_old)
+void CLSimulator::convolutionFFTW()
 {
     boost::chrono::high_resolution_clock::time_point startTime;
     if (_measure)
@@ -422,12 +559,14 @@ void CLSimulator::convolutionFFTW(const size_t ind_old)
 
     if (!_plot)
     {
-        _err = _wrapper.getQueue().enqueueReadBuffer(_states_cl, CL_TRUE, ind_old * _numNeurons * sizeof(state), _numNeurons * sizeof(state), &_states[ind_old * _numNeurons], NULL, NULL);
+        _err = _wrapper.getQueue().enqueueReadBuffer(_states_cl[_ind_old], CL_FALSE, 0, _numNeurons * sizeof(state), _states[_ind_old].get(), NULL, NULL);
     }
 
-    f_I_FFT_fftw(ind_old, AMPA);
+    _wrapper.getQueue().finish();
+
+    f_I_FFT_fftw(AMPA);
     _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), _sumFootprintAMPA.get(), NULL, NULL);
-    f_I_FFT_fftw(ind_old, NMDA);
+    f_I_FFT_fftw(NMDA);
     _err = _wrapper.getQueue().enqueueWriteBuffer(_sumFootprintNMDA_cl, CL_TRUE, 0, _numNeurons * sizeof(float), _sumFootprintNMDA.get(), NULL, NULL);
     // f_I_FFT(ind_old, "GABAA");
 
@@ -440,7 +579,7 @@ void CLSimulator::convolutionFFTW(const size_t ind_old)
     }
 }
 
-void CLSimulator::convolutionClFFT(const size_t ind_old)
+void CLSimulator::convolutionClFFT()
 {
     boost::chrono::high_resolution_clock::time_point startTime;
 
@@ -449,8 +588,8 @@ void CLSimulator::convolutionClFFT(const size_t ind_old)
         startTime = boost::chrono::high_resolution_clock::now();
     }
 
-    f_I_FFT_clFFT(ind_old, AMPA);
-    f_I_FFT_clFFT(ind_old, NMDA);
+    f_I_FFT_clFFT(AMPA);
+    f_I_FFT_clFFT(NMDA);
 
     if (_measure)
     {
@@ -511,45 +650,91 @@ void CLSimulator::initializeFFTW()
     _distances_f_split = (fftwf_complex *)fftwf_malloc(_nFFT * sizeof(fftwf_complex));
     _sVals_f_split = (fftwf_complex *)fftwf_malloc(_nFFT * sizeof(fftwf_complex));
     _convolution_f_split = (fftwf_complex *)fftwf_malloc(_nFFT * sizeof(fftwf_complex));
-    _p_distances_fftw = fftwf_plan_dft_1d(_nFFT, _distances_split, _distances_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
-    _p_sVals_fftw = fftwf_plan_dft_1d(_nFFT, _sVals_split, _sVals_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
-    _p_inv_fftw = fftwf_plan_dft_1d(_nFFT, _convolution_f_split, _convolution_split, FFTW_BACKWARD, FFTW_ESTIMATE);
 
-    if (_fftw)
+    assert(_nX >= 1 && _nY >= 1 && _nZ >=1);
+    assert((_nX >= _nY) && (_nY >= _nZ));
+    if(_nY == 1)
     {
-        // initialize distances
-        size_t j = 0;
-
-        for (size_t i = _numNeurons - 1; i > 0; --i)
-        {
-            _distances_split[j][0] = _f_w_EE(float(i));
-            _distances_split[j][1] = 0;
-            ++j;
-        }
-
-        for (size_t i = 0; i < _numNeurons; ++i)
-        {
-            _distances_split[j][0] = _f_w_EE(float(i));
-            _distances_split[j][1] = 0;
-            ++j;
-        }
-
-        _distances_split[j][0] = 0;
-        _distances_split[j][1] = 0;
-
-        fftwf_execute(_p_distances_fftw);
+        _p_distances_fftw = fftwf_plan_dft_1d(_nFFT, _distances_split, _distances_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
+        _p_sVals_fftw = fftwf_plan_dft_1d(_nFFT, _sVals_split, _sVals_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
+        _p_inv_fftw = fftwf_plan_dft_1d(_nFFT, _convolution_f_split, _convolution_split, FFTW_BACKWARD, FFTW_ESTIMATE);
+    } else if (_nZ == 1)
+    {
+        _p_distances_fftw = fftwf_plan_dft_2d(_nFFTx, _nFFTy, _distances_split, _distances_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
+        _p_sVals_fftw = fftwf_plan_dft_2d(_nFFTx, _nFFTy, _sVals_split, _sVals_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
+        _p_inv_fftw = fftwf_plan_dft_2d(_nFFTx, _nFFTy, _convolution_f_split, _convolution_split, FFTW_BACKWARD, FFTW_ESTIMATE);
+    } else 
+    {
+        _p_distances_fftw = fftwf_plan_dft_3d(_nFFTx, _nFFTy, _nFFTz, _distances_split, _distances_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
+        _p_sVals_fftw = fftwf_plan_dft_3d(_nFFTx, _nFFTy, _nFFTz, _sVals_split, _sVals_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
+        _p_inv_fftw = fftwf_plan_dft_3d(_nFFTx, _nFFTy, _nFFTz, _convolution_f_split, _convolution_split, FFTW_BACKWARD, FFTW_ESTIMATE);
     }
+
+    for (size_t i = 0; i < _nFFT; ++i)
+    {
+        _sVals_split[i][0] = 0;
+        _sVals_split[i][1] = 0;
+    }
+
+    for(size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
+        for(size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
+            float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
+            _distances_split[x_idx + y_idx * _nFFTx][0] = _f_w_EE((float(distance)));
+            _distances_split[x_idx + y_idx * _nFFTx][1] = 0;
+        }
+    }
+
+    for(size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
+        for(size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
+            float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
+            _distances_split[x_idx + y_idx * _nFFTx][0] = _f_w_EE((float(distance)));
+            _distances_split[x_idx + y_idx * _nFFTx][1] = 0;
+        }
+    }
+
+    if(_nY > 1)
+    {
+        for(size_t x_idx = 0; x_idx < _nFFTx; ++x_idx) {
+            _distances_split[x_idx + (_nFFTy - 1) * _nFFTx][0] = 0;
+            _distances_split[x_idx + (_nFFTy - 1) * _nFFTx][1] = 0;
+        }
+    }
+
+    for(size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
+        for(size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
+            float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
+            _distances_split[x_idx + y_idx * _nFFTx][0] = _f_w_EE((float(distance)));
+            _distances_split[x_idx + y_idx * _nFFTx][1] = 0;
+        }
+    }
+
+    for(size_t y_idx = 0; y_idx < _nFFTy; ++y_idx) {
+        _distances_split[(_nFFTx - 1) + y_idx * _nFFTx][0] = 0;
+        _distances_split[(_nFFTx - 1) + y_idx * _nFFTx][1] = 0;
+    }
+
+    for(size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
+        for(size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
+            float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
+            _distances_split[x_idx + y_idx * _nFFTx][0] = _f_w_EE((float(distance)));
+            _distances_split[x_idx + y_idx * _nFFTx][1] = 0;
+        }
+    }
+
+    fftwf_execute(_p_distances_fftw);
 }
 
 void CLSimulator::initializeHostVariables(state const& state_0)
 {
     // 2 states (old and new) per neuron per timestep
-    _states = std::unique_ptr<state[]>(new state[2 * _numNeurons]);
+    _states.emplace_back(std::unique_ptr<state[]>(new state[_numNeurons]));
+    _states.emplace_back(std::unique_ptr<state[]>(new state[_numNeurons]));
 
     _sumFootprintAMPA = std::unique_ptr<float[]>(new float[_numNeurons]);
     _sumFootprintNMDA = std::unique_ptr<float[]>(new float[_numNeurons]);
     _sumFootprintGABAA = std::unique_ptr<float[]>(new float[_numNeurons]);
 
+    //TODO: move to initializeClFFT
     _distances_real = std::unique_ptr<float[]>(new float[_nFFT]);
     _sVals_real = std::unique_ptr<float[]>(new float[_nFFT]);
     _convolution_real = std::unique_ptr<float[]>(new float[_nFFT]);
@@ -558,46 +743,147 @@ void CLSimulator::initializeHostVariables(state const& state_0)
     // initialize initial states
     for (size_t i = 0; i < _numNeurons; ++i)
     {
-        _states[i] = state_0;
+        _states[0][i] = state_0;
+        _states[1][i] = state_0;
         _sumFootprintAMPA[i] = 0;
         _sumFootprintNMDA[i] = 0;
         _sumFootprintGABAA[i] = 0;
-    }
-
-    for (size_t i = _numNeurons; i < 2 * _numNeurons; ++i)
-    {
-        _states[i] = state_0;
     }
 }
 
 void CLSimulator::initializeClFFT()
 {
-    // initialize distances
-    size_t j = 0;
+    /* x x x x
+     * x x x x
+     * x x x x
+     * x x x x
+     */
 
-    for (size_t i = _numNeurons - 1; i > 0; --i)
-    {
-        _distances_real[j] = _f_w_EE(float(i));
-        ++j;
+    for(size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
+        for(size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
+            float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
+            _distances_real[x_idx + y_idx * _nFFTx] = _f_w_EE((float(distance)));
+        }
     }
+    /* v v x x
+     * v v x x
+     * x x x x
+     * x x x x
+     */
 
-    for (size_t i = 0; i < _numNeurons; ++i)
-    {
-        _distances_real[j] = _f_w_EE(float(i));
-        ++j;
+    for(size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
+        for(size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
+            float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
+            _distances_real[x_idx + y_idx * _nFFTx] = _f_w_EE((float(distance)));
+        }
     }
+    /* v v v x
+     * v v v x
+     * x x x x
+     * x x x x
+     */
 
-    _distances_real[j] = 0;
-
-    for (size_t i = 0; i < _nFFT; ++i)
+    if(_nY > 1)
     {
-        _zeros[i] = 0;
+        for(size_t x_idx = 0; x_idx < _nFFTx; ++x_idx) {
+            _distances_real[x_idx + (_nFFTy - 1) * _nFFTx] = 0;
+        }
     }
+    /* v v v 0
+     * v v v 0
+     * x x x 0
+     * x x x 0
+     */
+
+    for(size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
+        for(size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
+            float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
+            _distances_real[x_idx + y_idx * _nFFTx] = _f_w_EE((float(distance)));
+        }
+    }
+    /* v v v 0
+     * v v v 0
+     * v v x 0
+     * x x x 0
+     */
+
+    for(size_t y_idx = 0; y_idx < _nFFTy; ++y_idx) {
+        _distances_real[(_nFFTx - 1) + y_idx * _nFFTx] = 0;
+    }
+    /* v v v 0
+     * v v v 0
+     * v v x 0
+     * 0 0 0 0
+     */
+
+    for(size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
+        for(size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
+            float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
+            _distances_real[x_idx + y_idx * _nFFTx] = _f_w_EE((float(distance)));
+        }
+    }
+    /* v v v 0
+     * v v v 0
+     * v v v 0
+     * 0 0 0 0
+     */
+
+    //for(size_t x = 0; x < _nFFTx; ++x) {
+    //    for(size_t y = 0; y < _nFFTy; ++y) {
+    //        std::cout << _distances_real[x + y * _nFFTx] << "\t"; 
+    //    }
+    //    std::cout << std::endl;
+    //}
+
+    //getchar();
+
+    //// initialize distances
+    //unsigned int j = 0;
+
+    //for (unsigned int i = _numNeurons - 1; i > 0; --i)
+    //{
+    //    _distances_real[j] = _f_w_EE(float(i));
+    //    ++j;
+    //}
+
+    //for (unsigned int i = 0; i < _numNeurons; ++i)
+    //{
+    //    _distances_real[j] = _f_w_EE(float(i));
+    //    ++j;
+    //}
+
+    //_distances_real[j] = 0;
+
+    //for (unsigned int i = 0; i < _nFFT; ++i)
+    //{
+    //    _zeros[i] = 0;
+    //}
+
+    //for(size_t x = 0; x < _nFFTx; ++x) {
+    //    for(size_t y = 0; y < _nFFTy; ++y) {
+    //        std::cout << _distances_real[x + y * _nFFTx] << "\t"; 
+    //    }
+    //    std::cout << std::endl;
+    //}
+
+    //getchar();
 
     assert(isPowerOfTwo(_nFFT));
-    clFFT_Dim3 n = { _nFFT, 1, 1 };
+    assert(_nX >= 1 && _nY >= 1 && _nZ >=1);
+    assert((_nX >= _nY) && (_nY >= _nZ));
+    clFFT_Dim3 n = { _nFFTx, _nFFTy, _nFFTz };
     clFFT_DataFormat dataFormat = clFFT_SplitComplexFormat;
-    clFFT_Dimension dim = clFFT_1D;
+    clFFT_Dimension dim;
+    if(_nY == 1)
+    {
+        dim = clFFT_1D;
+    } else if (_nZ == 1)
+    {
+        dim = clFFT_2D;
+    } else 
+    {
+        dim = clFFT_3D;
+    }
     _p_cl = clFFT_CreatePlan(_wrapper.getContextC(), n, dim, dataFormat, &_err);
     handleClError(_err);
 
@@ -709,11 +995,16 @@ void CLSimulator::assertInitializationResults()
 
 void CLSimulator::initializeCLKernelsAndBuffers()
 {
-    _states_cl = cl::Buffer(_wrapper.getContext(),
+    _states_cl.emplace_back(cl::Buffer(_wrapper.getContext(),
                             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                            2 * _numNeurons * sizeof(state),
-                            _states.get(),
-                            &_err);
+                            _numNeurons * sizeof(state),
+                            _states[0].get(),
+                            &_err));
+    _states_cl.emplace_back(cl::Buffer(_wrapper.getContext(),
+                            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                            _numNeurons * sizeof(state),
+                            _states[1].get(),
+                            &_err));
     _sumFootprintAMPA_cl = cl::Buffer(_wrapper.getContext(),
                                       CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                       _numNeurons * sizeof(float),
@@ -750,19 +1041,13 @@ void CLSimulator::initializeCLKernelsAndBuffers()
 
     // set constant kernel arguments
     _kernel_prepareFFT_AMPA = cl::Kernel(_program, "prepareFFT_AMPA", &_err);
-    handleClError(_kernel_prepareFFT_AMPA.setArg(0, _states_cl));
     handleClError(_kernel_prepareFFT_AMPA.setArg(1, _sVals_real_cl));
-    handleClError(_kernel_prepareFFT_AMPA.setArg(2, _numNeurons));
 
     _kernel_prepareFFT_NMDA = cl::Kernel(_program, "prepareFFT_NMDA", &_err);
-    handleClError(_kernel_prepareFFT_NMDA.setArg(0, _states_cl));
     handleClError(_kernel_prepareFFT_NMDA.setArg(1, _sVals_real_cl));
-    handleClError(_kernel_prepareFFT_NMDA.setArg(2, _numNeurons));
 
     _kernel_prepareFFT_GABAA = cl::Kernel(_program, "prepareFFT_GABAA", &_err);
-    handleClError(_kernel_prepareFFT_GABAA.setArg(0, _states_cl));
     handleClError(_kernel_prepareFFT_GABAA.setArg(1, _sVals_real_cl));
-    handleClError(_kernel_prepareFFT_GABAA.setArg(2, _numNeurons));
 
     _kernel_postConvolution_AMPA = cl::Kernel(_program, "postConvolution_AMPA", &_err);
     handleClError(_kernel_postConvolution_AMPA.setArg(0, _convolution_real_cl));
@@ -779,18 +1064,14 @@ void CLSimulator::initializeCLKernelsAndBuffers()
     handleClError(_kernel_postConvolution_GABAA.setArg(1, _sumFootprintGABAA_cl));
     handleClError(_kernel_postConvolution_GABAA.setArg(2, _numNeurons));
 
-    handleClError(_kernel_f_dV_dt.setArg(0, _states_cl));
-    handleClError(_kernel_f_dV_dt.setArg(1, _sumFootprintAMPA_cl));
-    handleClError(_kernel_f_dV_dt.setArg(2, _sumFootprintNMDA_cl));
-    handleClError(_kernel_f_dV_dt.setArg(3, _sumFootprintGABAA_cl));
-    handleClError(_kernel_f_dV_dt.setArg(4, _numNeurons));
-    handleClError(_kernel_f_dV_dt.setArg(6, _dt));
+    handleClError(_kernel_f_dV_dt.setArg(2, _sumFootprintAMPA_cl));
+    handleClError(_kernel_f_dV_dt.setArg(3, _sumFootprintNMDA_cl));
+    handleClError(_kernel_f_dV_dt.setArg(4, _sumFootprintGABAA_cl));
+    handleClError(_kernel_f_dV_dt.setArg(5, _dt));
 
     BOOST_FOREACH(cl::Kernel kernel, kernels)
     {
-        _err = kernel.setArg(0, _states_cl);
-        _err = kernel.setArg(1, _numNeurons);
-        _err = kernel.setArg(3, _dt);
+        _err = kernel.setArg(2, _dt);
     }
 }
 
@@ -815,9 +1096,14 @@ CLSimulator::~CLSimulator()
     }
 }
 
-std::unique_ptr<state[]> const& CLSimulator::getCurrentStates() const
+state const* CLSimulator::getCurrentStatesOld() const
 {
-    return _states;
+    return &_states[_ind_old][0];
+}
+
+state const* CLSimulator::getCurrentStatesNew() const
+{
+    return &_states[_ind_new][0];
 }
 
 std::unique_ptr<float[]> const& CLSimulator::getCurrentSumFootprintAMPA() const

@@ -24,7 +24,7 @@
 
 #include "Definitions.h"
 
-class BaseSimulator
+class BaseSimulator abstract
 {
 public:
     enum Plot {
@@ -53,7 +53,8 @@ public:
     virtual void step() = 0;
     virtual void simulate() = 0;
 
-    virtual std::unique_ptr<state[]> const& getCurrentStates() const = 0;
+    virtual state const* getCurrentStatesOld() const = 0;
+    virtual state const* getCurrentStatesNew() const = 0;
     virtual std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const = 0;
     virtual std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const = 0;
     virtual std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const = 0;
