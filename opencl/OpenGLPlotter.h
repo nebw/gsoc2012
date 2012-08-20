@@ -44,9 +44,9 @@ public:
                       const size_t t,
                       std::unique_ptr<float[]> const& sumFootprintAMPA,
                       std::unique_ptr<float[]> const& sumFootprintNMDA,
-                      std::unique_ptr<float[]> const& sumFootprintGABAA) override;
+                      std::unique_ptr<float[]> const& sumFootprintGABAA);
 
-    virtual void plot() override;
+    virtual void plot();
 
 private:
 
