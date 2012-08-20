@@ -200,12 +200,12 @@ void CPUSimulator::setCurrentSumFootprintGABAA(std::unique_ptr<float[]> const& s
     std::copy(sumFootprintGABAA.get(), sumFootprintGABAA.get() + _numNeurons, _sumFootprintGABAA.get());
 }
 
-std::vector<__int64> CPUSimulator::getTimesCalculations() const
+std::vector<size_t> CPUSimulator::getTimesCalculations() const
 {
     return _timesCalculations;
 }
 
-std::vector<__int64> CPUSimulator::getTimesConvolutions() const
+std::vector<size_t> CPUSimulator::getTimesConvolutions() const
 {
     return _timesConvolutions;
 }

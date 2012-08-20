@@ -421,19 +421,19 @@ void CLSimulator::f_I_FFT_clFFT(const Receptor rec)
     }
 }
 
-std::vector<__int64> CLSimulator::getTimesCalculations() const
+std::vector<size_t> CLSimulator::getTimesCalculations() const
 {
     assert(_measure);
     return _timesCalculations;
 }
 
-std::vector<__int64> CLSimulator::getTimesFFTW() const
+std::vector<size_t> CLSimulator::getTimesFFTW() const
 {
     assert(_measure && _fftw);
     return _timesFFTW;
 }
 
-std::vector<__int64> CLSimulator::getTimesClFFT() const
+std::vector<size_t> CLSimulator::getTimesClFFT() const
 {
     assert(_measure && _clfft);
     return _timesClFFT;

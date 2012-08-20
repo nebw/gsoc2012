@@ -59,9 +59,9 @@ public:
     std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const;
     std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const;
 
-    std::vector<__int64> getTimesCalculations() const;
-    std::vector<__int64> getTimesFFTW() const;
-    std::vector<__int64> getTimesClFFT() const;
+    std::vector<size_t> getTimesCalculations() const;
+    std::vector<size_t> getTimesFFTW() const;
+    std::vector<size_t> getTimesClFFT() const;
 
     CLWrapper getClWrapper() const;
 
@@ -105,9 +105,9 @@ private:
     size_t _ind_new;
 
     // Measurements
-    std::vector<__int64> _timesCalculations;
-    std::vector<__int64> _timesFFTW;
-    std::vector<__int64> _timesClFFT;
+    std::vector<size_t> _timesCalculations;
+    std::vector<size_t> _timesFFTW;
+    std::vector<size_t> _timesClFFT;
 
     // FFT variables
     size_t _nFFT;
