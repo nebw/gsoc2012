@@ -1,21 +1,21 @@
-/** 
+/**
  * Copyright (C) 2012 Benjamin Wild
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
@@ -74,10 +74,10 @@ CPUSimulator::CPUSimulator(const size_t nX,
         _states[i] = state_0;
     }
 
-    for(size_t x = 0; x < _nX; ++x) {
-        for(size_t y = 0; y < _nY; ++y) {
-            for(size_t z = 0; z < _nZ; ++z) {
-                size_t distance = x * x + y * y + z * z; 
+    for (size_t x = 0; x < _nX; ++x) {
+        for (size_t y = 0; y < _nY; ++y) {
+            for (size_t z = 0; z < _nZ; ++z) {
+                size_t distance = x * x + y * y + z * z;
                 _distances[x + y * _nX + z * _nY] = _f_w_EE(sqrt(float(distance)));
             }
         }
@@ -115,14 +115,14 @@ void CPUSimulator::simulate()
 
 void CPUSimulator::computeConvolutions()
 {
-    auto const& startTime = 
+    auto const& startTime =
         boost::chrono::high_resolution_clock::now();
 
     convolutionAMPA();
 
     convolutionNMDA();
 
-    auto const& endTime = 
+    auto const& endTime =
         boost::chrono::duration_cast<boost::chrono::microseconds>(
             boost::chrono::high_resolution_clock::now() - startTime);
     _timesConvolutions.push_back(endTime.count());
@@ -130,7 +130,7 @@ void CPUSimulator::computeConvolutions()
 
 void CPUSimulator::computeRungeKuttaApproximations()
 {
-    auto const& startTime = 
+    auto const& startTime =
         boost::chrono::high_resolution_clock::now();
 
     for (size_t idx = 0; idx < _numNeurons; ++idx)
@@ -144,18 +144,18 @@ void CPUSimulator::computeRungeKuttaApproximations()
         runge4_f_dsNMDA_dt(idx);
     }
 
-    auto const& endTime = 
+    auto const& endTime =
         boost::chrono::duration_cast<boost::chrono::microseconds>(
             boost::chrono::high_resolution_clock::now() - startTime);
     _timesCalculations.push_back(endTime.count());
 }
 
-state const* CPUSimulator::getCurrentStatesOld() const
+state const * CPUSimulator::getCurrentStatesOld() const
 {
     return &_states.get()[_ind_old * _numNeurons];
 }
 
-state const* CPUSimulator::getCurrentStatesNew() const
+state const * CPUSimulator::getCurrentStatesNew() const
 {
     return &_states.get()[_ind_new * _numNeurons];
 }
@@ -175,12 +175,12 @@ std::unique_ptr<float[]> const& CPUSimulator::getCurrentSumFootprintGABAA() cons
     return _sumFootprintGABAA;
 }
 
-void CPUSimulator::setCurrentStatesOld(state const* states)
+void CPUSimulator::setCurrentStatesOld(state const *states)
 {
     std::copy(states, states + _numNeurons, _states.get() + _ind_old * _numNeurons);
 }
 
-void CPUSimulator::setCurrentStatesNew(state const* states)
+void CPUSimulator::setCurrentStatesNew(state const *states)
 {
     std::copy(states, states + _numNeurons, _states.get() + _ind_new * _numNeurons);
 }
@@ -210,13 +210,12 @@ std::vector<__int64> CPUSimulator::getTimesConvolutions() const
     return _timesConvolutions;
 }
 
-float CPUSimulator::_f_w_EE( const float d )
+float CPUSimulator::_f_w_EE(const float d)
 {
     static const float sigma = 1;
     static const float p     = 32;
 
-    // TODO: p varies between 8 to 64
-    //
+    // p varies between 8 to 64
     return tanh(1 / (2 * sigma * p))
            * exp(-abs(d) / (sigma * p));
 }
@@ -289,7 +288,7 @@ float CPUSimulator::f_f_NMDA(const float V)
 {
     static const float theta_NMDA = 0;
 
-    // TODO: theta_NMDA = -inf for [Mg2+]_0 = 0
+    // theta_NMDA = -inf for [Mg2+]_0 = 0
     // and increases logarithmically with [Mg2+]_0
     static const float sigma_NMDA = 10;
 
@@ -417,7 +416,7 @@ float CPUSimulator::_f_dsNMDA_dt(const float s_NMDA, const float x_NMDA, const f
            - s_NMDA / tau_NMDA;
 }
 
-void CPUSimulator::runge4_f_dV_dt( const size_t idx )
+void CPUSimulator::runge4_f_dV_dt(const size_t idx)
 {
     const state state_0 = _states[_ind_old * _numNeurons + idx];
     const float sumFootprintAMPA_loc = _sumFootprintAMPA[idx];
@@ -434,7 +433,7 @@ void CPUSimulator::runge4_f_dV_dt( const size_t idx )
     _states[_ind_new * _numNeurons + idx].V = state_0.V + _dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }
 
-void CPUSimulator::runge4_f_I_Na_dh_dt( const size_t idx )
+void CPUSimulator::runge4_f_I_Na_dh_dt(const size_t idx)
 {
     state state_0 = _states[_ind_old * _numNeurons + idx];
 
@@ -448,7 +447,7 @@ void CPUSimulator::runge4_f_I_Na_dh_dt( const size_t idx )
     _states[_ind_new * _numNeurons + idx].h = state_0.h + _dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }
 
-void CPUSimulator::runge4_f_dn_dt( const size_t idx )
+void CPUSimulator::runge4_f_dn_dt(const size_t idx)
 {
     state state_0 = _states[_ind_old * _numNeurons + idx];
 
@@ -462,7 +461,7 @@ void CPUSimulator::runge4_f_dn_dt( const size_t idx )
     _states[_ind_new * _numNeurons + idx].n = state_0.n + _dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }
 
-void CPUSimulator::runge4_f_dz_dt( const size_t idx )
+void CPUSimulator::runge4_f_dz_dt(const size_t idx)
 {
     state state_0 = _states[_ind_old * _numNeurons + idx];
 
@@ -476,7 +475,7 @@ void CPUSimulator::runge4_f_dz_dt( const size_t idx )
     _states[_ind_new * _numNeurons + idx].z = state_0.z + _dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }
 
-void CPUSimulator::runge4_f_dsAMPA_dt( const size_t idx )
+void CPUSimulator::runge4_f_dsAMPA_dt(const size_t idx)
 {
     state state_0 = _states[_ind_old * _numNeurons + idx];
 
@@ -490,7 +489,7 @@ void CPUSimulator::runge4_f_dsAMPA_dt( const size_t idx )
     _states[_ind_new * _numNeurons + idx].s_AMPA = state_0.s_AMPA + _dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }
 
-void CPUSimulator::runge4_f_dxNMDA_dt( const size_t idx )
+void CPUSimulator::runge4_f_dxNMDA_dt(const size_t idx)
 {
     state state_0 = _states[_ind_old * _numNeurons + idx];
 
@@ -504,7 +503,7 @@ void CPUSimulator::runge4_f_dxNMDA_dt( const size_t idx )
     _states[_ind_new * _numNeurons + idx].x_NMDA = state_0.x_NMDA + _dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }
 
-void CPUSimulator::runge4_f_dsNMDA_dt( const size_t idx )
+void CPUSimulator::runge4_f_dsNMDA_dt(const size_t idx)
 {
     state state_0 = _states[_ind_old * _numNeurons + idx];
 
@@ -520,35 +519,19 @@ void CPUSimulator::runge4_f_dsNMDA_dt( const size_t idx )
 
 void CPUSimulator::convolutionAMPA()
 {
-    //bool stop = false;
-
-    //if(_states[ind_old * _numNeurons].s_AMPA > 0.5) 
-    //{
-    //    std::cout << std::endl;
-    //    for(size_t x = 0; x < _nX; ++x) {
-    //        for(size_t y = 0; y < _nY; ++y) {
-    //            for(size_t z = 0; z < _nZ; ++z) {
-    //                std::cout << _states[ind_old * _numNeurons + (x + y * _nX + z * _nY)].s_AMPA << "\t";
-    //            }
-    //        }
-    //        std::cout << std::endl;
-    //    }
-
-    //    stop = true;
-    //}
-
     long nX = long(_nX);
     long nY = long(_nY);
     long nZ = long(_nZ);
-    for(long x1 = 0; x1 < nX; ++x1) {
-        for(long y1 = 0; y1 < nY; ++y1) {
-            for(long z1 = 0; z1 < nZ; ++z1) {
+
+    for (long x1 = 0; x1 < nX; ++x1) {
+        for (long y1 = 0; y1 < nY; ++y1) {
+            for (long z1 = 0; z1 < nZ; ++z1) {
                 float sumFootprint = 0;
                 size_t index1 = x1 + y1 * nX + z1 * nY;
 
-                for(long x2 = 0; x2 < nX; ++x2) {
-                    for(long y2 = 0; y2 < nY; ++y2) {
-                        for(long z2 = 0; z2 < nZ; ++z2) {
+                for (long x2 = 0; x2 < nX; ++x2) {
+                    for (long y2 = 0; y2 < nY; ++y2) {
+                        for (long z2 = 0; z2 < nZ; ++z2) {
                             size_t index2 = x2 + y2 * nX + z2 * nY;
                             size_t distanceIdx = abs(x2 - x1) + abs(y2 - y1) * nX + abs(z2 - z1) * nY;
                             sumFootprint += _distances[distanceIdx] * _states[_ind_old * _numNeurons + index2].s_AMPA;
@@ -560,21 +543,6 @@ void CPUSimulator::convolutionAMPA()
             }
         }
     }
-
-    //if(stop)
-    //{
-    //    std::cout << std::endl;
-    //    for(size_t x = 0; x < _nX; ++x) {
-    //        for(size_t y = 0; y < _nY; ++y) {
-    //            for(size_t z = 0; z < _nZ; ++z) {
-    //                std::cout << _sumFootprintAMPA[(x + y * _nX + z * _nY)] << "\t";
-    //            }
-    //        }
-    //        std::cout << std::endl;
-    //    }
-
-    //    bool test = true;
-    //}
 }
 
 void CPUSimulator::convolutionNMDA()
@@ -582,15 +550,16 @@ void CPUSimulator::convolutionNMDA()
     long nX = long(_nX);
     long nY = long(_nY);
     long nZ = long(_nZ);
-    for(long x1 = 0; x1 < nX; ++x1) {
-        for(long y1 = 0; y1 < nY; ++y1) {
-            for(long z1 = 0; z1 < nZ; ++z1) {
+
+    for (long x1 = 0; x1 < nX; ++x1) {
+        for (long y1 = 0; y1 < nY; ++y1) {
+            for (long z1 = 0; z1 < nZ; ++z1) {
                 float sumFootprint = 0;
                 size_t index1 = x1 + y1 * nX + z1 * nY;
 
-                for(long x2 = 0; x2 < nX; ++x2) {
-                    for(long y2 = 0; y2 < nY; ++y2) {
-                        for(long z2 = 0; z2 < nZ; ++z2) {
+                for (long x2 = 0; x2 < nX; ++x2) {
+                    for (long y2 = 0; y2 < nY; ++y2) {
+                        for (long z2 = 0; z2 < nZ; ++z2) {
                             size_t index2 = x2 + y2 * nX + z2 * nY;
                             size_t distanceIdx = abs(x2 - x1) + abs(y2 - y1) * nX + abs(z2 - z1) * nY;
                             sumFootprint += _distances[distanceIdx] * _states[_ind_old * _numNeurons + index2].s_NMDA;
@@ -609,15 +578,16 @@ void CPUSimulator::convolutionGABAA()
     long nX = long(_nX);
     long nY = long(_nY);
     long nZ = long(_nZ);
-    for(long x1 = 0; x1 < nX; ++x1) {
-        for(long y1 = 0; y1 < nY; ++y1) {
-            for(long z1 = 0; z1 < nZ; ++z1) {
+
+    for (long x1 = 0; x1 < nX; ++x1) {
+        for (long y1 = 0; y1 < nY; ++y1) {
+            for (long z1 = 0; z1 < nZ; ++z1) {
                 float sumFootprint = 0;
                 size_t index1 = x1 + y1 * nX + z1 * nY;
 
-                for(long x2 = 0; x2 < nX; ++x2) {
-                    for(long y2 = 0; y2 < nY; ++y2) {
-                        for(long z2 = 0; z2 < nZ; ++z2) {
+                for (long x2 = 0; x2 < nX; ++x2) {
+                    for (long y2 = 0; y2 < nY; ++y2) {
+                        for (long z2 = 0; z2 < nZ; ++z2) {
                             size_t index2 = x2 + y2 * nX + z2 * nY;
                             size_t distanceIdx = abs(x2 - x1) + abs(y2 - y1) * nX + abs(z2 - z1) * nY;
                             sumFootprint += _distances[distanceIdx] * _states[_ind_old * _numNeurons + index2].s_GABAA;

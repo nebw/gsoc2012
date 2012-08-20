@@ -1,21 +1,21 @@
-/** 
+/**
  * Copyright (C) 2012 Benjamin Wild
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
@@ -33,7 +33,7 @@ GnuPlotPlotter::GnuPlotPlotter(
     const size_t nX,
     const size_t nY,
     const size_t nZ,
-    size_t index, 
+    size_t index,
     float dt)
     : _nX(nX),
       _nY(nY),
@@ -56,8 +56,7 @@ GnuPlotPlotter::GnuPlotPlotter(
       _spikeNeuronIndicesX(std::vector<size_t>()),
       _spikeNeuronIndicesY(std::vector<size_t>()),
       _spikeArr(std::vector<bool>(nX * nY * nZ))
-{
-}
+{}
 
 void GnuPlotPlotter::step(const state *curState, const size_t t, std::unique_ptr<float[]> const& sumFootprintAMPA, std::unique_ptr<float[]> const& sumFootprintNMDA, std::unique_ptr<float[]> const& sumFootprintGABAA)
 {
@@ -74,12 +73,14 @@ void GnuPlotPlotter::step(const state *curState, const size_t t, std::unique_ptr
     _sumFootprintGABAA.push_back(sumFootprintGABAA[_index]);
 
     size_t y = 0;
+
     for (size_t i = 0; i < _numNeurons; ++i)
     {
         if ((i >= _nX) && (i % _nX == 0))
         {
             ++y;
         }
+
         if ((curState[i].V >= 20) && (_spikeArr[i] == false))
         {
             _spikeTimes.push_back(t * _dt);
@@ -146,14 +147,15 @@ void GnuPlotPlotter::plot()
     Gnuplot plot_Spikes;
     plot_Spikes.set_title("Spikes");
     plot_Spikes.set_style("points");
-    if(_nY == 1 && _nZ == 1)
+
+    if ((_nY == 1) && (_nZ == 1))
     {
         plot_Spikes.set_xrange(0, timesteps * _dt);
         plot_Spikes.set_yrange(0, _numNeurons - 1);
         plot_Spikes.plot_xy(
             _spikeTimes, _spikeNeuronIndicesX, "Excitatory Spikes");
         getchar();
-    } else if(_nZ == 1)
+    } else if (_nZ == 1)
     {
         plot_Spikes.set_xlabel("Time");
         plot_Spikes.set_ylabel("X");

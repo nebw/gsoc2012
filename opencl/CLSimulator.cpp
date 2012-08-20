@@ -1,21 +1,21 @@
-/** 
+/**
  * Copyright (C) 2012 Benjamin Wild
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
@@ -33,9 +33,9 @@
 #include <ctime>
 #include <numeric>
 
+#include <boost/chrono.hpp>
 #include <boost/foreach.hpp>
 #include <boost/scoped_array.hpp>
-#include <boost/chrono.hpp>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
 # include <Windows.h>
@@ -215,6 +215,7 @@ void CLSimulator::step()
 void CLSimulator::simulate()
 {
     boost::chrono::high_resolution_clock::time_point startTime;
+
     if (_measure)
     {
         startTime = boost::chrono::high_resolution_clock::now();
@@ -242,9 +243,9 @@ void CLSimulator::simulate()
 
     if (_measure)
     {
-    auto const& endTime = 
-        boost::chrono::duration_cast<boost::chrono::microseconds>(
-            boost::chrono::high_resolution_clock::now() - startTime);
+        auto const& endTime =
+            boost::chrono::duration_cast<boost::chrono::microseconds>(
+                boost::chrono::high_resolution_clock::now() - startTime);
         LOG_INFO(*_logger) << "Execution time: " << endTime.count() / 1000000.0 << "s";
 
         if (_fftw)
@@ -268,23 +269,23 @@ void CLSimulator::simulate()
     }
 }
 
-inline float CLSimulator::_f_w_EE( const float j )
+inline float CLSimulator::_f_w_EE(const float j)
 {
     static const float sigma = 1;
     static const float p     = 32;
 
-    // TODO: p varies between 8 to 64
-    //
+    // p varies between 8 to 64
     return tanh(1 / (2 * sigma * p))
            * exp(-abs(j) / (sigma * p));
 }
 
-void CLSimulator::f_I_FFT_fftw( const Receptor rec )
+void CLSimulator::f_I_FFT_fftw(const Receptor rec)
 {
-    for(size_t x = 0; x < _nX; ++x) {
-        for(size_t y = 0; y < _nY; ++y) {
+    for (size_t x = 0; x < _nX; ++x) {
+        for (size_t y = 0; y < _nY; ++y) {
             size_t index_states = x + y * _nY;
             size_t index_sVals = x + y * _nFFTy;
+
             if (rec == AMPA)
             {
                 _sVals_split[index_sVals][0] = _states[_ind_old][index_states].s_AMPA;
@@ -299,25 +300,9 @@ void CLSimulator::f_I_FFT_fftw( const Receptor rec )
         }
     }
 
-    //bool stop = (rec == AMPA) && true;//_sVals_split[0][0] > 0.5;;
-    //if(stop)
-    //{
-    //    stop = true;
-
-    //    std::cout << "sVals" << std::endl;
-    //    for(size_t x = 0; x < _nFFTx; ++x) {
-    //        for(size_t y = 0; y < _nFFTy; ++y) {
-    //            std::cout << _sVals_split[x + y * _nFFTx][0] << "\t"; 
-    //        }
-    //        std::cout << std::endl;
-    //    }
-
-    //    getchar();
-    //}
-
-    for(size_t x = _nX; x < _nFFTx; ++x)
+    for (size_t x = _nX; x < _nFFTx; ++x)
     {
-        for(size_t y = _nY; y < _nFFTy; ++y)
+        for (size_t y = _nY; y < _nFFTy; ++y)
         {
             size_t index = x + y * _nFFTx;
             _sVals_split[index][0] = 0;
@@ -325,52 +310,7 @@ void CLSimulator::f_I_FFT_fftw( const Receptor rec )
         }
     }
 
-    //if(stop)
-    //{
-    //    stop = true;
-
-    //    std::cout << "sVals" << std::endl;
-    //    for(size_t x = 0; x < _nFFTx; ++x) {
-    //        for(size_t y = 0; y < _nFFTy; ++y) {
-    //            std::cout << _sVals_split[x + y * _nFFTx][0] << "\t"; 
-    //        }
-    //        std::cout << std::endl;
-    //    }
-
-    //    getchar();
-    //}
-
     fftwf_execute(_p_sVals_fftw);
-
-    //if(stop && rec == AMPA)
-    //{
-    //    stop = true;
-
-    //    std::cout << "sVals_f" << std::endl;
-    //    for(size_t x = 0; x < _nFFTx; ++x) {
-    //        for(size_t y = 0; y < _nFFTy; ++y) {
-    //            std::cout << _sVals_f_split[x + y * _nFFTx][0] << "\t"; 
-    //        }
-    //        std::cout << std::endl;
-    //    }
-
-    //    getchar();
-    //}
-
-    //if(stop && rec == AMPA)
-    //{
-    //    stop = true;
-
-    //    std::cout << "distances_f" << std::endl;
-    //    for(size_t x = 0; x < _nFFTx; ++x) {
-    //        for(size_t y = 0; y < _nFFTy; ++y) {
-    //            std::cout << _distances_f_split[x + y * _nFFTx][0] << "\t"; 
-    //        }
-    //        std::cout << std::endl;
-    //    }
-
-    //    getchar();
-    //}
 
     // convolution in frequency domain
     for (size_t i = 0; i < _nFFT; ++i)
@@ -381,45 +321,17 @@ void CLSimulator::f_I_FFT_fftw( const Receptor rec )
                                       + _distances_f_split[i][1] * _sVals_f_split[i][0]) * _scaleFFT;
     }
 
-    //if(stop && rec == AMPA)
-    //{
-    //    stop = true;
-
-    //    std::cout << "convolution_f" << std::endl;
-    //    for(size_t x = 0; x < _nFFTx; ++x) {
-    //        for(size_t y = 0; y < _nFFTy; ++y) {
-    //            std::cout << _convolution_f_split[x + y * _nFFTx][0] << "\t"; 
-    //        }
-    //        std::cout << std::endl;
-    //    }
-
-    //    getchar();
-    //}
-
     fftwf_execute(_p_inv_fftw);
 
-    //if(stop && rec == AMPA)
-    //{
-    //    stop = true;
-
-    //    std::cout << "convolution" << std::endl;
-    //    for(size_t x = 0; x < _nFFTx; ++x) {
-    //        for(size_t y = 0; y < _nFFTy; ++y) {
-    //            std::cout << _convolution_split[x + y * _nFFTx][0] << "\t"; 
-    //        }
-    //        std::cout << std::endl;
-    //    }
-
-    //    getchar();
-    //}
-
-    for(size_t x_conv = _nX - 1, x_fp = 0; x_conv < _nFFTx - 1; ++x_conv, ++x_fp)
+    for (size_t x_conv = _nX - 1, x_fp = 0; x_conv < _nFFTx - 1; ++x_conv, ++x_fp)
     {
         size_t t_nFFTy = _nFFTy > 1 ? _nFFTy - 1 : 1;
-        for(size_t y_conv = _nY - 1, y_fp = 0; y_conv < t_nFFTy; ++y_conv, ++y_fp)
+
+        for (size_t y_conv = _nY - 1, y_fp = 0; y_conv < t_nFFTy; ++y_conv, ++y_fp)
         {
             size_t index_conv = x_conv + y_conv * _nFFTx;
             size_t index_fp = x_fp + y_fp * _nX;
+
             if (rec == AMPA)
             {
                 _sumFootprintAMPA[index_fp] = _convolution_split[index_conv][0];
@@ -432,31 +344,9 @@ void CLSimulator::f_I_FFT_fftw( const Receptor rec )
             }
         }
     }
-
-    //if(stop && rec == AMPA)
-    //{
-    //    std::cout << std::endl << std::endl;
-
-    //    for(size_t i = 0; i < _numNeurons; ++i)
-    //    {
-    //        std::cout << _sumFootprintAMPA[i] << std::endl;
-
-    //    }
-
-    //    std::cout << std::endl << std::endl;
-
-    //    for(size_t x = 0; x < _nX; ++x) {
-    //        for(size_t y = 0; y < _nY; ++y) {
-    //            std::cout << _sumFootprintAMPA[x + y * _nX] << "\t"; 
-    //        }
-    //        std::cout << std::endl;
-    //    }
-
-    //    getchar();
-    //}
 }
 
-void CLSimulator::f_I_FFT_clFFT( const Receptor rec )
+void CLSimulator::f_I_FFT_clFFT(const Receptor rec)
 {
     // initialize sVals_real for FFT
     switch (rec)
@@ -552,6 +442,7 @@ std::vector<__int64> CLSimulator::getTimesClFFT() const
 void CLSimulator::convolutionFFTW()
 {
     boost::chrono::high_resolution_clock::time_point startTime;
+
     if (_measure)
     {
         startTime = boost::chrono::high_resolution_clock::now();
@@ -572,7 +463,7 @@ void CLSimulator::convolutionFFTW()
 
     if (_measure)
     {
-        auto const& endTime = 
+        auto const& endTime =
             boost::chrono::duration_cast<boost::chrono::microseconds>(
                 boost::chrono::high_resolution_clock::now() - startTime);
         _timesFFTW.push_back(endTime.count());
@@ -593,7 +484,7 @@ void CLSimulator::convolutionClFFT()
 
     if (_measure)
     {
-        auto const& endTime = 
+        auto const& endTime =
             boost::chrono::duration_cast<boost::chrono::microseconds>(
                 boost::chrono::high_resolution_clock::now() - startTime);
         _timesClFFT.push_back(endTime.count());
@@ -621,7 +512,7 @@ void CLSimulator::executeKernels()
 
     if (_measure)
     {
-        auto const& endTime = 
+        auto const& endTime =
             boost::chrono::duration_cast<boost::chrono::microseconds>(
                 boost::chrono::high_resolution_clock::now() - startTime);
         _timesCalculations.push_back(endTime.count());
@@ -651,9 +542,10 @@ void CLSimulator::initializeFFTW()
     _sVals_f_split = (fftwf_complex *)fftwf_malloc(_nFFT * sizeof(fftwf_complex));
     _convolution_f_split = (fftwf_complex *)fftwf_malloc(_nFFT * sizeof(fftwf_complex));
 
-    assert(_nX >= 1 && _nY >= 1 && _nZ >=1);
+    assert(_nX >= 1 && _nY >= 1 && _nZ >= 1);
     assert((_nX >= _nY) && (_nY >= _nZ));
-    if(_nY == 1)
+
+    if (_nY == 1)
     {
         _p_distances_fftw = fftwf_plan_dft_1d(_nFFT, _distances_split, _distances_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
         _p_sVals_fftw = fftwf_plan_dft_1d(_nFFT, _sVals_split, _sVals_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
@@ -663,7 +555,7 @@ void CLSimulator::initializeFFTW()
         _p_distances_fftw = fftwf_plan_dft_2d(_nFFTx, _nFFTy, _distances_split, _distances_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
         _p_sVals_fftw = fftwf_plan_dft_2d(_nFFTx, _nFFTy, _sVals_split, _sVals_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
         _p_inv_fftw = fftwf_plan_dft_2d(_nFFTx, _nFFTy, _convolution_f_split, _convolution_split, FFTW_BACKWARD, FFTW_ESTIMATE);
-    } else 
+    } else
     {
         _p_distances_fftw = fftwf_plan_dft_3d(_nFFTx, _nFFTy, _nFFTz, _distances_split, _distances_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
         _p_sVals_fftw = fftwf_plan_dft_3d(_nFFTx, _nFFTy, _nFFTz, _sVals_split, _sVals_f_split, FFTW_FORWARD, FFTW_ESTIMATE);
@@ -676,45 +568,45 @@ void CLSimulator::initializeFFTW()
         _sVals_split[i][1] = 0;
     }
 
-    for(size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
-        for(size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
+    for (size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
+        for (size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
             float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
             _distances_split[x_idx + y_idx * _nFFTx][0] = _f_w_EE((float(distance)));
             _distances_split[x_idx + y_idx * _nFFTx][1] = 0;
         }
     }
 
-    for(size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
-        for(size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
+    for (size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
+        for (size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
             float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
             _distances_split[x_idx + y_idx * _nFFTx][0] = _f_w_EE((float(distance)));
             _distances_split[x_idx + y_idx * _nFFTx][1] = 0;
         }
     }
 
-    if(_nY > 1)
+    if (_nY > 1)
     {
-        for(size_t x_idx = 0; x_idx < _nFFTx; ++x_idx) {
+        for (size_t x_idx = 0; x_idx < _nFFTx; ++x_idx) {
             _distances_split[x_idx + (_nFFTy - 1) * _nFFTx][0] = 0;
             _distances_split[x_idx + (_nFFTy - 1) * _nFFTx][1] = 0;
         }
     }
 
-    for(size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
-        for(size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
+    for (size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
+        for (size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
             float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
             _distances_split[x_idx + y_idx * _nFFTx][0] = _f_w_EE((float(distance)));
             _distances_split[x_idx + y_idx * _nFFTx][1] = 0;
         }
     }
 
-    for(size_t y_idx = 0; y_idx < _nFFTy; ++y_idx) {
+    for (size_t y_idx = 0; y_idx < _nFFTy; ++y_idx) {
         _distances_split[(_nFFTx - 1) + y_idx * _nFFTx][0] = 0;
         _distances_split[(_nFFTx - 1) + y_idx * _nFFTx][1] = 0;
     }
 
-    for(size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
-        for(size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
+    for (size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
+        for (size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
             float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
             _distances_split[x_idx + y_idx * _nFFTx][0] = _f_w_EE((float(distance)));
             _distances_split[x_idx + y_idx * _nFFTx][1] = 0;
@@ -734,7 +626,6 @@ void CLSimulator::initializeHostVariables(state const& state_0)
     _sumFootprintNMDA = std::unique_ptr<float[]>(new float[_numNeurons]);
     _sumFootprintGABAA = std::unique_ptr<float[]>(new float[_numNeurons]);
 
-    //TODO: move to initializeClFFT
     _distances_real = std::unique_ptr<float[]>(new float[_nFFT]);
     _sVals_real = std::unique_ptr<float[]>(new float[_nFFT]);
     _convolution_real = std::unique_ptr<float[]>(new float[_nFFT]);
@@ -750,7 +641,7 @@ void CLSimulator::initializeHostVariables(state const& state_0)
         _sumFootprintGABAA[i] = 0;
     }
 
-    for(size_t i = 0; i < _nFFT; ++i)
+    for (size_t i = 0; i < _nFFT; ++i)
     {
         _zeros[i] = 0;
     }
@@ -764,128 +655,95 @@ void CLSimulator::initializeClFFT()
      * x x x x
      */
 
-    for(size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
-        for(size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
+    for (size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
+        for (size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
             float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
             _distances_real[x_idx + y_idx * _nFFTx] = _f_w_EE((float(distance)));
         }
     }
+
     /* v v x x
      * v v x x
      * x x x x
      * x x x x
      */
 
-    for(size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
-        for(size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
+    for (size_t x_idx = 0, x_val = _nX - 1; x_idx < _nX; ++x_idx, --x_val) {
+        for (size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
             float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
             _distances_real[x_idx + y_idx * _nFFTx] = _f_w_EE((float(distance)));
         }
     }
+
     /* v v v x
      * v v v x
      * x x x x
      * x x x x
      */
 
-    if(_nY > 1)
+    if (_nY > 1)
     {
-        for(size_t x_idx = 0; x_idx < _nFFTx; ++x_idx) {
+        for (size_t x_idx = 0; x_idx < _nFFTx; ++x_idx) {
             _distances_real[x_idx + (_nFFTy - 1) * _nFFTx] = 0;
         }
     }
+
     /* v v v 0
      * v v v 0
      * x x x 0
      * x x x 0
      */
 
-    for(size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
-        for(size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
+    for (size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
+        for (size_t y_idx = 0, y_val = _nY - 1; y_idx < _nY; ++y_idx, --y_val) {
             float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
             _distances_real[x_idx + y_idx * _nFFTx] = _f_w_EE((float(distance)));
         }
     }
+
     /* v v v 0
      * v v v 0
      * v v x 0
      * x x x 0
      */
 
-    for(size_t y_idx = 0; y_idx < _nFFTy; ++y_idx) {
+    for (size_t y_idx = 0; y_idx < _nFFTy; ++y_idx) {
         _distances_real[(_nFFTx - 1) + y_idx * _nFFTx] = 0;
     }
+
     /* v v v 0
      * v v v 0
      * v v x 0
      * 0 0 0 0
      */
 
-    for(size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
-        for(size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
+    for (size_t x_idx = _nX, x_val = 1; x_idx < _nFFTx - 1; ++x_idx, ++x_val) {
+        for (size_t y_idx = _nY, y_val = 1; y_idx < _nFFTy - 1; ++y_idx, ++y_val) {
             float distance = sqrt(pow(float(x_val), 2.0f) + pow(float(y_val), 2.0f));
             _distances_real[x_idx + y_idx * _nFFTx] = _f_w_EE((float(distance)));
         }
     }
+
     /* v v v 0
      * v v v 0
      * v v v 0
      * 0 0 0 0
      */
 
-    //for(size_t x = 0; x < _nFFTx; ++x) {
-    //    for(size_t y = 0; y < _nFFTy; ++y) {
-    //        std::cout << _distances_real[x + y * _nFFTx] << "\t"; 
-    //    }
-    //    std::cout << std::endl;
-    //}
-
-    //getchar();
-
-    //// initialize distances
-    //unsigned int j = 0;
-
-    //for (unsigned int i = _numNeurons - 1; i > 0; --i)
-    //{
-    //    _distances_real[j] = _f_w_EE(float(i));
-    //    ++j;
-    //}
-
-    //for (unsigned int i = 0; i < _numNeurons; ++i)
-    //{
-    //    _distances_real[j] = _f_w_EE(float(i));
-    //    ++j;
-    //}
-
-    //_distances_real[j] = 0;
-
-    //for (unsigned int i = 0; i < _nFFT; ++i)
-    //{
-    //    _zeros[i] = 0;
-    //}
-
-    //for(size_t x = 0; x < _nFFTx; ++x) {
-    //    for(size_t y = 0; y < _nFFTy; ++y) {
-    //        std::cout << _distances_real[x + y * _nFFTx] << "\t"; 
-    //    }
-    //    std::cout << std::endl;
-    //}
-
-    //getchar();
-
     assert(isPowerOfTwo(_nFFT));
-    assert(_nX >= 1 && _nY >= 1 && _nZ >=1);
+    assert(_nX >= 1 && _nY >= 1 && _nZ >= 1);
     assert((_nX >= _nY) && (_nY >= _nZ));
     clFFT_Dim3 n = { _nFFTx, _nFFTy, _nFFTz };
     clFFT_DataFormat dataFormat = clFFT_SplitComplexFormat;
     clFFT_Dimension dim;
-    if(_nY == 1)
+
+    if (_nY == 1)
     {
         dim = clFFT_1D;
     } else if (_nZ == 1)
     {
         dim = clFFT_2D;
-    } else 
+    } else
     {
         dim = clFFT_3D;
     }
@@ -1001,15 +859,15 @@ void CLSimulator::assertInitializationResults()
 void CLSimulator::initializeCLKernelsAndBuffers()
 {
     _states_cl.emplace_back(cl::Buffer(_wrapper.getContext(),
-                            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                            _numNeurons * sizeof(state),
-                            _states[0].get(),
-                            &_err));
+                                       CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                       _numNeurons * sizeof(state),
+                                       _states[0].get(),
+                                       &_err));
     _states_cl.emplace_back(cl::Buffer(_wrapper.getContext(),
-                            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                            _numNeurons * sizeof(state),
-                            _states[1].get(),
-                            &_err));
+                                       CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                       _numNeurons * sizeof(state),
+                                       _states[1].get(),
+                                       &_err));
     _sumFootprintAMPA_cl = cl::Buffer(_wrapper.getContext(),
                                       CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                       _numNeurons * sizeof(float),
@@ -1116,12 +974,12 @@ CLSimulator::~CLSimulator()
     }
 }
 
-state const* CLSimulator::getCurrentStatesOld() const
+state const * CLSimulator::getCurrentStatesOld() const
 {
     return &_states[_ind_old][0];
 }
 
-state const* CLSimulator::getCurrentStatesNew() const
+state const * CLSimulator::getCurrentStatesNew() const
 {
     return &_states[_ind_new][0];
 }

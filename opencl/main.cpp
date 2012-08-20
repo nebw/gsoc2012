@@ -1,30 +1,30 @@
-/** 
+/**
  * Copyright (C) 2012 Benjamin Wild
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
 
 #include "stdafx.h"
 
-#include "Definitions.h"
 #include "CLSimulator.h"
 #include "CPUSimulator.h"
+#include "Definitions.h"
 #include "util.h"
 
 #include "cpplog/cpplog.hpp"
@@ -32,10 +32,10 @@
 
 #include <numeric>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 namespace po = boost::program_options;
 
@@ -50,7 +50,7 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
 
     std::string vendor, name;
 
-    for(int i = start; i < powers; ++i)
+    for (int i = start; i < powers; ++i)
     {
         auto neurons = static_cast<const size_t>(pow(2.f, i));
         numNeurons.push_back(neurons);
@@ -92,36 +92,37 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
 
         avgTimesCalculationsCL.push_back(
             std::accumulate(
-                timesCalculationsCL.begin(), 
-                timesCalculationsCL.end(), 0.0) 
+                timesCalculationsCL.begin(),
+                timesCalculationsCL.end(), 0.0)
             / timesCalculationsCL.size());
 
         avgTimesFFTW.push_back(
             std::accumulate(
-            timesFFTW.begin(), 
-            timesFFTW.end(), 0.0) 
+                timesFFTW.begin(),
+                timesFFTW.end(), 0.0)
             / timesFFTW.size());
 
         avgTimesClFFT.push_back(
             std::accumulate(
-            timesClFFT.begin(), 
-            timesClFFT.end(), 0.0) 
+                timesClFFT.begin(),
+                timesClFFT.end(), 0.0)
             / timesClFFT.size());
 
         avgTimesCalculationsCPU.push_back(
             std::accumulate(
-                timesCalculationsCPU.begin(), 
-                timesCalculationsCPU.end(), 0.0) 
+                timesCalculationsCPU.begin(),
+                timesCalculationsCPU.end(), 0.0)
             / timesCalculationsCPU.size());
 
         avgTimesConvolutionsCPU.push_back(
             std::accumulate(
-                timesConvolutionsCPU.begin(), 
-                timesConvolutionsCPU.end(), 0.0) 
+                timesConvolutionsCPU.begin(),
+                timesConvolutionsCPU.end(), 0.0)
             / timesConvolutionsCPU.size());
     }
 
     std::cout << std::endl << "Results" << std::endl << "=======" << std::endl;
+
     for (int i = 0; i < powers - start; ++i)
     {
         std::cout << static_cast<const size_t>(pow(2.f, (int)(i + start))) << "\t" << avgTimesCalculationsCL[i] << "\t" << avgTimesFFTW[i] << "\t" << avgTimesClFFT[i] << std::endl;
@@ -147,9 +148,9 @@ int finish(const int rc)
 {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
     _CrtDumpMemoryLeaks();
-#endif
+#endif // if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)
 
-    return(rc);
+    return rc;
 }
 
 int main(int ac, char **av)
@@ -159,6 +160,7 @@ int main(int ac, char **av)
     std::string plotStr, measureStr, fftwStr, clfftStr, perfplot;
 
     po::options_description desc("Allowed options");
+
     desc.add_options()
         ("help", "produce help message")
         ("V", po::value<float>(&V0)->default_value(-70.0), "initial value for membrane potential")
@@ -189,15 +191,14 @@ int main(int ac, char **av)
         std::cout << desc << std::endl;
         return finish(1);
     }
-
-    po::notify(vm);    
+    po::notify(vm);
 
     if (vm.count("help")) {
         std::cout << desc << std::endl;
         return finish(1);
     }
 
-    if(stringToBool(clfftStr) && !isPowerOfTwo(nX * nY * nZ))
+    if (stringToBool(clfftStr) && !isPowerOfTwo(nX * nY * nZ))
     {
         std::cout << "Error: numNeurons (nX * nY * nZ) must be radix 2" << std::endl;
         return finish(1);
@@ -224,10 +225,11 @@ int main(int ac, char **av)
     } else
     {
         CLSimulator::Plot plot;
-        if(boost::iequals(plotStr, "gnuplot"))
+
+        if (boost::iequals(plotStr, "gnuplot"))
         {
             plot = CLSimulator::PLOT_GNUPLOT;
-        } else if(boost::iequals(plotStr, "opengl"))
+        } else if (boost::iequals(plotStr, "opengl"))
         {
             plot = CLSimulator::PLOT_OPENGL;
         } else

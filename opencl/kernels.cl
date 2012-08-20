@@ -101,7 +101,7 @@ inline float _f_f_NMDA(const float V)
 {
     const float theta_NMDA = 0;
 
-    // TODO: theta_NMDA = -inf for [Mg2+]_0 = 0
+    // theta_NMDA = -inf for [Mg2+]_0 = 0
     // and increases logarithmically with [Mg2+]_0
     const float sigma_NMDA = 10;
 

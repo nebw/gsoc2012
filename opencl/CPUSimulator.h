@@ -1,21 +1,21 @@
-/** 
+/**
  * Copyright (C) 2012 Benjamin Wild
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
@@ -51,8 +51,8 @@ public:
     std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const override;
     std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const override;
 
-    void setCurrentStatesOld(state const* states);
-    void setCurrentStatesNew(state const* states);
+    void setCurrentStatesOld(state const *states);
+    void setCurrentStatesNew(state const *states);
     void setCurrentSumFootprintAMPA(std::unique_ptr<float[]> const& sumFootprintAMPA);
     void setCurrentSumFootprintNMDA(std::unique_ptr<float[]> const& sumFootprintNMDA);
     void setCurrentSumFootprintGABAA(std::unique_ptr<float[]> const& sumFootprintGABAA);
@@ -61,6 +61,7 @@ public:
     std::vector<__int64> getTimesConvolutions() const;
 
 private:
+
     std::unique_ptr<state[]> _states;
     std::unique_ptr<float[]> _sumFootprintAMPA;
     std::unique_ptr<float[]> _sumFootprintNMDA;
@@ -79,12 +80,12 @@ private:
     const size_t _numNeurons;
     const size_t _timesteps;
 
-    size_t _t;    
-    const Convolution _convolution;    
+    size_t _t;
+    const Convolution _convolution;
 
     size_t _ind_old;
     size_t _ind_new;
-    
+
     float _f_w_EE(const float d);
 
     float f_I_Na_m_inf(const float V);
