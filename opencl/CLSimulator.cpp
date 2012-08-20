@@ -79,10 +79,10 @@ CLSimulator::CLSimulator(const size_t nX,
 
     switch (plot)
     {
-    case NO_PLOT:
+    case NO_PLOT :
         break;
 
-    case PLOT_GNUPLOT:
+    case PLOT_GNUPLOT :
         _plotter = std::unique_ptr<BasePlotter>(new GnuPlotPlotter(_nX, _nY, _nZ, 0, dt));
         break;
 
@@ -733,8 +733,8 @@ void CLSimulator::initializeClFFT()
     assert(isPowerOfTwo(_nFFT));
     assert(_nX >= 1 && _nY >= 1 && _nZ >= 1);
     assert((_nX >= _nY) && (_nY >= _nZ));
-    clFFT_Dim3 n = { static_cast<unsigned int>(_nFFTx), 
-                     static_cast<unsigned int>(_nFFTy), 
+    clFFT_Dim3 n = { static_cast<unsigned int>(_nFFTx),
+                     static_cast<unsigned int>(_nFFTy),
                      static_cast<unsigned int>(_nFFTz) };
     clFFT_DataFormat dataFormat = clFFT_SplitComplexFormat;
     clFFT_Dimension dim;
@@ -1005,3 +1005,4 @@ CLWrapper CLSimulator::getClWrapper() const
 {
     return _wrapper;
 }
+

@@ -284,13 +284,13 @@ TEST(BasicSimTests, CPUSimInitializationTest)
     state0.I_app = 1.0f;
 
     ASSERT_NO_THROW(
-        CPUSimulator cpuSim (256,
-                             1,
-                             1,
-                             500,
-                             0.1f,
-                             state0,
-                             CPUSimulator::CONVOLUTION)
+        CPUSimulator cpuSim(256,
+                            1,
+                            1,
+                            500,
+                            0.1f,
+                            state0,
+                            CPUSimulator::CONVOLUTION)
         );
 }
 
@@ -308,13 +308,13 @@ TEST(BasicSimTests, CPUSimSimulationReturnsTest)
     state0.s_GABAA = 0.0f;
     state0.I_app = 1.0f;
 
-    CPUSimulator cpuSim (64,
-                         1,
-                         1,
-                         500,
-                         0.1f,
-                         state0,
-                         CPUSimulator::CONVOLUTION);
+    CPUSimulator cpuSim(64,
+                        1,
+                        1,
+                        500,
+                        0.1f,
+                        state0,
+                        CPUSimulator::CONVOLUTION);
 
     ASSERT_NO_THROW(cpuSim.simulate());
 }
@@ -352,7 +352,7 @@ TEST(BasicSimTests, CLSimInitializationTest)
                     BaseSimulator::NO_CLFFT,
                     path,
                     logger)
-   );
+        );
 }
 
 TEST(BasicSimTests, CLSimSimulationRungeKuttaOnlyReturnsTest)
@@ -375,18 +375,18 @@ TEST(BasicSimTests, CLSimSimulationRungeKuttaOnlyReturnsTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (256,
-                       1,
-                       1,
-                       500,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::NO_FFTW,
-                       BaseSimulator::NO_CLFFT,
-                       path,
-                       logger);
+    CLSimulator clSim(256,
+                      1,
+                      1,
+                      500,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::NO_FFTW,
+                      BaseSimulator::NO_CLFFT,
+                      path,
+                      logger);
 
     ASSERT_NO_THROW(clSim.simulate());
 }
@@ -411,18 +411,18 @@ TEST(BasicSimTests, CLSimSimulationWithFFTWReturnsTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (256,
-                       1,
-                       1,
-                       500,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::FFTW,
-                       BaseSimulator::NO_CLFFT,
-                       path,
-                       logger);
+    CLSimulator clSim(256,
+                      1,
+                      1,
+                      500,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::FFTW,
+                      BaseSimulator::NO_CLFFT,
+                      path,
+                      logger);
 
     ASSERT_NO_THROW(clSim.simulate());
 }
@@ -447,18 +447,18 @@ TEST(BasicSimTests, CLSimSimulationWithClFFTWReturnsTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (4,
-                       1,
-                       1,
-                       500,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::NO_FFTW,
-                       BaseSimulator::CLFFT,
-                       path,
-                       logger);
+    CLSimulator clSim(4,
+                      1,
+                      1,
+                      500,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::NO_FFTW,
+                      BaseSimulator::CLFFT,
+                      path,
+                      logger);
 
     ASSERT_NO_THROW(clSim.simulate());
 }
@@ -487,18 +487,18 @@ TEST(BasicSimTests, CLSimSimulationFFTWClFFTW1DAssertionsReturnsTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (nX,
-                       nY,
-                       nZ,
-                       500,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::FFTW,
-                       BaseSimulator::CLFFT,
-                       path,
-                       logger);
+    CLSimulator clSim(nX,
+                      nY,
+                      nZ,
+                      500,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::FFTW,
+                      BaseSimulator::CLFFT,
+                      path,
+                      logger);
 
     ASSERT_NO_THROW(clSim.simulate());
 }
@@ -527,18 +527,18 @@ TEST(BasicSimTests, CLSimSimulationFFTWClFFTW2DAssertionsReturnsTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (nX,
-                       nY,
-                       nZ,
-                       500,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::FFTW,
-                       BaseSimulator::CLFFT,
-                       path,
-                       logger);
+    CLSimulator clSim(nX,
+                      nY,
+                      nZ,
+                      500,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::FFTW,
+                      BaseSimulator::CLFFT,
+                      path,
+                      logger);
 
     ASSERT_NO_THROW(clSim.simulate());
 }
@@ -560,13 +560,13 @@ TEST(SimResultTests, RungeKuttaApproximationRelErrorTest)
     state0.s_GABAA = 0.0f;
     state0.I_app = 1.0f;
 
-    CPUSimulator cpuSim (numNeurons,
-                         1,
-                         1,
-                         timesteps,
-                         0.1f,
-                         state0,
-                         CPUSimulator::NO_CONVOLUTION);
+    CPUSimulator cpuSim(numNeurons,
+                        1,
+                        1,
+                        timesteps,
+                        0.1f,
+                        state0,
+                        CPUSimulator::NO_CONVOLUTION);
 
     auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
@@ -574,19 +574,19 @@ TEST(SimResultTests, RungeKuttaApproximationRelErrorTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (numNeurons,
-                       1,
-                       1,
-                       timesteps,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::NO_FFTW,
-                       BaseSimulator::NO_CLFFT,
-                       path,
-                       logger,
-                       true);
+    CLSimulator clSim(numNeurons,
+                      1,
+                      1,
+                      timesteps,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::NO_FFTW,
+                      BaseSimulator::NO_CLFFT,
+                      path,
+                      logger,
+                      true);
 
     size_t t;
 
@@ -638,13 +638,13 @@ TEST(SimResultTests, RungeKuttaApproximationAbsErrorTest)
     state0.s_GABAA = 0.0f;
     state0.I_app = 1.0f;
 
-    CPUSimulator cpuSim (numNeurons,
-                         1,
-                         1,
-                         timesteps,
-                         0.1f,
-                         state0,
-                         CPUSimulator::NO_CONVOLUTION);
+    CPUSimulator cpuSim(numNeurons,
+                        1,
+                        1,
+                        timesteps,
+                        0.1f,
+                        state0,
+                        CPUSimulator::NO_CONVOLUTION);
 
     auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
@@ -652,19 +652,19 @@ TEST(SimResultTests, RungeKuttaApproximationAbsErrorTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (numNeurons,
-                       1,
-                       1,
-                       timesteps,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::NO_FFTW,
-                       BaseSimulator::NO_CLFFT,
-                       path,
-                       logger,
-                       true);
+    CLSimulator clSim(numNeurons,
+                      1,
+                      1,
+                      timesteps,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::NO_FFTW,
+                      BaseSimulator::NO_CLFFT,
+                      path,
+                      logger,
+                      true);
 
     size_t t;
 
@@ -711,13 +711,13 @@ TEST(SimResultTests, FFTWConvolution1DRelErrorTest)
     state0.s_GABAA = 0.0f;
     state0.I_app = 1.0f;
 
-    CPUSimulator cpuSim (numNeurons,
-                         1,
-                         1,
-                         timesteps,
-                         0.1f,
-                         state0,
-                         CPUSimulator::CONVOLUTION);
+    CPUSimulator cpuSim(numNeurons,
+                        1,
+                        1,
+                        timesteps,
+                        0.1f,
+                        state0,
+                        CPUSimulator::CONVOLUTION);
 
     auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
@@ -725,19 +725,19 @@ TEST(SimResultTests, FFTWConvolution1DRelErrorTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (numNeurons,
-                       1,
-                       1,
-                       timesteps,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::FFTW,
-                       BaseSimulator::NO_CLFFT,
-                       path,
-                       logger,
-                       true);
+    CLSimulator clSim(numNeurons,
+                      1,
+                      1,
+                      timesteps,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::FFTW,
+                      BaseSimulator::NO_CLFFT,
+                      path,
+                      logger,
+                      true);
 
     size_t t;
 
@@ -800,13 +800,13 @@ TEST(SimResultTests, FFTWConvolution2DRelErrorTest)
     state0.s_GABAA = 0.0f;
     state0.I_app = 1.0f;
 
-    CPUSimulator cpuSim (nX,
-                         nY,
-                         nZ,
-                         timesteps,
-                         0.1f,
-                         state0,
-                         CPUSimulator::CONVOLUTION);
+    CPUSimulator cpuSim(nX,
+                        nY,
+                        nZ,
+                        timesteps,
+                        0.1f,
+                        state0,
+                        CPUSimulator::CONVOLUTION);
 
     auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
@@ -814,19 +814,19 @@ TEST(SimResultTests, FFTWConvolution2DRelErrorTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (nX,
-                       nY,
-                       nZ,
-                       timesteps,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::FFTW,
-                       BaseSimulator::NO_CLFFT,
-                       path,
-                       logger,
-                       true);
+    CLSimulator clSim(nX,
+                      nY,
+                      nZ,
+                      timesteps,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::FFTW,
+                      BaseSimulator::NO_CLFFT,
+                      path,
+                      logger,
+                      true);
 
     size_t t;
 
@@ -889,13 +889,13 @@ TEST(SimResultTests, ClFFTConvolution1DRelErrorTest)
     state0.s_GABAA = 0.0f;
     state0.I_app = 1.0f;
 
-    CPUSimulator cpuSim (nX,
-                         nY,
-                         nZ,
-                         timesteps,
-                         0.1f,
-                         state0,
-                         CPUSimulator::CONVOLUTION);
+    CPUSimulator cpuSim(nX,
+                        nY,
+                        nZ,
+                        timesteps,
+                        0.1f,
+                        state0,
+                        CPUSimulator::CONVOLUTION);
 
     auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
@@ -903,19 +903,19 @@ TEST(SimResultTests, ClFFTConvolution1DRelErrorTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (nX,
-                       nY,
-                       nZ,
-                       timesteps,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::NO_FFTW,
-                       BaseSimulator::CLFFT,
-                       path,
-                       logger,
-                       true);
+    CLSimulator clSim(nX,
+                      nY,
+                      nZ,
+                      timesteps,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::NO_FFTW,
+                      BaseSimulator::CLFFT,
+                      path,
+                      logger,
+                      true);
 
     size_t t;
 
@@ -978,13 +978,13 @@ TEST(SimResultTests, ClFFTConvolution2DRelErrorTest)
     state0.s_GABAA = 0.0f;
     state0.I_app = 1.0f;
 
-    CPUSimulator cpuSim (nX,
-                         nY,
-                         nZ,
-                         timesteps,
-                         0.1f,
-                         state0,
-                         CPUSimulator::CONVOLUTION);
+    CPUSimulator cpuSim(nX,
+                        nY,
+                        nZ,
+                        timesteps,
+                        0.1f,
+                        state0,
+                        CPUSimulator::CONVOLUTION);
 
     auto path = boost::filesystem::path(CL_SOURCE_DIR);
     path /= "/kernels.cl";
@@ -992,19 +992,19 @@ TEST(SimResultTests, ClFFTConvolution2DRelErrorTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    CLSimulator clSim (nX,
-                       nY,
-                       nZ,
-                       timesteps,
-                       0.1f,
-                       state0,
-                       BaseSimulator::NO_PLOT,
-                       BaseSimulator::NO_MEASURE,
-                       BaseSimulator::NO_FFTW,
-                       BaseSimulator::CLFFT,
-                       path,
-                       logger,
-                       true);
+    CLSimulator clSim(nX,
+                      nY,
+                      nZ,
+                      timesteps,
+                      0.1f,
+                      state0,
+                      BaseSimulator::NO_PLOT,
+                      BaseSimulator::NO_MEASURE,
+                      BaseSimulator::NO_FFTW,
+                      BaseSimulator::CLFFT,
+                      path,
+                      logger,
+                      true);
 
     size_t t;
 

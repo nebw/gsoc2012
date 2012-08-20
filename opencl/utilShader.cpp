@@ -120,3 +120,4 @@ GLuint create_shader(const char *filename, GLenum type)
 
     return res;
 }
+

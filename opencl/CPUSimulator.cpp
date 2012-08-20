@@ -600,3 +600,4 @@ void CPUSimulator::convolutionGABAA()
         }
     }
 }
+
