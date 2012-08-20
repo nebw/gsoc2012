@@ -633,12 +633,12 @@ void CLSimulator::assertConvolutionResults()
     std::unique_ptr<float[]> sumFootprintAMPA_tmp(std::unique_ptr<float[]>(new float[_numNeurons]));
     _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), sumFootprintAMPA_tmp.get(), NULL, NULL);
     std::unique_ptr<float[]> sumFootprintNMDA_tmp(std::unique_ptr<float[]>(new float[_numNeurons]));
-    _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintNMDA_cl, CL_TRUE, 0, _numNeurons * sizeof(float), sumFootprintNMDA_tmp.get(), NULL, NULL);
+    _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintNMDA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), sumFootprintNMDA_tmp.get(), NULL, NULL);
 
     for (size_t i = 0; i < _numNeurons; ++i)
     {
-        assertNear(_sumFootprintAMPA[i], sumFootprintAMPA_tmp[i], 0.05);
-        assertNear(_sumFootprintNMDA[i], sumFootprintNMDA_tmp[i], 0.05);
+        assertNear(_sumFootprintAMPA[i], sumFootprintAMPA_tmp[i], 0.00001);
+        assertNear(_sumFootprintNMDA[i], sumFootprintNMDA_tmp[i], 0.00001);
     }
 }
 
@@ -748,6 +748,11 @@ void CLSimulator::initializeHostVariables(state const& state_0)
         _sumFootprintAMPA[i] = 0;
         _sumFootprintNMDA[i] = 0;
         _sumFootprintGABAA[i] = 0;
+    }
+
+    for(size_t i = 0; i < _nFFT; ++i)
+    {
+        _zeros[i] = 0;
     }
 }
 
@@ -1042,27 +1047,42 @@ void CLSimulator::initializeCLKernelsAndBuffers()
     // set constant kernel arguments
     _kernel_prepareFFT_AMPA = cl::Kernel(_program, "prepareFFT_AMPA", &_err);
     handleClError(_kernel_prepareFFT_AMPA.setArg(1, _sVals_real_cl));
+    handleClError(_kernel_prepareFFT_AMPA.setArg(2, _nX));
+    handleClError(_kernel_prepareFFT_AMPA.setArg(3, _nY));
+    handleClError(_kernel_prepareFFT_AMPA.setArg(4, _nZ));
 
     _kernel_prepareFFT_NMDA = cl::Kernel(_program, "prepareFFT_NMDA", &_err);
     handleClError(_kernel_prepareFFT_NMDA.setArg(1, _sVals_real_cl));
+    handleClError(_kernel_prepareFFT_NMDA.setArg(2, _nX));
+    handleClError(_kernel_prepareFFT_NMDA.setArg(3, _nY));
+    handleClError(_kernel_prepareFFT_NMDA.setArg(4, _nZ));
 
     _kernel_prepareFFT_GABAA = cl::Kernel(_program, "prepareFFT_GABAA", &_err);
     handleClError(_kernel_prepareFFT_GABAA.setArg(1, _sVals_real_cl));
+    handleClError(_kernel_prepareFFT_GABAA.setArg(2, _nX));
+    handleClError(_kernel_prepareFFT_GABAA.setArg(3, _nY));
+    handleClError(_kernel_prepareFFT_GABAA.setArg(4, _nZ));
 
     _kernel_postConvolution_AMPA = cl::Kernel(_program, "postConvolution_AMPA", &_err);
     handleClError(_kernel_postConvolution_AMPA.setArg(0, _convolution_real_cl));
     handleClError(_kernel_postConvolution_AMPA.setArg(1, _sumFootprintAMPA_cl));
-    handleClError(_kernel_postConvolution_AMPA.setArg(2, _numNeurons));
+    handleClError(_kernel_postConvolution_AMPA.setArg(2, _nX));
+    handleClError(_kernel_postConvolution_AMPA.setArg(3, _nY));
+    handleClError(_kernel_postConvolution_AMPA.setArg(4, _nZ));
 
     _kernel_postConvolution_NMDA = cl::Kernel(_program, "postConvolution_NMDA", &_err);
     handleClError(_kernel_postConvolution_NMDA.setArg(0, _convolution_real_cl));
     handleClError(_kernel_postConvolution_NMDA.setArg(1, _sumFootprintNMDA_cl));
-    handleClError(_kernel_postConvolution_NMDA.setArg(2, _numNeurons));
+    handleClError(_kernel_postConvolution_NMDA.setArg(2, _nX));
+    handleClError(_kernel_postConvolution_NMDA.setArg(3, _nY));
+    handleClError(_kernel_postConvolution_NMDA.setArg(4, _nZ));
 
     _kernel_postConvolution_GABAA = cl::Kernel(_program, "postConvolution_GABAA", &_err);
     handleClError(_kernel_postConvolution_GABAA.setArg(0, _convolution_real_cl));
     handleClError(_kernel_postConvolution_GABAA.setArg(1, _sumFootprintGABAA_cl));
-    handleClError(_kernel_postConvolution_GABAA.setArg(2, _numNeurons));
+    handleClError(_kernel_postConvolution_GABAA.setArg(2, _nX));
+    handleClError(_kernel_postConvolution_GABAA.setArg(3, _nY));
+    handleClError(_kernel_postConvolution_GABAA.setArg(4, _nZ));
 
     handleClError(_kernel_f_dV_dt.setArg(2, _sumFootprintAMPA_cl));
     handleClError(_kernel_f_dV_dt.setArg(3, _sumFootprintNMDA_cl));

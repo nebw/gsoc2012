@@ -384,51 +384,114 @@ __kernel void convolution(__global float *convolution_f_real, __global float *co
                                - distances_f_imag[idx] * sVals_f_imag[idx])
                               * scaleFFT;
     convolution_f_imag[idx] = (distances_f_real[idx] * sVals_f_imag[idx]
-                               - distances_f_imag[idx] * sVals_f_real[idx])
+                               + distances_f_imag[idx] * sVals_f_real[idx])
                               * scaleFFT;
 }
 
 __kernel void prepareFFT_AMPA(__global const struct state *states_old,
-                              __global float *sVals_real) 
+                              __global float *sVals_real,
+                              const unsigned int nX,
+                              const unsigned int nY,
+                              const unsigned int nZ) 
 {
     const unsigned int idx = get_global_id(0);
+    const unsigned int nFFTx = 2 * nX;
+    const unsigned int x_sVals = idx % nX;
+    const unsigned int y_sVals = nY > 1 ? idx / nY : 0;
+    const unsigned int index_sVals = x_sVals + y_sVals * nFFTx;
+    const unsigned int x_states = idx % nX;
+    const unsigned int y_states = idx / nX;
+    const unsigned int index_states = x_states + y_states * nX;
 
-    sVals_real[idx] = states_old[idx].s_AMPA;
+    sVals_real[index_sVals] = states_old[index_states].s_AMPA;
 }
 
-__kernel void prepareFFT_NMDA(__global const struct state *states_old, 
-                              __global float *sVals_real)
+__kernel void prepareFFT_NMDA(__global const struct state *states_old,
+                              __global float *sVals_real,
+                              const unsigned int nX,
+                              const unsigned int nY,
+                              const unsigned int nZ) 
 {
     const unsigned int idx = get_global_id(0);
+    const unsigned int nFFTx = 2 * nX;
+    const unsigned int x_sVals = idx % nX;
+    const unsigned int y_sVals = nY > 1 ? idx / nY : 0;
+    const unsigned int index_sVals = x_sVals + y_sVals * nFFTx;
+    const unsigned int x_states = idx % nX;
+    const unsigned int y_states = idx / nX;
+    const unsigned int index_states = x_states + y_states * nX;
 
-    sVals_real[idx] = states_old[idx].s_NMDA;
+    sVals_real[index_sVals] = states_old[index_states].s_NMDA;
 }
 
 __kernel void prepareFFT_GABAA(__global const struct state *states_old,
-                               __global float *sVals_real)
+                              __global float *sVals_real,
+                              const unsigned int nX,
+                              const unsigned int nY,
+                              const unsigned int nZ) 
 {
     const unsigned int idx = get_global_id(0);
+    const unsigned int nFFTx = 2 * nX;
+    const unsigned int x_sVals = idx % nX;
+    const unsigned int y_sVals = nY > 1 ? idx / nY : 0;
+    const unsigned int index_sVals = x_sVals + y_sVals * nFFTx;
+    const unsigned int x_states = idx % nX;
+    const unsigned int y_states = idx / nX;
+    const unsigned int index_states = x_states + y_states * nX;
 
-    sVals_real[idx] = states_old[idx].s_GABAA;
+    sVals_real[index_sVals] = states_old[index_states].s_GABAA;
 }
 
-__kernel void postConvolution_AMPA(__global const float *convolution_real, __global float *sumFootprintAMPA, const unsigned int numNeurons)
+__kernel void postConvolution_AMPA(__global const float *convolution_real, 
+                                   __global float *sumFootprintAMPA,
+                                   const unsigned int nX,
+                                   const unsigned int nY,
+                                   const unsigned int nZ) 
 {
     const unsigned int idx = get_global_id(0);
+    const unsigned int x_fp = idx % nX;
+    const unsigned int y_fp = idx / nX;
+    const unsigned int index_fp = x_fp + y_fp * nX;
+    const unsigned int nFFTx = 2 * nX;
+    const unsigned int x_conv = idx % nX + nX - 1;
+    const unsigned int y_conv = nY > 1 ? idx / nY + nY - 1 : 0;
+    const unsigned int index_conv = x_conv + y_conv * nFFTx;
 
-    sumFootprintAMPA[idx] = convolution_real[idx + numNeurons - 1];
+    sumFootprintAMPA[index_fp] = convolution_real[index_conv];
 }
 
-__kernel void postConvolution_NMDA(__global const float *convolution_real, __global float *sumFootprintNMDA, const unsigned int numNeurons)
+__kernel void postConvolution_NMDA(__global const float *convolution_real, 
+                                   __global float *sumFootprintNMDA,
+                                   const unsigned int nX,
+                                   const unsigned int nY,
+                                   const unsigned int nZ) 
 {
     const unsigned int idx = get_global_id(0);
+    const unsigned int x_fp = idx % nX;
+    const unsigned int y_fp = idx / nX;
+    const unsigned int index_fp = x_fp + y_fp * nX;
+    const unsigned int nFFTx = 2 * nX;
+    const unsigned int x_conv = idx % nX + nX - 1;
+    const unsigned int y_conv = nY > 1 ? idx / nY + nY - 1 : 0;
+    const unsigned int index_conv = x_conv + y_conv * nFFTx;
 
-    sumFootprintNMDA[idx] = convolution_real[idx + numNeurons - 1];
+    sumFootprintNMDA[index_fp] = convolution_real[index_conv];
 }
 
-__kernel void postConvolution_GABAA(__global const float *convolution_real, __global float *sumFootprintGABAA, const unsigned int numNeurons)
+__kernel void postConvolution_GABAA(__global const float *convolution_real, 
+                                   __global float *sumFootprintGABAA,
+                                   const unsigned int nX,
+                                   const unsigned int nY,
+                                   const unsigned int nZ) 
 {
     const unsigned int idx = get_global_id(0);
+    const unsigned int x_fp = idx % nX;
+    const unsigned int y_fp = idx / nX;
+    const unsigned int index_fp = x_fp + y_fp * nX;
+    const unsigned int nFFTx = 2 * nX;
+    const unsigned int x_conv = idx % nX + nX - 1;
+    const unsigned int y_conv = nY > 1 ? idx / nY + nY - 1 : 0;
+    const unsigned int index_conv = x_conv + y_conv * nFFTx;
 
-    sumFootprintGABAA[idx] = convolution_real[idx + numNeurons - 1];
+    sumFootprintGABAA[index_fp] = convolution_real[index_conv];
 }

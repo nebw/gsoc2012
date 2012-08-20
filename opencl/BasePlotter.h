@@ -24,7 +24,7 @@
 
 #include "Definitions.h"
 
-class BasePlotter
+class BasePlotter abstract
 {
 public:
     virtual ~BasePlotter() {};
