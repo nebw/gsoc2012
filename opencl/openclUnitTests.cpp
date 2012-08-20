@@ -254,10 +254,10 @@ TEST(FFTTest, InverseFFTTest)
 
     for (int i = 0; i < length; i++)
     {
-        EXPECT_NEAR(data_i_split.real[i],
+        ASSERT_NEAR(data_i_split.real[i],
                     data_cl_split.real[i] / length,
                     0.000001);
-        EXPECT_NEAR(data_i_split.imag[i],
+        ASSERT_NEAR(data_i_split.imag[i],
                     data_cl_split.imag[i] / length,
                     0.000001);
     }
@@ -283,7 +283,7 @@ TEST(BasicSimTests, CPUSimInitializationTest)
     state0.s_GABAA = 0.0f;
     state0.I_app = 1.0f;
 
-    EXPECT_NO_THROW(
+    ASSERT_NO_THROW(
         CPUSimulator cpuSim = CPUSimulator(256,
                                            1,
                                            1,
@@ -316,7 +316,7 @@ TEST(BasicSimTests, CPUSimSimulationReturnsTest)
                                        state0,
                                        CPUSimulator::CONVOLUTION);
 
-    EXPECT_NO_THROW(cpuSim.simulate());
+    ASSERT_NO_THROW(cpuSim.simulate());
 }
 
 TEST(BasicSimTests, CLSimInitializationTest)
@@ -339,7 +339,7 @@ TEST(BasicSimTests, CLSimInitializationTest)
     auto stdErrLogger = std::make_shared<cpplog::StdErrLogger>();
     auto logger = std::make_shared<cpplog::FilteringLogger>(LL_ERROR, stdErrLogger.get());
 
-    EXPECT_NO_THROW(
+    ASSERT_NO_THROW(
         CLSimulator clSim = CLSimulator(4,
                                         1,
                                         1,
@@ -388,7 +388,7 @@ TEST(BasicSimTests, CLSimSimulationRungeKuttaOnlyReturnsTest)
                                     path,
                                     logger);
 
-    EXPECT_NO_THROW(clSim.simulate());
+    ASSERT_NO_THROW(clSim.simulate());
 }
 
 TEST(BasicSimTests, CLSimSimulationWithFFTWReturnsTest)
@@ -424,7 +424,7 @@ TEST(BasicSimTests, CLSimSimulationWithFFTWReturnsTest)
                                     path,
                                     logger);
 
-    EXPECT_NO_THROW(clSim.simulate());
+    ASSERT_NO_THROW(clSim.simulate());
 }
 
 TEST(BasicSimTests, CLSimSimulationWithClFFTWReturnsTest)
@@ -460,7 +460,7 @@ TEST(BasicSimTests, CLSimSimulationWithClFFTWReturnsTest)
                                     path,
                                     logger);
 
-    EXPECT_NO_THROW(clSim.simulate());
+    ASSERT_NO_THROW(clSim.simulate());
 }
 
 TEST(BasicSimTests, CLSimSimulationFFTWClFFTW1DAssertionsReturnsTest)
@@ -501,7 +501,7 @@ TEST(BasicSimTests, CLSimSimulationFFTWClFFTW1DAssertionsReturnsTest)
                                     path,
                                     logger);
 
-    EXPECT_NO_THROW(clSim.simulate());
+    ASSERT_NO_THROW(clSim.simulate());
 }
 
 TEST(BasicSimTests, CLSimSimulationFFTWClFFTW2DAssertionsReturnsTest)
@@ -542,7 +542,7 @@ TEST(BasicSimTests, CLSimSimulationFFTWClFFTW2DAssertionsReturnsTest)
                                     path,
                                     logger);
 
-    EXPECT_NO_THROW(clSim.simulate());
+    ASSERT_NO_THROW(clSim.simulate());
 }
 
 TEST(SimResultTests, RungeKuttaApproximationRelErrorTest)
@@ -607,13 +607,13 @@ TEST(SimResultTests, RungeKuttaApproximationRelErrorTest)
 
         for (size_t i = 0; i < numNeurons; ++i)
         {
-            EXPECT_NEAR(cpuSimStateNew[i].V, clSimStateNew[i].V, 0.00001);
-            EXPECT_NEAR(cpuSimStateNew[i].h, clSimStateNew[i].h, 0.00001);
-            EXPECT_NEAR(cpuSimStateNew[i].n, clSimStateNew[i].n, 0.00001);
-            EXPECT_NEAR(cpuSimStateNew[i].z, clSimStateNew[i].z, 0.00001);
-            EXPECT_NEAR(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA, 0.00001);
-            EXPECT_NEAR(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA, 0.00001);
-            EXPECT_NEAR(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA, 0.00001);
+            ASSERT_NEAR(cpuSimStateNew[i].V, clSimStateNew[i].V, 0.00001);
+            ASSERT_NEAR(cpuSimStateNew[i].h, clSimStateNew[i].h, 0.00001);
+            ASSERT_NEAR(cpuSimStateNew[i].n, clSimStateNew[i].n, 0.00001);
+            ASSERT_NEAR(cpuSimStateNew[i].z, clSimStateNew[i].z, 0.00001);
+            ASSERT_NEAR(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA, 0.00001);
+            ASSERT_NEAR(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA, 0.00001);
+            ASSERT_NEAR(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA, 0.00001);
         }
 
         cpuSim.setCurrentStatesOld(clSimStateOld);
@@ -684,13 +684,13 @@ TEST(SimResultTests, RungeKuttaApproximationAbsErrorTest)
 
         for (size_t i = 0; i < numNeurons; ++i)
         {
-            EXPECT_NEAR(cpuSimStateNew[i].V, clSimStateNew[i].V, 0.000001);
-            EXPECT_NEAR(cpuSimStateNew[i].h, clSimStateNew[i].h, 0.000001);
-            EXPECT_NEAR(cpuSimStateNew[i].n, clSimStateNew[i].n, 0.000001);
-            EXPECT_NEAR(cpuSimStateNew[i].z, clSimStateNew[i].z, 0.000001);
-            EXPECT_NEAR(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA, 0.000001);
-            EXPECT_NEAR(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA, 0.000001);
-            EXPECT_NEAR(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA, 0.000001);
+            ASSERT_NEAR(cpuSimStateNew[i].V, clSimStateNew[i].V, 0.000001);
+            ASSERT_NEAR(cpuSimStateNew[i].h, clSimStateNew[i].h, 0.000001);
+            ASSERT_NEAR(cpuSimStateNew[i].n, clSimStateNew[i].n, 0.000001);
+            ASSERT_NEAR(cpuSimStateNew[i].z, clSimStateNew[i].z, 0.000001);
+            ASSERT_NEAR(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA, 0.000001);
+            ASSERT_NEAR(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA, 0.000001);
+            ASSERT_NEAR(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA, 0.000001);
         }
     }
     std::cout << std::endl;
@@ -698,7 +698,7 @@ TEST(SimResultTests, RungeKuttaApproximationAbsErrorTest)
 
 TEST(SimResultTests, FFTWConvolution1DRelErrorTest)
 {
-    const size_t numNeurons = 512;
+    const size_t numNeurons = 64;
     const size_t timesteps = 500;
 
     state state0;
@@ -766,15 +766,15 @@ TEST(SimResultTests, FFTWConvolution1DRelErrorTest)
 
         for (size_t i = 0; i < numNeurons; ++i)
         {
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].V, clSimStateNew[i].V);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].h, clSimStateNew[i].h);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].n, clSimStateNew[i].n);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].z, clSimStateNew[i].z);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA);
-            EXPECT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.00001);
-            EXPECT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.00001);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].V, clSimStateNew[i].V);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].h, clSimStateNew[i].h);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].n, clSimStateNew[i].n);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].z, clSimStateNew[i].z);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA);
+            ASSERT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.00001);
+            ASSERT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.00001);
         }
 
         cpuSim.setCurrentSumFootprintAMPA(clSumFootprintAMPA);
@@ -856,15 +856,15 @@ TEST(SimResultTests, FFTWConvolution2DRelErrorTest)
 
         for (size_t i = 0; i < numNeurons; ++i)
         {
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].V, clSimStateNew[i].V);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].h, clSimStateNew[i].h);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].n, clSimStateNew[i].n);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].z, clSimStateNew[i].z);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA);
-            EXPECT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.00001);
-            EXPECT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.00001);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].V, clSimStateNew[i].V);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].h, clSimStateNew[i].h);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].n, clSimStateNew[i].n);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].z, clSimStateNew[i].z);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA);
+            ASSERT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.00001);
+            ASSERT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.00001);
         }
 
         cpuSim.setCurrentSumFootprintAMPA(clSumFootprintAMPA);
@@ -946,15 +946,15 @@ TEST(SimResultTests, ClFFTConvolution1DRelErrorTest)
 
         for (size_t i = 0; i < numNeurons; ++i)
         {
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].V, clSimStateNew[i].V);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].h, clSimStateNew[i].h);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].n, clSimStateNew[i].n);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].z, clSimStateNew[i].z);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA);
-            EXPECT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.00001);
-            EXPECT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.00001);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].V, clSimStateNew[i].V);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].h, clSimStateNew[i].h);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].n, clSimStateNew[i].n);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].z, clSimStateNew[i].z);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA);
+            ASSERT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.00001);
+            ASSERT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.00001);
         }
 
         cpuSim.setCurrentSumFootprintAMPA(clSumFootprintAMPA);
@@ -1036,15 +1036,15 @@ TEST(SimResultTests, ClFFTConvolution2DRelErrorTest)
 
         for (size_t i = 0; i < numNeurons; ++i)
         {
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].V, clSimStateNew[i].V);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].h, clSimStateNew[i].h);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].n, clSimStateNew[i].n);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].z, clSimStateNew[i].z);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA);
-            EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA);
-            EXPECT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.05);
-            EXPECT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.05);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].V, clSimStateNew[i].V);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].h, clSimStateNew[i].h);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].n, clSimStateNew[i].n);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].z, clSimStateNew[i].z);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA);
+            ASSERT_FLOAT_EQ(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA);
+            ASSERT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.05);
+            ASSERT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.05);
         }
 
         cpuSim.setCurrentSumFootprintAMPA(clSumFootprintAMPA);
