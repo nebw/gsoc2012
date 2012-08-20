@@ -284,13 +284,13 @@ TEST(BasicSimTests, CPUSimInitializationTest)
     state0.I_app = 1.0f;
 
     ASSERT_NO_THROW(
-        CPUSimulator cpuSim = CPUSimulator(256,
-                                           1,
-                                           1,
-                                           500,
-                                           0.1f,
-                                           state0,
-                                           CPUSimulator::CONVOLUTION)
+        CPUSimulator cpuSim (256,
+                             1,
+                             1,
+                             500,
+                             0.1f,
+                             state0,
+                             CPUSimulator::CONVOLUTION)
         );
 }
 
@@ -308,13 +308,13 @@ TEST(BasicSimTests, CPUSimSimulationReturnsTest)
     state0.s_GABAA = 0.0f;
     state0.I_app = 1.0f;
 
-    CPUSimulator cpuSim = CPUSimulator(64,
-                                       1,
-                                       1,
-                                       500,
-                                       0.1f,
-                                       state0,
-                                       CPUSimulator::CONVOLUTION);
+    CPUSimulator cpuSim (64,
+                         1,
+                         1,
+                         500,
+                         0.1f,
+                         state0,
+                         CPUSimulator::CONVOLUTION);
 
     ASSERT_NO_THROW(cpuSim.simulate());
 }
