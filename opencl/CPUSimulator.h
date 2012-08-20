@@ -41,15 +41,15 @@ public:
                  state const& state_0,
                  const Convolution convolution);
 
-    void step() override;
+    void step();
 
-    void simulate() override;
+    void simulate();
 
-    state const* getCurrentStatesOld() const override;
-    state const* getCurrentStatesNew() const override;
-    std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const override;
-    std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const override;
-    std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const override;
+    state const* getCurrentStatesOld() const;
+    state const* getCurrentStatesNew() const;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const;
 
     void setCurrentStatesOld(state const *states);
     void setCurrentStatesNew(state const *states);

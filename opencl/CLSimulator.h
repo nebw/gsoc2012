@@ -50,14 +50,14 @@ public:
                 const bool readToHostMemory = false);
     ~CLSimulator();
 
-    void step() override;
-    void simulate() override;
+    void step();
+    void simulate();
 
-    state const* getCurrentStatesOld() const override;
-    state const* getCurrentStatesNew() const override;
-    std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const override;
-    std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const override;
-    std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const override;
+    state const* getCurrentStatesOld() const;
+    state const* getCurrentStatesNew() const;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const;
+    std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const;
 
     std::vector<__int64> getTimesCalculations() const;
     std::vector<__int64> getTimesFFTW() const;
