@@ -44,9 +44,9 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
     const size_t start = 1;
     const size_t powers = 12;
 
-    std::vector<const size_t> numNeurons;
-    std::vector<const double> avgTimesCalculationsCL, avgTimesFFTW, avgTimesClFFT;
-    std::vector<const double> avgTimesCalculationsCPU, avgTimesConvolutionsCPU;
+    std::vector<double> avgTimesCalculationsCL, avgTimesFFTW, avgTimesClFFT;
+    std::vector<double> avgTimesCalculationsCPU, avgTimesConvolutionsCPU;
+    std::vector<size_t> numNeurons;
 
     std::string vendor, name;
 
@@ -55,7 +55,7 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
         auto neurons = static_cast<const size_t>(pow(2.f, i));
         numNeurons.push_back(neurons);
 
-        CLSimulator clSim = CLSimulator(
+        CLSimulator clSim (
             neurons,
             1,
             1,
@@ -71,7 +71,7 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
 
         clSim.simulate();
 
-        CPUSimulator cpuSim = CPUSimulator(
+        CPUSimulator cpuSim (
             neurons,
             1,
             1,
@@ -120,7 +120,6 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
                 timesConvolutionsCPU.end(), 0.0)
             / timesConvolutionsCPU.size());
     }
-
     std::cout << std::endl << "Results" << std::endl << "=======" << std::endl;
 
     for (int i = 0; i < powers - start; ++i)
@@ -237,7 +236,7 @@ int main(int ac, char **av)
             plot = CLSimulator::NO_PLOT;
         }
 
-        CLSimulator sim = CLSimulator(
+        CLSimulator sim (
             nX,
             nY,
             nZ,
