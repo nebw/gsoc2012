@@ -363,7 +363,7 @@ void OpenGLPlotter::initGraphs()
     plotdesc.size = graphsize;
     plotdesc.title = "Membrane potential";
     plotdesc.type = LINESPOINTS;
-    auto& minMax = std::minmax_element(_V.begin(), _V.end());
+    auto const& minMax = std::minmax_element(_V.begin(), _V.end());
     float range = *minMax.second - *minMax.first;
     float min = *minMax.first - abs(range * 0.1f);
     float max = *minMax.second + abs(range * 0.1f);
@@ -382,7 +382,7 @@ void OpenGLPlotter::initGraphs()
     input.push_back(_sAMPA);
     input.push_back(_sNMDA);
     input.push_back(_xNMDA);
-    auto& minMaxInput = getMinMax(input, 0.0f, 0.0f);
+    auto minMaxInput = getMinMax(input, 0.0f, 0.0f);
     min = minMaxInput.first;
     max = minMaxInput.second;
     BOOST_FOREACH(std::vector<float> const & vals, input)

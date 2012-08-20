@@ -733,7 +733,9 @@ void CLSimulator::initializeClFFT()
     assert(isPowerOfTwo(_nFFT));
     assert(_nX >= 1 && _nY >= 1 && _nZ >= 1);
     assert((_nX >= _nY) && (_nY >= _nZ));
-    clFFT_Dim3 n = { _nFFTx, _nFFTy, _nFFTz };
+    clFFT_Dim3 n = { static_cast<unsigned int>(_nFFTx), 
+                     static_cast<unsigned int>(_nFFTy), 
+                     static_cast<unsigned int>(_nFFTz) };
     clFFT_DataFormat dataFormat = clFFT_SplitComplexFormat;
     clFFT_Dimension dim;
 
