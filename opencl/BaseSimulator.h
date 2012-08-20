@@ -24,7 +24,7 @@
 
 #include "Definitions.h"
 
-class BaseSimulator abstract {
+class BaseSimulator {
 public:
 
     enum Plot {
