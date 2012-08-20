@@ -161,8 +161,6 @@ if(MSVC)
     )
   endif()
   
-  message("  FFTW_LIBRARIES: ${FFTW_LIBRARIES}")
-  
   target_link_libraries(simulate
         ${LIBRARIES}
         Winmm)
@@ -174,7 +172,7 @@ if(MSVC)
       gtest_main)
 else()
   target_link_libraries(simulate
-        ${LIBRARIES}
+      ${LIBRARIES}
   )
   
   target_link_libraries(execute_unit_tests
@@ -186,9 +184,6 @@ endif()
 add_test(openclUnitTests openclUnitTests)
 
 if(MSVC)
-#  list(REMOVE_ITEM Boost_LIBRARIES debug)
-#  list(REMOVE_ITEM Boost_LIBRARIES optimized)
-#  INSTALL(FILES ${GLEW_LIBRARY} ${GLFW_LIBRARY} ${FFTW_LIBRARIES} ${Boost_LIBRARIES}
   INSTALL(FILES 
     "${opencl_SOURCE_DIR}/fftw_win32/libfftw3f-3.dll"
     "${opencl_SOURCE_DIR}/glfw/x86/GLFW.dll"
