@@ -953,8 +953,8 @@ TEST(SimResultTests, ClFFTConvolution1DRelErrorTest)
             EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_AMPA, clSimStateNew[i].s_AMPA);
             EXPECT_FLOAT_EQ(cpuSimStateNew[i].x_NMDA, clSimStateNew[i].x_NMDA);
             EXPECT_FLOAT_EQ(cpuSimStateNew[i].s_NMDA, clSimStateNew[i].s_NMDA);
-            EXPECT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.05);
-            EXPECT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.05);
+            EXPECT_NEAR(cpuSumFootprintAMPA[i], clSumFootprintAMPA[i], 0.00001);
+            EXPECT_NEAR(cpuSumFootprintNMDA[i], clSumFootprintNMDA[i], 0.00001);
         }
 
         cpuSim.setCurrentSumFootprintAMPA(clSumFootprintAMPA);
