@@ -87,7 +87,7 @@ if(NOT MSVC)
 endif()
 
 if(NOT MSVC)
-  find_package(glfw)
+  find_package(GLFW)
   if(GLFW_FOUND)
   message("GLFW information:") 
     message("  GLFW_INCLUDE_DIR: ${GLFW_INCLUDE_DIR}") 
