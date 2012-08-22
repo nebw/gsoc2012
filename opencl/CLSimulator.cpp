@@ -521,9 +521,9 @@ void CLSimulator::executeKernels()
 
 void CLSimulator::assertConvolutionResults()
 {
-    std::unique_ptr<float[]> sumFootprintAMPA_tmp(std::unique_ptr<float[]>(new float[_numNeurons]));
+    std::unique_ptr<float[]> sumFootprintAMPA_tmp(new float[_numNeurons]);
     _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintAMPA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), sumFootprintAMPA_tmp.get(), NULL, NULL);
-    std::unique_ptr<float[]> sumFootprintNMDA_tmp(std::unique_ptr<float[]>(new float[_numNeurons]));
+    std::unique_ptr<float[]> sumFootprintNMDA_tmp(new float[_numNeurons]);
     _err = _wrapper.getQueue().enqueueReadBuffer(_sumFootprintNMDA_cl, CL_FALSE, 0, _numNeurons * sizeof(float), sumFootprintNMDA_tmp.get(), NULL, NULL);
 
     for (size_t i = 0; i < _numNeurons; ++i)
