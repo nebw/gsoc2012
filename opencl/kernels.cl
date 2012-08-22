@@ -1,21 +1,21 @@
-/** 
+/**
  * Copyright (C) 2012 Benjamin Wild
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
@@ -152,11 +152,11 @@ __kernel void f_dV_dt(__global struct state *states_old,
                       const float dt)
 {
     const unsigned int idx = get_global_id(0);
-    //const unsigned int nX = 2;
-    //const unsigned int nY = 2;
-    //const unsigned int x = idx % nX;
-    //const unsigned int y = idx / nX;
-    //const unsigned int index = x + y * nY; 
+    // const unsigned int nX = 2;
+    // const unsigned int nY = 2;
+    // const unsigned int x = idx % nX;
+    // const unsigned int y = idx / nX;
+    // const unsigned int index = x + y * nY;
 
     const struct state state_0 = states_old[idx];
     const float sumFootprintAMPA_loc = sumFootprintAMPA[idx];
@@ -194,8 +194,8 @@ inline float _f_I_Na_dh_dt(const float h, const float V)
     return (_f_I_Na_h_inf(V) - h) / _f_I_Na_tau_h(V);
 }
 
-__kernel void f_I_Na_dh_dt(__global struct state *states_old, 
-                           __global struct state *states_new, 
+__kernel void f_I_Na_dh_dt(__global struct state *states_old,
+                           __global struct state *states_new,
                            const float dt)
 {
     const unsigned int idx = get_global_id(0);
@@ -233,8 +233,8 @@ inline float _f_dn_dt(const float n, const float V)
     return (_f_n_inf(V) - n) / _f_tau_n(V);
 }
 
-__kernel void f_dn_dt(__global struct state *states_old, 
-                      __global struct state *states_new, 
+__kernel void f_dn_dt(__global struct state *states_old,
+                      __global struct state *states_new,
                       const float dt)
 {
     const unsigned int idx = get_global_id(0);
@@ -266,7 +266,7 @@ inline float _f_dz_dt(const float z, const float V)
     return (_f_z_inf(V) - z) / tau_z;
 }
 
-__kernel void f_dz_dt(__global struct state *states_old, 
+__kernel void f_dz_dt(__global struct state *states_old,
                       __global struct state *states_new,
                       const float dt)
 {
@@ -328,7 +328,7 @@ inline float _f_dxNMDA_dt(const float x_NMDA, const float V)
            - (1 - _f_s_inf(V)) * x_NMDA / tau2_NMDA;
 }
 
-__kernel void f_dxNMDA_dt(__global struct state *states_old, 
+__kernel void f_dxNMDA_dt(__global struct state *states_old,
                           __global struct state *states_new,
                           const float dt)
 {
@@ -355,7 +355,7 @@ inline float _f_dsNMDA_dt(const float s_NMDA, const float x_NMDA, const float V)
            - s_NMDA / tau_NMDA;
 }
 
-__kernel void f_dsNMDA_dt(__global struct state *states_old, 
+__kernel void f_dsNMDA_dt(__global struct state *states_old,
                           __global struct state *states_new,
                           const float dt)
 {
@@ -392,7 +392,7 @@ __kernel void prepareFFT_AMPA(__global const struct state *states_old,
                               __global float *sVals_real,
                               const unsigned int nX,
                               const unsigned int nY,
-                              const unsigned int nZ) 
+                              const unsigned int nZ)
 {
     const unsigned int idx = get_global_id(0);
     const unsigned int nFFTx = 2 * nX;
@@ -410,7 +410,7 @@ __kernel void prepareFFT_NMDA(__global const struct state *states_old,
                               __global float *sVals_real,
                               const unsigned int nX,
                               const unsigned int nY,
-                              const unsigned int nZ) 
+                              const unsigned int nZ)
 {
     const unsigned int idx = get_global_id(0);
     const unsigned int nFFTx = 2 * nX;
@@ -425,10 +425,10 @@ __kernel void prepareFFT_NMDA(__global const struct state *states_old,
 }
 
 __kernel void prepareFFT_GABAA(__global const struct state *states_old,
-                              __global float *sVals_real,
-                              const unsigned int nX,
-                              const unsigned int nY,
-                              const unsigned int nZ) 
+                               __global float *sVals_real,
+                               const unsigned int nX,
+                               const unsigned int nY,
+                               const unsigned int nZ)
 {
     const unsigned int idx = get_global_id(0);
     const unsigned int nFFTx = 2 * nX;
@@ -442,11 +442,11 @@ __kernel void prepareFFT_GABAA(__global const struct state *states_old,
     sVals_real[index_sVals] = states_old[index_states].s_GABAA;
 }
 
-__kernel void postConvolution_AMPA(__global const float *convolution_real, 
+__kernel void postConvolution_AMPA(__global const float *convolution_real,
                                    __global float *sumFootprintAMPA,
                                    const unsigned int nX,
                                    const unsigned int nY,
-                                   const unsigned int nZ) 
+                                   const unsigned int nZ)
 {
     const unsigned int idx = get_global_id(0);
     const unsigned int x_fp = idx % nX;
@@ -460,11 +460,11 @@ __kernel void postConvolution_AMPA(__global const float *convolution_real,
     sumFootprintAMPA[index_fp] = convolution_real[index_conv];
 }
 
-__kernel void postConvolution_NMDA(__global const float *convolution_real, 
+__kernel void postConvolution_NMDA(__global const float *convolution_real,
                                    __global float *sumFootprintNMDA,
                                    const unsigned int nX,
                                    const unsigned int nY,
-                                   const unsigned int nZ) 
+                                   const unsigned int nZ)
 {
     const unsigned int idx = get_global_id(0);
     const unsigned int x_fp = idx % nX;
@@ -478,11 +478,11 @@ __kernel void postConvolution_NMDA(__global const float *convolution_real,
     sumFootprintNMDA[index_fp] = convolution_real[index_conv];
 }
 
-__kernel void postConvolution_GABAA(__global const float *convolution_real, 
-                                   __global float *sumFootprintGABAA,
-                                   const unsigned int nX,
-                                   const unsigned int nY,
-                                   const unsigned int nZ) 
+__kernel void postConvolution_GABAA(__global const float *convolution_real,
+                                    __global float *sumFootprintGABAA,
+                                    const unsigned int nX,
+                                    const unsigned int nY,
+                                    const unsigned int nZ)
 {
     const unsigned int idx = get_global_id(0);
     const unsigned int x_fp = idx % nX;

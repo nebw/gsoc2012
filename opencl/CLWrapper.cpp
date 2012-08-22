@@ -151,3 +151,4 @@ std::string CLWrapper::getDeviceName()
     _devices[0].getInfo(CL_DEVICE_NAME, &name);
     return name;
 }
+

@@ -88,7 +88,6 @@ SET(HEADERS
   BaseSimulator.h
   CLSimulator.h
   CPUSimulator.h
-  Plotter.h
   BasePlotter.h
   GnuPlotPlotter.h
   OpenGLPlotter.h

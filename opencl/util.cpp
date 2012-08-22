@@ -179,3 +179,4 @@ void handleClError(cl::Error err)
     getchar();
     throw err;
 }
+

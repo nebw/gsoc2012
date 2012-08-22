@@ -55,7 +55,7 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
         auto neurons = static_cast<const size_t>(pow(2.f, i));
         numNeurons.push_back(neurons);
 
-        CLSimulator clSim (
+        CLSimulator clSim(
             neurons,
             1,
             1,
@@ -71,7 +71,7 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
 
         clSim.simulate();
 
-        CPUSimulator cpuSim (
+        CPUSimulator cpuSim(
             neurons,
             1,
             1,
@@ -236,7 +236,7 @@ int main(int ac, char **av)
             plot = CLSimulator::NO_PLOT;
         }
 
-        CLSimulator sim (
+        CLSimulator sim(
             nX,
             nY,
             nZ,
@@ -255,3 +255,4 @@ int main(int ac, char **av)
 
     return finish(0);
 }
+
