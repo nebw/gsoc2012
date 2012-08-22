@@ -97,24 +97,8 @@ endif()
 
 ## Compiler flags for GCC and Clang
 if(NOT MSVC)
-  # enable extra compiler warnings
-  set(CMAKE_CXX_FLAGS "-Wall -Wextra ${CMAKE_CXX_FLAGS}")
-  # even more warnings
-  set(CMAKE_CXX_FLAGS "-Wpointer-arith -Wcast-qual -Wwrite-strings -Wno-long-long	-Wno-variadic-macros -Wno-multichar -Woverloaded-virtual -Wsign-promo ${CMAKE_CXX_FLAGS}")
   # enable support for c++11
   set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
-  # treat warnings as errors
-  # set(CMAKE_CXX_FLAGS "-Werror ${CMAKE_CXX_FLAGS}")
-  # set(CMAKE_CXX_FLAGS "-Weffc++ ${CMAKE_CXX_FLAGS}")
-  set(CMAKE_CXX_FLAGS "-Wno-deprecated ${CMAKE_CXX_FLAGS}")
-else()
-  # enable visual studio static code analysis
-  # set(CMAKE_CXX_FLAGS "-analyze ${CMAKE_CXX_FLAGS}")
 endif()
 
-## Compiler flags for GCC only
-if(CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS "-Wstrict-null-sentinel ${CMAKE_CXX_FLAGS}")
-endif()
-
-add_subdirectory(${CMAKE_SOURCE_DIR}/opencl)
+add_subdirectory(src)
