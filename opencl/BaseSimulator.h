@@ -26,7 +26,6 @@
 
 class BaseSimulator {
 public:
-
     enum Plot {
         NO_PLOT = 0,
         PLOT_GNUPLOT,
@@ -48,6 +47,7 @@ public:
         CLFFT
     };
 
+    BaseSimulator() {}
     virtual ~BaseSimulator() {}
 
     virtual void step() = 0;
@@ -58,4 +58,8 @@ public:
     virtual std::unique_ptr<float[]> const& getCurrentSumFootprintAMPA() const = 0;
     virtual std::unique_ptr<float[]> const& getCurrentSumFootprintNMDA() const = 0;
     virtual std::unique_ptr<float[]> const& getCurrentSumFootprintGABAA() const = 0;
+
+private:
+    BaseSimulator(const BaseSimulator&);
+    BaseSimulator& operator=(BaseSimulator&);
 };

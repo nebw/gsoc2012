@@ -26,7 +26,7 @@
 
 class BasePlotter {
 public:
-
+    BasePlotter() {}
     virtual ~BasePlotter() {}
 
     virtual void step(const state *curState,
@@ -35,4 +35,8 @@ public:
                       std::unique_ptr<float[]> const& sumFootprintNMDA,
                       std::unique_ptr<float[]> const& sumFootprintGABAA) = 0;
     virtual void plot() = 0;
+
+private:
+    BasePlotter(const BasePlotter&);
+    BasePlotter& operator=(const BasePlotter&);
 };
