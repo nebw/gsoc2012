@@ -24,27 +24,12 @@
 
 #include "Definitions.h"
 
+#include "main.h"
 #include "CLSimulator.h"
 #include "CPUSimulator.h"
 #include "util.h"
 
-    #pragma warning(push, 0)        
-#ifdef _MSVC_VER
-    #pragma warning(push, 0)        
-#elif __GCC__
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wall"
-#endif
-
 #include <cpplog.hpp>
-
-#ifdef _MSVC_VER
-    #pragma warning(pop)
-#elif __GCC__
-    #pragma GCC diagnostic pop
-#endif
-    #pragma warning(pop)
-
 #include <gnuplot_i.h>
 
 #include <numeric>
@@ -67,7 +52,7 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
 
     std::string vendor, name;
 
-    for (int i = start; i < powers; ++i)
+    for (size_t i = start; i < powers; ++i)
     {
         auto neurons = static_cast<const size_t>(pow(2.f, i));
         numNeurons.push_back(neurons);
@@ -139,7 +124,7 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
     }
     std::cout << std::endl << "Results" << std::endl << "=======" << std::endl;
 
-    for (int i = 0; i < powers - start; ++i)
+    for (size_t i = 0; i < powers - start; ++i)
     {
         std::cout << static_cast<const size_t>(pow(2.f, (int)(i + start))) << "\t" << avgTimesCalculationsCL[i] << "\t" << avgTimesFFTW[i] << "\t" << avgTimesClFFT[i] << std::endl;
     }
