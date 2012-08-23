@@ -39,8 +39,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <Cl/cl.h>
-#include <Cl/cl.hpp>
+#include <CL/cl.h>
+#include <CL/cl.hpp>
 
 #include <clFFT.h>
 

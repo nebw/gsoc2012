@@ -36,12 +36,12 @@ CPUSimulator::CPUSimulator(const size_t nX,
                            const float dt,
                            state const& state_0,
                            const Convolution convolution)
-    : _nX(nX),
+    : _dt(dt),
+      _nX(nX),
       _nY(nY),
       _nZ(nZ),
       _numNeurons(nX * nY * nZ),
       _timesteps(timesteps),
-      _dt(dt),
       _t(0),
       _convolution(convolution)
 {

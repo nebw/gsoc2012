@@ -31,7 +31,7 @@ if(NOT MSVC)
   # enable extra compiler warnings
   set(CMAKE_CXX_FLAGS "-Wall -Wextra ${CMAKE_CXX_FLAGS}")
   # even more warnings
-  set(CMAKE_CXX_FLAGS "-Wpointer-arith -Wcast-qual -Wwrite-strings -Wno-long-long	-Wno-variadic-macros -Wno-multichar -Woverloaded-virtual -Wsign-promo -Wold-style-cast -Winit-self -Wuninitialized -Wmissing-declaration ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-Wpointer-arith -Wcast-qual -Wno-long-long -Wno-variadic-macros -Wno-multichar -Woverloaded-virtual -Wsign-promo -Winit-self -Wuninitialized -Wmissing-declarations ${CMAKE_CXX_FLAGS}")
   # treat warnings as errors
   # set(CMAKE_CXX_FLAGS "-Werror ${CMAKE_CXX_FLAGS}")
   # set(CMAKE_CXX_FLAGS "-Weffc++ ${CMAKE_CXX_FLAGS}")
@@ -118,6 +118,7 @@ SET(HEADERS
   GnuPlotPlotter.h
   OpenGLPlotter.h
   Definitions.h
+  main.h
 )
 
 SET(SOURCE

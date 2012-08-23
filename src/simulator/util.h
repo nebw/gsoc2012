@@ -26,8 +26,8 @@
 
 #include "Definitions.h"
 
-#include <Cl/cl.h>
-#include <Cl/cl.hpp>
+#include <CL/cl.h>
+#include <CL/cl.hpp>
 
 #include <string>
 #include <vector>

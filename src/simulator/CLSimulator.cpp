@@ -27,6 +27,8 @@
 #include "OpenGLPlotter.h"
 #include "util.h"
 
+#include <CL/cl.hpp>
+
 #include <cassert>
 #include <ctime>
 #include <numeric>
@@ -34,21 +36,6 @@
 #include <boost/chrono.hpp>
 #include <boost/foreach.hpp>
 #include <boost/scoped_array.hpp>
-
-#ifdef _MSVC_VER
-    #pragma warning(push, 0)        
-#elif __GCC__
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wall"
-#endif
-
-#include <Cl/cl.hpp>
-
-#ifdef _MSVC_VER
-    #pragma warning(pop)
-#elif __GCC__
-    #pragma GCC diagnostic pop
-#endif
 
 CLSimulator::CLSimulator(const size_t nX,
                          const size_t nY,
@@ -63,25 +50,25 @@ CLSimulator::CLSimulator(const size_t nX,
                          boost::filesystem::path const& programPath,
                          Logger const& logger,
                          const bool readToHostMemory /*= false*/)
-    : _wrapper(CLWrapper(logger)),
-      _nX(nX),
-      _nY(nY),
-      _nZ(nZ),
-      _numNeurons(nX * nY * nZ),
-      _timesteps(timesteps),
-      _dt(dt),
-      _state_0(state_0),
-      _t(0),
-      _plot(plot != NO_PLOT),
-      _measure(measure == MEASURE),
-      _fftw(fftw == FFTW),
-      _clfft(clfft == CLFFT),
-      _logger(logger),
-      _readToHostMemory(readToHostMemory),
-      _nFFTx(2 * nX),
-      _nFFTy(nY > 1 ? 2 * nY : 1),
-      _nFFTz(nZ > 1 ? 2 * nZ : 1),
-      _err(CL_SUCCESS)
+    : _err(CL_SUCCESS)
+    , _wrapper(CLWrapper(logger))
+    , _nX(nX)
+    , _nY(nY)
+    , _nZ(nZ)
+    , _numNeurons(nX * nY * nZ)
+    , _timesteps(timesteps)
+    , _dt(dt)
+    , _state_0(state_0)
+    , _t(0)
+    , _plot(plot != NO_PLOT)
+    , _measure(measure == MEASURE)
+    , _fftw(fftw == FFTW)
+    , _clfft(clfft == CLFFT)
+    , _logger(logger)
+    , _readToHostMemory(readToHostMemory)
+    , _nFFTx(2 * nX)
+    , _nFFTy(nY > 1 ? 2 * nY : 1)
+    , _nFFTz(nZ > 1 ? 2 * nZ : 1)
 {
     _nFFT = (_nFFTx * _nFFTy * _nFFTz);
     _scaleFFT = (1.f / _nFFT);

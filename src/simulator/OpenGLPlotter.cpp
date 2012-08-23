@@ -35,9 +35,12 @@
 OpenGLPlotter::OpenGLPlotter(size_t numNeurons,
                              size_t index,
                              float dt)
-    : _numNeurons(numNeurons),
+    : _border(10),
+      _ticksize(10),
+      _numNeurons(numNeurons),
       _index(index),
       _dt(dt),
+      _plots(std::vector<PlotDesc>()),
       _V(std::vector<float>()),
       _h(std::vector<float>()),
       _n(std::vector<float>()),
@@ -48,10 +51,7 @@ OpenGLPlotter::OpenGLPlotter(size_t numNeurons,
       _IApp(std::vector<float>()),
       _sumFootprintAMPA(std::vector<float>()),
       _sumFootprintNMDA(std::vector<float>()),
-      _sumFootprintGABAA(std::vector<float>()),
-      _plots(std::vector<PlotDesc>()),
-      _border(10),
-      _ticksize(10)
+      _sumFootprintGABAA(std::vector<float>())
 {}
 
 OpenGLPlotter::~OpenGLPlotter()

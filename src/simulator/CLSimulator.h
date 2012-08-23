@@ -76,13 +76,10 @@ private:
     };
 
     // OpenCL
+    cl_int _err;
     CLWrapper _wrapper;
     cl::Program _program;
     cl::Event _event;
-    cl_int _err;
-
-    std::unique_ptr<BasePlotter> _plotter;
-    Logger _logger;
 
     // Simulation configuration
     const size_t _nX;
@@ -91,20 +88,24 @@ private:
     const size_t _numNeurons;
     const size_t _timesteps;
     const float _dt;
-
+    
     // Initial state
     const state _state_0;
     size_t _t;
-
+    size_t _ind_old;
+    size_t _ind_new;
+    
     // Configuration
     const bool _plot;
     const bool _measure;
     const bool _fftw;
     const bool _clfft;
-    const bool _readToHostMemory;
+    
+    std::unique_ptr<BasePlotter> _plotter;
+    Logger _logger;
 
-    size_t _ind_old;
-    size_t _ind_new;
+    // Debug settings
+    const bool _readToHostMemory;
 
     // Measurements
     std::vector<size_t> _timesCalculations;

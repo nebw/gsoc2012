@@ -89,8 +89,8 @@ TEST(FFTTest, InverseFFTTest)
 
     for (int i = 0; i < length; i++)
     {
-        data_i_split.real[i]  = 2.0f * (float)rand() / (float)RAND_MAX - 1.0f;
-        data_i_split.imag[i]  = 2.0f * (float)rand() / (float)RAND_MAX - 1.0f;
+        data_i_split.real[i]  = 2.0f * float(rand()) / float(RAND_MAX) - 1.0f;
+        data_i_split.imag[i]  = 2.0f * float(rand()) / float(RAND_MAX) - 1.0f;
         data_cl_split.real[i] = 0.0f;
         data_cl_split.imag[i] = 0.0f;
     }
