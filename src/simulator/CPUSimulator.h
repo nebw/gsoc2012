@@ -121,8 +121,7 @@ private:
     float _f_dxNMDA_dt(const float x_NMDA,
                        const float V);
     float _f_dsNMDA_dt(const float s_NMDA,
-                       const float x_NMDA,
-                       const float V);
+                       const float x_NMDA);
     float _f_I_Na_dh_dt(const float h,
                         const float V);
     float f_dV_dt(const float V,

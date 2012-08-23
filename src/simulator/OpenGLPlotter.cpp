@@ -32,12 +32,17 @@
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 
-OpenGLPlotter::OpenGLPlotter(size_t numNeurons,
-                             size_t index,
-                             float dt)
+OpenGLPlotter::OpenGLPlotter(const size_t nX,
+                             const size_t nY,
+                             const size_t nZ,
+                             const size_t index,
+                             const float dt)
     : _border(10),
       _ticksize(10),
-      _numNeurons(numNeurons),
+      _nX(nX),
+      _nY(nY),
+      _nZ(nZ),
+      _numNeurons(nX * nY * nZ),
       _index(index),
       _dt(dt),
       _plots(std::vector<PlotDesc>()),
@@ -72,6 +77,23 @@ void OpenGLPlotter::step(const state *curState, const size_t t, std::unique_ptr<
     _sumFootprintAMPA.push_back(sumFootprintAMPA[_index]);
     _sumFootprintNMDA.push_back(sumFootprintNMDA[_index]);
     _sumFootprintGABAA.push_back(sumFootprintGABAA[_index]);
+
+    for (size_t x = 0; x < _nX; ++x) {
+        for (size_t y = 0; y < _nY; ++y) {
+            size_t i = x + y * _nX;
+
+            if ((curState[i].V >= 20) && (_spikeArr[i] == false))
+            {
+                _spikeTimes.push_back(t * _dt);
+                _spikeNeuronIndicesX.push_back(i % _nX);
+                _spikeNeuronIndicesY.push_back(y);
+                _spikeArr[i] = true;
+            } else if ((curState[i].V < 20) && (_spikeArr[i] == true))
+            {
+                _spikeArr[i] = false;
+            }
+        }
+    }
 }
 
 void OpenGLPlotter::plot()

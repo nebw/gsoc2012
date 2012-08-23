@@ -26,8 +26,8 @@
 
 #include "gtest/gtest.h"
 
-#include <cpplog.hpp>
 #include <clFFT.h>
+#include <cpplog.hpp>
 
 #include <iostream>
 #include <memory>
@@ -82,10 +82,10 @@ TEST(FFTTest, InverseFFTTest)
 
     int length = n.x * n.y * n.z * batchSize;
 
-    clFFT_SplitComplex data_i_split = {(float *)malloc(sizeof(float) * length),
-                                       (float *)malloc(sizeof(float) * length)};
-    clFFT_SplitComplex data_cl_split = {(float *)malloc(sizeof(float) * length),
-                                        (float *)malloc(sizeof(float) * length)};
+    clFFT_SplitComplex data_i_split = { (float *)malloc(sizeof(float) * length),
+                                        (float *)malloc(sizeof(float) * length) };
+    clFFT_SplitComplex data_cl_split = { (float *)malloc(sizeof(float) * length),
+                                         (float *)malloc(sizeof(float) * length) };
 
     for (int i = 0; i < length; i++)
     {

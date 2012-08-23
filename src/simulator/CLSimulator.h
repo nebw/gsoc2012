@@ -88,19 +88,19 @@ private:
     const size_t _numNeurons;
     const size_t _timesteps;
     const float _dt;
-    
+
     // Initial state
     const state _state_0;
     size_t _t;
     size_t _ind_old;
     size_t _ind_new;
-    
+
     // Configuration
     const bool _plot;
     const bool _measure;
     const bool _fftw;
     const bool _clfft;
-    
+
     std::unique_ptr<BasePlotter> _plotter;
     Logger _logger;
 

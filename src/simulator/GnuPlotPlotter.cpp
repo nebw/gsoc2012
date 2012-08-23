@@ -25,7 +25,7 @@
 #include "GnuPlotPlotter.h"
 #include "util.h"
 
-#include <gnuplot_i.h> 
+#include <gnuplot_i.h>
 
 #include <boost/foreach.hpp>
 

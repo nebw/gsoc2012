@@ -24,8 +24,6 @@ project(opencl)
 
 ## Compiler flags for GCC and Clang
 if(NOT MSVC)
-  # enforce ansi standards
-  set(CMAKE_CXX_FLAGS "-ansi ${CMAKE_CXX_FLAGS}")
   # demand strict ISO C++ compliance
   set(CMAKE_CXX_FLAGS "-pedantic ${CMAKE_CXX_FLAGS}")
   # enable extra compiler warnings
@@ -44,6 +42,8 @@ else()
 endif()
 ## Compiler flags for GCC only
 if(CMAKE_COMPILER_IS_GNUCXX)
+  # enforce ansi standards
+  set(CMAKE_CXX_FLAGS "-ansi ${CMAKE_CXX_FLAGS}")
   set(CMAKE_CXX_FLAGS "-Wstrict-null-sentinel ${CMAKE_CXX_FLAGS}")
 endif()
 

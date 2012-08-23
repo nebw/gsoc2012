@@ -26,7 +26,9 @@
 
 class BasePlotter {
 public:
+
     BasePlotter() {}
+
     virtual ~BasePlotter() {}
 
     virtual void step(const state *curState,
@@ -37,6 +39,7 @@ public:
     virtual void plot() = 0;
 
 private:
+
     BasePlotter(const BasePlotter&);
     BasePlotter& operator=(const BasePlotter&);
 };

@@ -346,7 +346,7 @@ __kernel void f_dxNMDA_dt(__global struct state *states_old,
     states_new[idx].x_NMDA = state_0.x_NMDA + dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }
 
-inline float _f_dsNMDA_dt(const float s_NMDA, const float x_NMDA, const float V)
+inline float _f_dsNMDA_dt(const float s_NMDA, const float x_NMDA)
 {
     const float k_fN     = 1;
     const float tau_NMDA = 14.3f;
@@ -365,10 +365,10 @@ __kernel void f_dsNMDA_dt(__global struct state *states_old,
 
     float f1, f2, f3, f4;
 
-    f1 = _f_dsNMDA_dt(state_0.s_NMDA, state_0.x_NMDA, state_0.V);
-    f2 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f1 / 2.0f, state_0.x_NMDA, state_0.V);
-    f3 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f2 / 2.0f, state_0.x_NMDA, state_0.V);
-    f4 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f3, state_0.x_NMDA, state_0.V);
+    f1 = _f_dsNMDA_dt(state_0.s_NMDA, state_0.x_NMDA);
+    f2 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f1 / 2.0f, state_0.x_NMDA);
+    f3 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f2 / 2.0f, state_0.x_NMDA);
+    f4 = _f_dsNMDA_dt(state_0.s_NMDA + dt * f3, state_0.x_NMDA);
 
     states_new[idx].s_NMDA = state_0.s_NMDA + dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }

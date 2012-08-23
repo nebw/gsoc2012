@@ -26,7 +26,7 @@
 
 #include <boost/filesystem.hpp>
 
-void measureTimes(Logger const& logger, 
+void measureTimes(Logger const& logger,
                   state const& state0,
                   const size_t timesteps,
                   float dt,
@@ -34,4 +34,5 @@ void measureTimes(Logger const& logger,
 
 int finish(const int rc);
 
-int main(int ac, char **av);
+int main(int ac,
+         char **av);

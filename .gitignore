@@ -172,3 +172,9 @@ gnuploti*
 
 #build path 
 build
+
+#vim 
+*~
+
+#kdev4 
+*kdev4*

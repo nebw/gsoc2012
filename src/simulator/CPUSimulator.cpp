@@ -178,62 +178,62 @@ std::unique_ptr<float[]> const& CPUSimulator::getCurrentSumFootprintGABAA() cons
 void CPUSimulator::setCurrentStatesOld(state const *states)
 {
 #ifdef _MSC_VER
-    std::copy(states, states + _numNeurons, 
-              stdext::checked_array_iterator<state*>(_states.get(), _ind_old * _numNeurons));
-#else
+    std::copy(states, states + _numNeurons,
+              stdext::checked_array_iterator<state *>(_states.get(), _ind_old * _numNeurons));
+#else // ifdef _MSC_VER
     std::copy(states, states + _numNeurons,
               _states.get() + _ind_old * _numNeurons);
-#endif
+#endif // ifdef _MSC_VER
 }
 
 void CPUSimulator::setCurrentStatesNew(state const *states)
 {
 #ifdef _MSC_VER
-    std::copy(states, states + _numNeurons, 
-              stdext::checked_array_iterator<state*>(_states.get(), _ind_new * _numNeurons));
-#else
+    std::copy(states, states + _numNeurons,
+              stdext::checked_array_iterator<state *>(_states.get(), _ind_new * _numNeurons));
+#else // ifdef _MSC_VER
     std::copy(states, states + _numNeurons,
               _states.get() + _ind_new * _numNeurons);
-#endif
+#endif // ifdef _MSC_VER
 }
 
 void CPUSimulator::setCurrentSumFootprintAMPA(std::unique_ptr<float[]> const& sumFootprintAMPA)
 {
 #ifdef _MSC_VER
-    std::copy(stdext::checked_array_iterator<float*>(sumFootprintAMPA.get(), 0),
-              stdext::checked_array_iterator<float*>(sumFootprintAMPA.get(), _numNeurons),
-              stdext::checked_array_iterator<float*>(_sumFootprintAMPA.get(), 0));
-#else
-    std::copy(sumFootprintAMPA.get(), 
-              sumFootprintAMPA.get() + _numNeurons, 
+    std::copy(stdext::checked_array_iterator<float *>(sumFootprintAMPA.get(), 0),
+              stdext::checked_array_iterator<float *>(sumFootprintAMPA.get(), _numNeurons),
+              stdext::checked_array_iterator<float *>(_sumFootprintAMPA.get(), 0));
+#else // ifdef _MSC_VER
+    std::copy(sumFootprintAMPA.get(),
+              sumFootprintAMPA.get() + _numNeurons,
               _sumFootprintAMPA.get());
-#endif
+#endif // ifdef _MSC_VER
 }
 
 void CPUSimulator::setCurrentSumFootprintNMDA(std::unique_ptr<float[]> const& sumFootprintNMDA)
 {
 #ifdef _MSC_VER
-    std::copy(stdext::checked_array_iterator<float*>(sumFootprintNMDA.get(), 0),
-              stdext::checked_array_iterator<float*>(sumFootprintNMDA.get(), _numNeurons),
-              stdext::checked_array_iterator<float*>(_sumFootprintNMDA.get(), 0));
-#else
-    std::copy(sumFootprintNMDA.get(), 
-              sumFootprintNMDA.get() + _numNeurons, 
+    std::copy(stdext::checked_array_iterator<float *>(sumFootprintNMDA.get(), 0),
+              stdext::checked_array_iterator<float *>(sumFootprintNMDA.get(), _numNeurons),
+              stdext::checked_array_iterator<float *>(_sumFootprintNMDA.get(), 0));
+#else // ifdef _MSC_VER
+    std::copy(sumFootprintNMDA.get(),
+              sumFootprintNMDA.get() + _numNeurons,
               _sumFootprintNMDA.get());
-#endif
+#endif // ifdef _MSC_VER
 }
 
 void CPUSimulator::setCurrentSumFootprintGABAA(std::unique_ptr<float[]> const& sumFootprintGABAA)
 {
 #ifdef _MSC_VER
-    std::copy(stdext::checked_array_iterator<float*>(sumFootprintGABAA.get(), 0),
-              stdext::checked_array_iterator<float*>(sumFootprintGABAA.get(), _numNeurons),
-              stdext::checked_array_iterator<float*>(_sumFootprintGABAA.get(), 0));
-#else
-    std::copy(sumFootprintGABAA.get(), 
-              sumFootprintGABAA.get() + _numNeurons, 
+    std::copy(stdext::checked_array_iterator<float *>(sumFootprintGABAA.get(), 0),
+              stdext::checked_array_iterator<float *>(sumFootprintGABAA.get(), _numNeurons),
+              stdext::checked_array_iterator<float *>(_sumFootprintGABAA.get(), 0));
+#else // ifdef _MSC_VER
+    std::copy(sumFootprintGABAA.get(),
+              sumFootprintGABAA.get() + _numNeurons,
               _sumFootprintGABAA.get());
-#endif
+#endif // ifdef _MSC_VER
 }
 
 std::vector<size_t> CPUSimulator::getTimesCalculations() const
@@ -443,7 +443,7 @@ float CPUSimulator::_f_dxNMDA_dt(const float x_NMDA, const float V)
            - (1 - _f_s_inf(V)) * x_NMDA / tau2_NMDA;
 }
 
-float CPUSimulator::_f_dsNMDA_dt(const float s_NMDA, const float x_NMDA, const float V)
+float CPUSimulator::_f_dsNMDA_dt(const float s_NMDA, const float x_NMDA)
 {
     static const float k_fN     = 1;
     static const float tau_NMDA = 14.3f;
@@ -545,10 +545,10 @@ void CPUSimulator::runge4_f_dsNMDA_dt(const size_t idx)
 
     float f1, f2, f3, f4;
 
-    f1 = _f_dsNMDA_dt(state_0.s_NMDA, state_0.x_NMDA, state_0.V);
-    f2 = _f_dsNMDA_dt(state_0.s_NMDA + _dt * f1 / 2.0f, state_0.x_NMDA, state_0.V);
-    f3 = _f_dsNMDA_dt(state_0.s_NMDA + _dt * f2 / 2.0f, state_0.x_NMDA, state_0.V);
-    f4 = _f_dsNMDA_dt(state_0.s_NMDA + _dt * f3, state_0.x_NMDA, state_0.V);
+    f1 = _f_dsNMDA_dt(state_0.s_NMDA, state_0.x_NMDA);
+    f2 = _f_dsNMDA_dt(state_0.s_NMDA + _dt * f1 / 2.0f, state_0.x_NMDA);
+    f3 = _f_dsNMDA_dt(state_0.s_NMDA + _dt * f2 / 2.0f, state_0.x_NMDA);
+    f4 = _f_dsNMDA_dt(state_0.s_NMDA + _dt * f3, state_0.x_NMDA);
 
     _states[_ind_new * _numNeurons + idx].s_NMDA = state_0.s_NMDA + _dt * (f1 + 2.0f * f2 + 2.0f * f3 + f4) / 6.0f;
 }

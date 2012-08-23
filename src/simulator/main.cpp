@@ -24,9 +24,9 @@
 
 #include "Definitions.h"
 
-#include "main.h"
 #include "CLSimulator.h"
 #include "CPUSimulator.h"
+#include "main.h"
 #include "util.h"
 
 #include <cpplog.hpp>

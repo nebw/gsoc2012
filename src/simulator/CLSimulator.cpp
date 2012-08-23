@@ -51,24 +51,24 @@ CLSimulator::CLSimulator(const size_t nX,
                          Logger const& logger,
                          const bool readToHostMemory /*= false*/)
     : _err(CL_SUCCESS)
-    , _wrapper(CLWrapper(logger))
-    , _nX(nX)
-    , _nY(nY)
-    , _nZ(nZ)
-    , _numNeurons(nX * nY * nZ)
-    , _timesteps(timesteps)
-    , _dt(dt)
-    , _state_0(state_0)
-    , _t(0)
-    , _plot(plot != NO_PLOT)
-    , _measure(measure == MEASURE)
-    , _fftw(fftw == FFTW)
-    , _clfft(clfft == CLFFT)
-    , _logger(logger)
-    , _readToHostMemory(readToHostMemory)
-    , _nFFTx(2 * nX)
-    , _nFFTy(nY > 1 ? 2 * nY : 1)
-    , _nFFTz(nZ > 1 ? 2 * nZ : 1)
+      , _wrapper(CLWrapper(logger))
+      , _nX(nX)
+      , _nY(nY)
+      , _nZ(nZ)
+      , _numNeurons(nX * nY * nZ)
+      , _timesteps(timesteps)
+      , _dt(dt)
+      , _state_0(state_0)
+      , _t(0)
+      , _plot(plot != NO_PLOT)
+      , _measure(measure == MEASURE)
+      , _fftw(fftw == FFTW)
+      , _clfft(clfft == CLFFT)
+      , _logger(logger)
+      , _readToHostMemory(readToHostMemory)
+      , _nFFTx(2 * nX)
+      , _nFFTy(nY > 1 ? 2 * nY : 1)
+      , _nFFTz(nZ > 1 ? 2 * nZ : 1)
 {
     _nFFT = (_nFFTx * _nFFTy * _nFFTz);
     _scaleFFT = (1.f / _nFFT);
@@ -79,11 +79,13 @@ CLSimulator::CLSimulator(const size_t nX,
         break;
 
     case PLOT_GNUPLOT :
-        _plotter = std::unique_ptr<BasePlotter>(new GnuPlotPlotter(_nX, _nY, _nZ, 0, dt));
+        _plotter = std::unique_ptr<BasePlotter>(
+            new GnuPlotPlotter(_nX, _nY, _nZ, 0, dt));
         break;
 
     case PLOT_OPENGL:
-        _plotter = std::unique_ptr<BasePlotter>(new OpenGLPlotter(_numNeurons, 0, dt));
+        _plotter = std::unique_ptr<BasePlotter>(
+            new OpenGLPlotter(_nX, _nY, _nZ, 0, dt));
         break;
     }
 
