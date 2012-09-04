@@ -33,6 +33,7 @@
 #include <gnuplot_i.h>
 
 #include <numeric>
+#include <cmath>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -54,7 +55,7 @@ void measureTimes(Logger const& logger, state const& state0, const size_t timest
 
     for (size_t i = start; i < powers; ++i)
     {
-        auto neurons = static_cast<const size_t>(pow(2.f, i));
+        auto neurons = static_cast<const size_t>(pow(2.f, float(i)));
         numNeurons.push_back(neurons);
 
         CLSimulator clSim(
