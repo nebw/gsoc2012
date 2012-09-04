@@ -179,7 +179,9 @@ void CPUSimulator::setCurrentStatesOld(state const *states)
 {
 #ifdef _MSC_VER
     std::copy(states, states + _numNeurons,
-              stdext::checked_array_iterator<state *>(_states.get(), _ind_old * _numNeurons));
+              stdext::checked_array_iterator<state *>(
+                _states.get() + _ind_old * _numNeurons,
+                _numNeurons));
 #else // ifdef _MSC_VER
     std::copy(states, states + _numNeurons,
               _states.get() + _ind_old * _numNeurons);
@@ -190,7 +192,9 @@ void CPUSimulator::setCurrentStatesNew(state const *states)
 {
 #ifdef _MSC_VER
     std::copy(states, states + _numNeurons,
-              stdext::checked_array_iterator<state *>(_states.get(), _ind_new * _numNeurons));
+              stdext::checked_array_iterator<state *>(
+                _states.get() + _ind_new * _numNeurons,
+                _numNeurons));
 #else // ifdef _MSC_VER
     std::copy(states, states + _numNeurons,
               _states.get() + _ind_new * _numNeurons);
