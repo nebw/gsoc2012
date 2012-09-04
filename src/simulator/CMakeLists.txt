@@ -174,15 +174,15 @@ add_test(openclUnitTests openclUnitTests)
 
 if(MSVC)
   INSTALL(FILES 
-    "${opencl_SOURCE_DIR}/fftw_win32/libfftw3f-3.dll"
-    "${opencl_SOURCE_DIR}/glfw/x86/GLFW.dll"
-    "${opencl_SOURCE_DIR}/glew/x86/glew32.dll"
-    DESTINATION "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/Debug"
+    "${CMAKE_SOURCE_DIR}/libs/fftw/x86/libfftw3f-3.dll"
+    "${CMAKE_SOURCE_DIR}/libs/glfw/x86/GLFW.dll"
+    "${CMAKE_SOURCE_DIR}/libs/glew/x86/glew32.dll"
+    DESTINATION "${CMAKE_BINARY_DIR}/src/simulator/Debug"
     CONFIGURATIONS Debug)
   INSTALL(FILES 
-    "${opencl_SOURCE_DIR}/fftw_win32/libfftw3f-3.dll"
-    "${opencl_SOURCE_DIR}/glfw/x86/GLFW.dll"
-    "${opencl_SOURCE_DIR}/glew/x86/glew32.dll"
-    DESTINATION "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/Release"
+    "${CMAKE_SOURCE_DIR}/libs/fftw/x86/libfftw3f-3.dll"
+    "${CMAKE_SOURCE_DIR}/libs/glfw/x86/GLFW.dll"
+    "${CMAKE_SOURCE_DIR}/libs/glew/x86/glew32.dll"
+    DESTINATION "${CMAKE_BINARY_DIR}/src/simulator/Release"
     CONFIGURATIONS Release)
 endif()
