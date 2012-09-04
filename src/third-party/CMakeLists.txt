@@ -25,7 +25,7 @@ if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "-w ${CMAKE_CXX_FLAGS}")
 else()
   set(CMAKE_CXX_FLAGS "/W0 ${CMAKE_CXX_FLAGS}")
-  ADD_DEFINITIONS(/D _CRT_SECURE_NO_WARNINGS)
+  add_definitions(/D _CRT_SECURE_NO_WARNINGS)
 endif()
 
 add_subdirectory(clFFT)
