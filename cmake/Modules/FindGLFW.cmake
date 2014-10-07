@@ -84,7 +84,7 @@ FIND_PATH(GLFW_INCLUDE_DIR glfw.h
 # GLFW-1.1 is the name used by FreeBSD ports...
 # don't confuse it for the version number.
 FIND_LIBRARY(GLFW_LIBRARY_TEMP 
-  NAMES GLFW glfw
+  NAMES GLFW glfw glfw2
   HINTS
   $ENV{GLFWDIR}
   PATH_SUFFIXES lib64 lib
